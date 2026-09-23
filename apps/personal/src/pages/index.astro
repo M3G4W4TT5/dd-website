@@ -1,0 +1,83 @@
+---
+import { ArrowDownRight, ArrowRight, ArrowUpRight, Asterisk, Camera, Play, Sparkles } from "lucide-react";
+import { ContactPreview } from "../components/ContactPreview";
+import { InstagramCarousel } from "../components/InstagramCarousel";
+import { MotionMark } from "../components/MotionMark";
+import { feedSamples, pendingLinks, workSamples } from "../content";
+import "../styles/site.css";
+
+const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="description" content="Local concept preview for Didde-Mie Lykke From, also known as DD. Content and imagery are placeholders." />
+    <title>Didde-Mie Lykke From / DD — concept preview</title>
+  </head>
+  <body>
+    <div class="preview-banner"><span></span> CONCEPT PREVIEW · CONTENT, LINKS & VISUAL IDENTITY TO BE DECIDED WITH DD</div>
+    <header class="site-header">
+      <a class="wordmark" href="#top" aria-label="DD — top of page">DD<span>✳</span></a>
+      <nav aria-label="Main navigation"><a href="#work">Selected work</a><a href="#media">Media</a><a href="#social">Instagram</a><a href="#contact">Contact</a></nav>
+      <a class="header-book" href={bookingUrl}>Studio booking <ArrowUpRight size={16} /></a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-heading">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> DANCER / MOVEMENT ARTIST <span class="hero-star">✳</span> </div>
+          <h1 id="hero-heading">Didde-Mie<br /><em>Lykke From.</em></h1>
+          <div class="hero-subline"><span>ALSO KNOWN AS</span><strong>DD</strong></div>
+          <p class="hero-intro">This is the first shape of a personal stage. DD's introduction, selected work, portrait and showreel will be added once she chooses the content and visual direction.</p>
+          <div class="hero-actions"><a class="button button-dark" href="#work">Explore the page <ArrowDownRight size={19} /></a><a class="line-link" href="#contact">Get in touch <ArrowUpRight size={17} /></a></div>
+          <div class="hero-bottom"><span>01 / PERSONAL SITE CONCEPT</span><span>SCROLL TO EXPLORE ↓</span></div>
+        </div>
+        <div class="hero-stage"><MotionMark client:load /><div class="stage-corner corner-one">MOVEMENT<br />IS A LANGUAGE.</div><div class="stage-corner corner-two">PORTRAIT / FILM<br />PENDING DD</div></div>
+      </section>
+
+      <div class="ticker" aria-hidden="true"><div>MOVE WITH INTENTION <span>✳</span> MAKE SPACE <span>✳</span> MOVE WITH INTENTION <span>✳</span> MAKE SPACE <span>✳</span> MOVE WITH INTENTION <span>✳</span> MAKE SPACE <span>✳</span></div></div>
+
+      <section class="work-section section-wrap" id="work" aria-labelledby="work-title">
+        <div class="section-topline"><span>01 / SELECTED WORK</span><span>ACTS & PROJECTS TO BE CONFIRMED</span></div>
+        <div class="section-heading"><div><span class="kicker">ON THE STAGE & BEYOND</span><h2 id="work-title">The work <em>takes shape.</em></h2></div><p>Approved acts, projects, dates, and DD's roles will live here. These cards show the editable structure without assigning unverified credits.</p></div>
+        <div class="work-grid">
+          {workSamples.map((item) => <article class="work-card">
+            <div class={`work-art work-art-${item.number}`}><span class="work-placeholder">PROJECT IMAGE PENDING</span><span class="art-graphic"></span></div>
+            <div class="work-meta"><span>{item.number} / {item.category}</span><span>CONTENT PENDING</span></div>
+            <div class="work-caption"><h3>{item.title}</h3><p>{item.note}</p><ArrowUpRight size={24} aria-hidden="true" /></div>
+          </article>)}
+        </div>
+      </section>
+
+      <section class="statement" aria-label="Page concept statement"><div class="statement-mark"><Sparkles size={28} strokeWidth={1.2} /></div><p>Every movement<br />starts <em>somewhere.</em></p><span>PLACEHOLDER LINE — FINAL COPY PENDING</span></section>
+
+      <section class="media-section section-wrap" id="media" aria-labelledby="media-title">
+        <div class="section-topline"><span>02 / PERFORMANCE MEDIA</span><span>APPROVED PHOTO & VIDEO ASSETS PENDING</span></div>
+        <div class="section-heading"><div><span class="kicker">SEEN IN MOTION</span><h2 id="media-title">A space for <em>the moving image.</em></h2></div><p>A showreel, performance clips, and selected stills will be curated here with credits and rights checked before publication.</p></div>
+        <div class="media-layout">
+          <div class="showreel-placeholder"><div class="showreel-noise"></div><div class="showreel-ring"></div><span class="play-icon"><Play size={24} fill="currentColor" /></span><span class="showreel-corner">FILM / SHOWREEL</span><div><strong>Video slot</strong><span>Approved showreel and poster pending</span></div></div>
+          <div class="stills-column"><div class="still still-one"><span>STILL 01</span><strong>Image pending</strong></div><div class="still still-two"><span>STILL 02</span><strong>Image pending</strong></div></div>
+        </div>
+      </section>
+
+      <section class="social-section" id="social" aria-labelledby="social-title"><div class="section-wrap">
+        <div class="section-topline"><span>03 / INSTAGRAM</span><span>LIVE CONNECTION IS A LATER STEP</span></div>
+        <div class="section-heading"><div><span class="kicker"><Camera size={15} /> AN OPEN WINDOW</span><h2 id="social-title">Moments <em>in motion.</em></h2></div><p>These are sample cards only. DD's eligible posts will appear here after she authorizes the account and the feed is connected.</p></div>
+        <InstagramCarousel client:visible posts={feedSamples} />
+      </div></section>
+
+      <section class="links-section section-wrap" aria-labelledby="links-title">
+        <div class="section-topline"><span>04 / FIND DD</span><span>DESTINATIONS PENDING CONFIRMATION</span></div>
+        <div class="links-layout"><div><span class="kicker">THE PLACES TO GO</span><h2 id="links-title">Stay <em>connected.</em></h2><p>Verified profiles and press links will be added here. The studio booking preview is already available locally.</p></div><div class="links-list"><a href={bookingUrl}><span>Studio booking</span><strong>LOCAL PREVIEW</strong><ArrowUpRight size={22} /></a>{pendingLinks.map((label) => <div class="pending-link"><span>{label}</span><strong>LINK PENDING</strong><ArrowRight size={22} /></div>)}</div></div>
+      </section>
+
+      <section class="contact-section" id="contact" aria-labelledby="contact-title"><div class="section-wrap contact-layout"><div class="contact-copy"><div class="section-topline"><span>05 / GET IN TOUCH</span></div><span class="kicker">START A CONVERSATION</span><h2 id="contact-title">Let's make<br /><em>something move.</em></h2><p>The final contact email and delivery service are not configured yet. This form demonstrates the intended fields and validates them in your browser without sending a message.</p><div class="contact-decor"><Asterisk size={45} strokeWidth={.9} /></div></div><ContactPreview client:load /></div></section>
+    </main>
+
+    <footer class="site-footer"><div class="footer-upper"><a class="footer-logo" href="#top">DD<span>✳</span></a><div><span>DIDDE-MIE LYKKE FROM</span><p>Dancer / movement artist<br />Content and identity preview</p></div><a href={bookingUrl}>Studio booking <ArrowUpRight size={17} /></a></div><div class="footer-lower"><span>© {new Date().getFullYear()} DD</span><span>PERSONAL SITE CONCEPT · NOT A PUBLISHED PORTFOLIO</span><span>CONTACT & SOCIAL LINKS PENDING</span></div></footer>
+  </body>
+</html>

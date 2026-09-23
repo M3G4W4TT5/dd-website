@@ -1,0 +1,27 @@
+{
+  "name": "@dd/personal",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 ASTRO_DEV_BACKGROUND=1 astro dev --host 127.0.0.1 --port 4321",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 ASTRO_PREVIEW_BACKGROUND=1 astro preview --host 127.0.0.1 --port 4321",
+    "typecheck": "ASTRO_TELEMETRY_DISABLED=1 astro check"
+  },
+  "dependencies": {
+    "@astrojs/react": "7.0.0",
+    "astro": "7.3.4",
+    "embla-carousel-react": "8.6.0",
+    "lucide-react": "1.47.0",
+    "motion": "13.4.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/react": "19.1.13",
+    "@types/react-dom": "19.1.9",
+    "typescript": "5.9.3"
+  }
+}
