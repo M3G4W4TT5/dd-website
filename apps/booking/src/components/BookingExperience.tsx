@@ -2,7 +2,6 @@
 
 import {
   ArrowDownRight,
-  ArrowRight,
   ArrowUpRight,
   CalendarDays,
   Check,
@@ -14,7 +13,6 @@ import {
   MapPin,
   MoveUpRight,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { DateTime } from "luxon";
 import { useEffect, useMemo, useState } from "react";
@@ -32,16 +30,15 @@ const copy = {
     navInfo: "Praktisk",
     navAdmin: "Administration",
     heroEyebrow: "ET RUM TIL BEVÆGELSE",
-    heroLine1: "Plads til det,",
-    heroLine2: "du skaber.",
+    displayLeft: "STUDIET",
+    displayRight: "BOOKING",
+    displaySub: "ET RUM TIL BEVÆGELSE / 01—02",
+    imageOne: "Illustrativt urbant dansestudie med mursten, spejle og trægulv",
+    imageTwo: "Illustrativ detalje med spejl og murstensvæg i et urbant dansestudie",
     heroText:
       "Et enkelt rum til dans, undervisning og kreativt arbejde. Tekst, billeder og praktiske oplysninger er foreløbige og afventer DD.",
     heroBook: "Se ledige tider",
-    heroExplore: "Udforsk rummet",
     heroNote: "Designudkast · Studiebillede afventer",
-    visualSide: "BEVÆGELSE / RUM / RO",
-    visualPlace: "ADRESSE AFVENTER",
-    visualBottom: "DIDDE-MIE LYKKE FROM — STUDIO",
     metricOne: "1 rum",
     metricTwo: "1 time ad gangen",
     metricThree: "Dit tempo",
@@ -107,16 +104,15 @@ const copy = {
     navInfo: "Good to know",
     navAdmin: "Administration",
     heroEyebrow: "A SPACE FOR MOVEMENT",
-    heroLine1: "Room for what",
-    heroLine2: "you create.",
+    displayLeft: "STUDIO",
+    displayRight: "BOOKING",
+    displaySub: "A SPACE FOR MOVEMENT / 01—02",
+    imageOne: "Illustrative urban dance studio with brick, mirrors and wooden floor",
+    imageTwo: "Illustrative urban dance studio detail with mirror and brick wall",
     heroText:
       "A simple space for dance, teaching and creative work. Copy, images and practical details are placeholders pending DD's approval.",
     heroBook: "Explore availability",
-    heroExplore: "Explore the space",
     heroNote: "Design preview · Studio photo pending",
-    visualSide: "MOVEMENT / SPACE / CALM",
-    visualPlace: "LOCATION TO COME",
-    visualBottom: "DIDDE-MIE LYKKE FROM — STUDIO",
     metricOne: "1 space",
     metricTwo: "1 hour at a time",
     metricThree: "Your pace",
@@ -220,6 +216,24 @@ export function BookingExperience({
     document.documentElement.lang = language;
   }, [language]);
 
+  useEffect(() => {
+    const elements = document.querySelectorAll<HTMLElement>("[data-reveal]");
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
+      elements.forEach((element) => element.classList.add("is-visible"));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: "0px 0px -6% 0px", threshold: 0.08 });
+    elements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
+
   const week = useMemo(
     () => Array.from({ length: 7 }, (_, index) => DateTime.fromISO(weekStart).plus({ days: index }).toISODate()!),
     [weekStart],
@@ -287,16 +301,14 @@ export function BookingExperience({
     <>
       <div className="preview-bar"><span className="preview-dot" />{t.preview}</div>
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="DD Studio — top">
-          <span className="brand-mark">dd<span className="brand-star">✳</span></span>
-          <span className="brand-divider" />
-          <span className="brand-name">STUDIO<br />DIDDE-MIE</span>
-        </a>
         <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
           <a href="#booking">{t.navBook}</a>
           <a href="#space">{t.navSpace}</a>
           <a href="#info">{t.navInfo}</a>
         </nav>
+        <a className="brand" href="#top" aria-label="DD Studio — top">
+          <span className="brand-mark">DD<br />STUDIO</span>
+        </a>
         <div className="header-actions">
           <div className="lang-switch" aria-label="Language">
             <button type="button" className={language === "da" ? "active" : ""} onClick={() => setLanguage("da")} aria-pressed={language === "da"}>DA</button>
@@ -309,26 +321,21 @@ export function BookingExperience({
 
       <main id="top">
         <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-copy">
-            <div className="eyebrow"><span className="eyebrow-line" />{t.heroEyebrow}</div>
-            <h1 id="hero-title">{t.heroLine1}<br /><em>{t.heroLine2}</em></h1>
-            <p>{t.heroText}</p>
-            <div className="hero-actions">
-              <a className="button button-dark" href="#booking">{t.heroBook}<ArrowUpRight size={18} /></a>
-              <a className="text-link" href="#space">{t.heroExplore}<ArrowRight size={17} /></a>
-            </div>
-            <div className="hero-fineprint"><Sparkles size={15} />{t.heroNote}</div>
+          <div className="hero-introline"><span>{t.heroEyebrow}</span><span>{t.displaySub}</span></div>
+          <div className="hero-title-row">
+            <h1 id="hero-title"><span>{t.displayLeft}</span><span>{t.displayRight}</span></h1>
           </div>
-          <div className="hero-visual" aria-label={t.heroNote} role="img">
-            <div className="visual-grain" />
-            <div className="visual-arc arc-one" />
-            <div className="visual-arc arc-two" />
-            <div className="visual-orb" />
-            <div className="visual-floor" />
-            <div className="visual-topline"><span>DD — STUDIO</span><span>{t.visualPlace}</span></div>
-            <div className="visual-side">{t.visualSide}</div>
-            <div className="visual-bottom"><span>{t.visualBottom}</span><ArrowDownRight size={24} /></div>
+          <div className="hero-gallery">
+            <figure className="hero-photo hero-photo-wide" data-reveal>
+              <img src="/concepts/studio-room.png" alt={t.imageOne} />
+              <figcaption><span>01 / {t.navSpace}</span><span>{t.heroNote}</span></figcaption>
+            </figure>
+            <figure className="hero-photo hero-photo-detail" data-reveal>
+              <img src="/concepts/studio-detail.png" loading="lazy" alt={t.imageTwo} />
+              <figcaption><span>02 / STUDIO DETAIL</span><span>{t.heroNote}</span></figcaption>
+            </figure>
           </div>
+          <div className="hero-after"><p>{t.heroText}</p><a href="#booking">{t.heroBook}<ArrowDownRight size={21} /></a></div>
         </section>
 
         <div className="metric-strip" aria-label={language === "da" ? "Om studiet" : "About the studio"}>
@@ -396,7 +403,7 @@ export function BookingExperience({
         <section className="space-section" id="space" aria-labelledby="space-title">
           <div className="space-intro"><span className="section-kicker">{t.studioEyebrow}</span><h2 id="space-title">{t.studioTitle}</h2><p>{t.studioText}</p></div>
           <div className="feature-cards">
-            {[t.featureOne, t.featureTwo, t.featureThree].map((feature, index) => <article className={`feature-card feature-${index + 1}`} key={feature}><span className="feature-number">0{index + 1} / 03</span><div className="feature-art"><span /></div><div className="feature-caption"><div><h3>{feature}</h3><p>{t.featureBody}</p></div><ArrowUpRight size={22} /></div></article>)}
+            {[t.featureOne, t.featureTwo, t.featureThree].map((feature, index) => <article className={`feature-card feature-${index + 1}`} key={feature} data-reveal><div className="feature-art"><img src={index === 1 ? "/concepts/studio-detail.png" : "/concepts/studio-room.png"} loading="lazy" alt={index === 1 ? t.imageTwo : t.imageOne} /></div><div className="feature-caption"><div><span>0{index + 1} / 03 · {t.heroNote}</span><h3>{feature}</h3><p>{t.featureBody}</p></div><ArrowUpRight size={22} /></div></article>)}
           </div>
         </section>
 
