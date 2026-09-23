@@ -1,10 +1,10 @@
 ---
-import { ArrowDownRight, ArrowUpRight, Play } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { ContactPreview } from "../components/ContactPreview";
 import { EditorialMotion } from "../components/EditorialMotion";
-import { InstagramCarousel } from "../components/InstagramCarousel";
+import { FilmCarousel } from "../components/FilmCarousel";
 import { WorkSwitcher } from "../components/WorkSwitcher";
-import { feedSamples, pendingLinks, workSamples } from "../content";
+import { films, media, work } from "../content";
 import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
 import "@fontsource/montserrat/900.css";
@@ -19,72 +19,77 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
-    <meta name="description" content="Local concept preview for Didde-Mie Lykke From, also known as DD. Portfolio content and imagery are placeholders." />
-    <title>Didde-Mie Lykke From / DD — concept preview</title>
+    <meta name="description" content="DD — Didde-Mie Lykke From. Dancer and choreographer. Selected performance, film and modelling work." />
+    <meta name="author" content="Didde-Mie Lykke From" />
+    <title>DD — Didde-Mie Lykke From | Dancer / Choreographer</title>
   </head>
   <body>
+    <div class="site-intro" aria-hidden="true">
+      <div class="dd-loader-mark site-intro-mark"><span>D</span><span>D</span><i>.</i></div>
+    </div>
     <EditorialMotion client:load />
-    <div class="preview-banner">CONCEPT PREVIEW <span>·</span> CONTENT, IMAGES AND CREDITS AWAIT DD</div>
     <header class="site-header">
       <a class="wordmark" href="#top" aria-label="DD — top of page">DD<span>.</span><small>DIDDE-MIE LYKKE FROM</small></a>
-      <nav class="desktop-nav" aria-label="Main navigation"><a href="#work">Work</a><a href="#media">Media</a><a href="#social">Instagram</a><a href="#contact">Contact</a></nav>
+      <nav class="desktop-nav" aria-label="Main navigation"><a href="#work">Work</a><a href="#films">Films</a><a href="#contact">Contact</a></nav>
       <a class="header-book" href={bookingUrl}>STUDIO BOOKING <ArrowUpRight size={18} /></a>
-      <details class="mobile-menu"><summary>MENU <span>+</span></summary><nav aria-label="Mobile navigation"><a href="#work">Work</a><a href="#media">Media</a><a href="#social">Instagram</a><a href="#contact">Contact</a><a href={bookingUrl}>Studio booking</a></nav></details>
+      <details class="mobile-menu"><summary>MENU <span>+</span></summary><nav aria-label="Mobile navigation"><a href="#work">Work</a><a href="#films">Films</a><a href="#contact">Contact</a><a href={bookingUrl}>Studio booking</a></nav></details>
     </header>
 
     <main id="top">
       <section class="hero" aria-labelledby="hero-heading">
-        <div class="hero-topline"><span>DANCER / MOVEMENT ARTIST</span><span>DD / CONCEPT PREVIEW</span></div>
-        <div class="hero-name"><h1 id="hero-heading"><span>DIDDE-MIE</span><span>LYKKE FROM</span><span>IN MOTION.</span></h1></div>
+        <div class="hero-name"><h1 id="hero-heading">IN MOTION.</h1></div>
         <div class="hero-image" data-reveal>
-          <img src="/concepts/dance-hero.png" alt="Illustrative anonymous street dancer in motion; not a photograph of DD" />
+          <img src={media.heroPortrait} alt="Close-up portrait of DD looking into the camera" fetchpriority="high" />
           <div class="hero-overlay-type" aria-hidden="true">DD.</div>
-          <div class="hero-image-caption"><span>THE BODY SPEAKS FIRST.</span><span>ILLUSTRATIVE IMAGE / DD MEDIA PENDING</span></div>
+          <div class="hero-image-caption"><span>DD / HALO</span></div>
         </div>
-        <div class="hero-bottom"><span>PERSONAL SITE CONCEPT / 2026</span><a href="#work">SCROLL TO EXPLORE <ArrowDownRight size={21} /></a></div>
       </section>
 
       <section class="intro-statement" aria-label="Introduction">
-        <div class="section-index"><span>01 / INTRODUCTION</span><span>WORDS IN PROGRESS</span></div>
-        <p>AN OPEN STAGE<br />FOR WHAT COMES <em>NEXT.</em></p>
-        <div class="intro-detail"><span>DD / DIDDE-MIE LYKKE FROM</span><p>DD's introduction, artistic point of view and verified credits will be written with her. This preview establishes the visual rhythm of the personal site.</p></div>
+        <div class="section-index"><span>01 / INTRODUCTION</span></div>
+        <p>DANCE.<br />CHOREOGRAPHY.<br /><em>MODELLING.</em></p>
+        <div class="intro-detail"><span>DD / DIDDE-MIE LYKKE FROM</span><p>DD’s work moves between live stages, music films and campaigns. Selected credits include Dua Lipa’s Glastonbury set, Jungle’s <i>Back On 74</i> and Rosalía’s LUX tour. <a href="https://www.voguescandinavia.com/articles/didde-mie-beauty-guide" target="_blank" rel="noopener noreferrer">Tour source <ArrowUpRight size={14} /></a></p></div>
       </section>
 
-      <div class="ticker" aria-hidden="true"><div>MOVE WITH INTENTION <span>✳</span> MAKE SPACE <span>✳</span> MOVE WITH INTENTION <span>✳</span> MAKE SPACE <span>✳</span> MOVE WITH INTENTION <span>✳</span> MAKE SPACE <span>✳</span></div></div>
+      <div class="ticker" aria-hidden="true"><div>DANCE <span>✳</span> CHOREOGRAPHY <span>✳</span> MODELLING <span>✳</span> DANCE <span>✳</span> CHOREOGRAPHY <span>✳</span> MODELLING <span>✳</span></div></div>
 
       <section class="work-section" id="work" aria-labelledby="work-title">
-        <div class="section-index"><span>02 / SELECTED WORK</span><span>ACTS AND PROJECTS TO BE CONFIRMED</span></div>
-        <div class="mega-heading"><h2 id="work-title">SELECTED<br /><span>WORK.</span></h2><p>Move over a project title to explore the image. Actual project names, roles, collaborators and photography will be added after DD's review.</p></div>
-        <WorkSwitcher client:load items={workSamples} />
+        <div class="section-index"><span>02 / SELECTED WORK</span><span>PERFORMANCE / CAMPAIGNS</span></div>
+        <div class="mega-heading"><h2 id="work-title">SELECTED<br /><span>WORK.</span></h2><p>Live dance, music films and modelling campaigns. Select a project for its credits and source.</p></div>
+        <WorkSwitcher client:load items={work} />
       </section>
 
-      <section class="media-section" id="media" aria-labelledby="media-title">
-        <div class="section-index"><span>03 / IN MOTION</span><span>SHOWREEL AND STILLS PENDING</span></div>
-        <div class="mega-heading"><h2 id="media-title">THE MOVING<br /><span>IMAGE.</span></h2><p>A showreel, performance clips and credited stills belong here. This first version uses concept imagery until the approved media is supplied.</p></div>
-        <div class="media-stage" data-reveal>
-          <img src="/concepts/dance-study.png" loading="lazy" alt="Illustrative anonymous street dancer on a dark stage; not DD or an actual performance" />
-          <div class="media-stage-type" aria-hidden="true">IN<br />MOTION</div>
-          <div class="media-stage-label"><span><Play size={16} /> VIDEO SLOT</span><span>APPROVED SHOWREEL PENDING</span></div>
-        </div>
-      </section>
-
-      <section class="social-section" id="social" aria-labelledby="social-title">
-        <div class="section-index"><span>04 / INSTAGRAM</span><span>ACCOUNT CONNECTION IS A LATER STEP</span></div>
-        <div class="mega-heading"><h2 id="social-title">AFTER THE<br /><span>STAGE.</span></h2><p>This carousel previews the feed layout. DD's posts will populate it after she authorizes the account and the connection is built.</p></div>
-        <InstagramCarousel client:visible posts={feedSamples} />
+      <section class="social-section" id="films" aria-labelledby="films-title">
+        <div class="section-index"><span>03 / WATCH</span></div>
+        <div class="mega-heading"><h2 id="films-title">SELECTED<br /><span>FILMS.</span></h2><p>Performance films and a recording from Rosalía’s LUX tour. Select a film to watch it here.</p></div>
+        <FilmCarousel client:visible films={films} />
       </section>
 
       <section class="links-section" aria-labelledby="links-title">
-        <div class="section-index"><span>05 / FIND DD</span><span>DESTINATIONS PENDING CONFIRMATION</span></div>
-        <div class="links-layout"><h2 id="links-title">ALL THE<br />WAYS TO <span>CONNECT.</span></h2><div class="links-list"><a href={bookingUrl}><span>Studio booking</span><small>LOCAL PREVIEW</small><ArrowUpRight size={23} /></a>{pendingLinks.map((label) => <div class="pending-link"><span>{label}</span><small>LINK PENDING</small><ArrowUpRight size={23} /></div>)}</div></div>
+        <div class="section-index"><span>04 / LINKS</span><span>DD / ONLINE</span></div>
+        <div class="links-layout">
+          <h2 id="links-title">FOLLOW<br />THE <span>WORK.</span></h2>
+          <div class="links-list">
+            <a href={bookingUrl}><span>Studio booking</span><small>DD STUDIO</small><ArrowUpRight size={23} /></a>
+            <a href="https://www.instagram.com/diddemie_from/" target="_blank" rel="noopener noreferrer"><span>Instagram</span><small>@diddemie_from</small><ArrowUpRight size={23} /></a>
+            <a href="https://www.tiktok.com/@diddemielykkefrom" target="_blank" rel="noopener noreferrer"><span>TikTok</span><small>@diddemielykkefrom</small><ArrowUpRight size={23} /></a>
+            <a href="https://www.imdb.com/name/nm15290342/" target="_blank" rel="noopener noreferrer"><span>IMDb</span><small>PROFILE</small><ArrowUpRight size={23} /></a>
+          </div>
+        </div>
       </section>
 
-      <section class="contact-section" id="contact" aria-labelledby="contact-title">
-        <div class="section-index"><span>06 / GET IN TOUCH</span><span>DELIVERY IS NOT CONNECTED</span></div>
-        <div class="contact-layout"><div class="contact-copy"><h2 id="contact-title">LET'S<br />MOVE<br /><span>TOGETHER.</span></h2><p>The final contact address and message delivery are pending. The form checks fields locally and sends nothing.</p></div><ContactPreview client:load /></div>
+      <section class="contact-section" id="contact" aria-labelledby="contact-title" style={`--contact-image: url("${media.lowerBanner}")`}>
+        <div class="section-index"><span>05 / GET IN TOUCH</span><span>DANCE / CHOREOGRAPHY / CAMPAIGNS</span></div>
+        <div class="contact-layout"><div class="contact-copy"><h2 id="contact-title"><span class="contact-title-blend">WORK<br />WITH<br />DD</span><span class="contact-title-dot">.</span></h2><p>For dance, choreography and campaign inquiries.</p></div><ContactPreview client:load /></div>
+        <p class="contact-image-credit">DD / HALO</p>
       </section>
     </main>
 
-    <footer class="site-footer"><div class="footer-top"><a href="#top" aria-label="Return to top">DD.</a><div><span>DIDDE-MIE LYKKE FROM</span><p>Dancer / movement artist<br />Personal site concept preview</p></div><a href={bookingUrl}>STUDIO BOOKING <ArrowUpRight size={20} /></a></div><div class="footer-bottom"><span>© {new Date().getFullYear()} DD</span><span>ILLUSTRATIVE IMAGES · NOT DD OR HER STUDIO</span><span>CONTACT & SOCIAL LINKS PENDING</span></div></footer>
+    <footer class="site-footer"><div class="footer-bottom"><span>© {new Date().getFullYear()} Didde-Mie Lykke From</span><a href="#top">Back to top ↑</a></div></footer>
+    <script>
+      document.querySelectorAll<HTMLAnchorElement>(".mobile-menu nav a").forEach((link) => {
+        link.addEventListener("click", () => link.closest("details")?.removeAttribute("open"));
+      });
+    </script>
   </body>
 </html>
