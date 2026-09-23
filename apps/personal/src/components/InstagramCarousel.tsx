@@ -33,9 +33,9 @@ export function InstagramCarousel({ posts }: { posts: readonly SamplePost[] }) {
         <div className="feed-track">
           {posts.map((post) => (
             <article className={`feed-slide feed-${post.tone}`} key={post.number}>
-              <div className="feed-placeholder-art" aria-hidden="true"><span /></div>
+              <img src={Number(post.number) % 2 ? "/concepts/dance-hero.png" : "/concepts/dance-study.png"} loading="lazy" alt="Illustrative street dance image; not a post from DD's Instagram" />
               <div className="feed-card-top"><Camera size={18} /><span>SAMPLE / {post.number}</span></div>
-              <div className="feed-card-bottom"><strong>{post.label}</strong><span>Real post pending</span></div>
+              <div className="feed-card-bottom"><strong>{post.label}</strong><span>DD post pending</span></div>
             </article>
           ))}
         </div>
