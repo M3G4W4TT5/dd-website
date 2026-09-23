@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.astro/
+dist/
+coverage/
+.env
+.env.*.local
+!.env.example
+*.log
+.DS_Store
+
