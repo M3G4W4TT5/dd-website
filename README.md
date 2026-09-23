@@ -6,6 +6,7 @@ The client specifications and implementation plan live one directory above this 
 
 - `../SPECIFICATIONS.md`
 - `../IMPLEMENTATION_PLAN.md`
+- `../DESIGN_REFERENCES.md`
 
 ## Local services
 
@@ -20,7 +21,7 @@ pretix's official [small-scale Docker guide](https://docs.pretix.eu/self-hosting
 
 ## Booking preview
 
-Requires Node 24 or later. Run `npm ci`, then `npm run dev:booking` and open `http://127.0.0.1:3000`. The booking UI is in Danish and English. It lets a visitor select a start time and consecutive one-hour slots, displays an indicative total, and checks current availability again on the server. **The check does not hold slots or create an order.**
+Requires Node 24 or later. Run `npm ci`, then `npm run dev:booking` and open `http://127.0.0.1:3000`. The booking UI is in Danish and English. It lets a visitor select a start time and consecutive one-hour slots, displays an indicative total, and checks current availability again on the server. A second local preflight validates the customer fields and checks availability once more. **Neither check stores customer details, holds slots, starts payment, or creates an order.**
 
 Without a complete `apps/booking/.env.local`, the page shows labeled sample times and a sample DKK 300 hourly price. For real read-only inventory, copy `apps/booking/.env.local.example` to `apps/booking/.env.local`, then set the pretix organizer slug, event-series slug, product ID, and a restricted team API token. Create a token under the organizer's **Teams** page with only view permissions for the event's settings, dates, products, and quotas. Keep the token out of Git. The example `.env.local` is ignored by Git.
 
@@ -32,8 +33,8 @@ Run `npm run test:booking`, `npm run typecheck`, and `npm run build:booking` to 
 
 Run `npm run dev:personal` and open `http://127.0.0.1:4321` after installing dependencies. The page uses clearly labeled sample content and links to the local booking preview. Its contact and Instagram areas are UI placeholders until the excluded integrations are implemented and DD approves content and links.
 
+The two sites have separate visual systems. DD's personal site takes its black, white, pink, oversized-type and responsive-image direction from Dance Festival Malta. The booking site takes its offset image grid, condensed type, section colors, and blur reveals from Lanterne Architectes, adapted to muted greens and earth tones. All current photos in `apps/*/public/concepts/` are generated **illustrative concepts**. They do not depict DD, a real credit, or her actual Copenhagen studio, and must be replaced by approved media before publication.
+
 ## Stop point
 
 The chosen domain, studio email/calendar address, hourly rate, operating schedule, final cancellation terms, approved media, and external accounts are pending. Do not make the booking site publicly reachable or treat quoted times as reservations. Before production, finish order creation and paid checkout, customer order access and changes, calendar synchronization, Instagram connection, SMS, SMTP, and the acceptance scenarios in `../SPECIFICATIONS.md`.
-
-The production domain, email address, calendar provider, hourly rate, policies, and final media are placeholders pending DD's decisions. This Compose file is for local evaluation only; it does not expose a public production service.
