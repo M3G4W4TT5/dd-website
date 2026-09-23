@@ -3,9 +3,10 @@ node_modules/
 .astro/
 dist/
 coverage/
-.env
-.env.*.local
+.env*
 !.env.example
+!.env.local.example
+.local-admin-password
 *.log
 .DS_Store
-
+*.tsbuildinfo

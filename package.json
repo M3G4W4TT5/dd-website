@@ -1,0 +1,16 @@
+{
+  "name": "dd-platform",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev:booking": "npm run dev -w @dd/booking",
+    "dev:personal": "npm run dev -w @dd/personal",
+    "build:booking": "npm run build -w @dd/booking",
+    "build:personal": "npm run build -w @dd/personal",
+    "typecheck": "npm run typecheck -w @dd/booking && npm run typecheck -w @dd/personal",
+    "test:booking": "npm run test -w @dd/booking"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

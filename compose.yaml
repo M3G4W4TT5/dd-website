@@ -1,5 +1,24 @@
 name: dd-platform
 
+x-pretix-environment: &pretix-environment
+  PRETIX_PRETIX_INSTANCE_NAME: DD studio local development
+  PRETIX_PRETIX_URL: http://127.0.0.1:8345
+  PRETIX_PRETIX_DATADIR: /data
+  PRETIX_PRETIX_CURRENCY: DKK
+  PRETIX_PRETIX_PLUGINS_DEFAULT: pretix.plugins.statistics,pretix.plugins.checkinlists
+  PRETIX_PRETIX_PASSWORD_RESET: "off"
+  PRETIX_LOCALE_DEFAULT: da
+  PRETIX_LOCALE_TIMEZONE: Europe/Copenhagen
+  PRETIX_DATABASE_BACKEND: postgresql
+  PRETIX_DATABASE_NAME: pretix
+  PRETIX_DATABASE_USER: pretix
+  PRETIX_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+  PRETIX_DATABASE_HOST: postgres
+  PRETIX_REDIS_LOCATION: redis://redis:6379/0
+  PRETIX_REDIS_SESSIONS: "true"
+  PRETIX_CELERY_BACKEND: redis://redis:6379/1
+  PRETIX_CELERY_BROKER: redis://redis:6379/2
+
 services:
   postgres:
     image: postgres:17.6-alpine
@@ -31,26 +50,23 @@ services:
   pretix:
     image: pretix/standalone:2026.7.0
     command: all
-    environment:
-      PRETIX_PRETIX_INSTANCE_NAME: DD studio local development
-      PRETIX_PRETIX_URL: http://127.0.0.1:8345
-      PRETIX_PRETIX_DATADIR: /data
-      PRETIX_PRETIX_CURRENCY: DKK
-      PRETIX_PRETIX_PLUGINS_DEFAULT: pretix.plugins.statistics,pretix.plugins.checkinlists
-      PRETIX_PRETIX_PASSWORD_RESET: "off"
-      PRETIX_LOCALE_DEFAULT: da
-      PRETIX_LOCALE_TIMEZONE: Europe/Copenhagen
-      PRETIX_DATABASE_BACKEND: postgresql
-      PRETIX_DATABASE_NAME: pretix
-      PRETIX_DATABASE_USER: pretix
-      PRETIX_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      PRETIX_DATABASE_HOST: postgres
-      PRETIX_REDIS_LOCATION: redis://redis:6379/0
-      PRETIX_REDIS_SESSIONS: "true"
-      PRETIX_CELERY_BACKEND: redis://redis:6379/1
-      PRETIX_CELERY_BROKER: redis://redis:6379/2
+    environment: *pretix-environment
     ports:
       - "127.0.0.1:8345:80"
+    volumes:
+      - pretix-data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  pretix-cron:
+    image: pretix/standalone:2026.7.0
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["while true; do pretix cron; sleep 1800; done"]
+    environment: *pretix-environment
     volumes:
       - pretix-data:/data
     depends_on:
@@ -64,4 +80,3 @@ volumes:
   pretix-postgres:
   pretix-redis:
   pretix-data:
-
