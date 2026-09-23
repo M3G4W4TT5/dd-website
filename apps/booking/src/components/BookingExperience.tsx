@@ -20,6 +20,7 @@ import { DateTime } from "luxon";
 import { useEffect, useMemo, useState } from "react";
 import type { Availability, Quote, Slot } from "@/lib/booking";
 import { MAX_HOURS, quoteInterval, STUDIO_ZONE } from "@/lib/booking";
+import { CustomerDetailsPreview } from "@/components/CustomerDetailsPreview";
 
 type Language = "da" | "en";
 
@@ -75,7 +76,7 @@ const copy = {
     noQuote: "Valgte timer skal være sammenhængende og ledige.",
     check: "Tjek tilgængelighed",
     checking: "Tjekker…",
-    checked: "Tiderne var ledige ved seneste tjek. De er ikke reserveret.",
+    checked: "Tiderne var ledige ved seneste tjek. Udfyld forhåndsvisningen af bookingfelterne nedenfor. Tiderne er ikke reserveret.",
     changed: "Tiderne er ændret. Vælg et nyt interval.",
     checkoutLater: "Checkout åbner, når online betaling er integreret og testet.",
     policy: "Planlagt: gratis afbestilling indtil 24 timer før start. Præcis grænse og endelig pris godkendes før lancering.",
@@ -150,7 +151,7 @@ const copy = {
     noQuote: "The selected hours must be consecutive and available.",
     check: "Check availability",
     checking: "Checking…",
-    checked: "These hours were available at the last check. They are not reserved.",
+    checked: "These hours were available at the last check. Complete the booking-field preview below. The hours are not reserved.",
     changed: "Availability has changed. Choose another interval.",
     checkoutLater: "Checkout opens after online payment is integrated and tested.",
     policy: "Planned: free cancellation until 24 hours before start. The exact cutoff and final price require approval before launch.",
@@ -389,6 +390,7 @@ export function BookingExperience({
               <div className="summary-footer"><ShieldCheck size={18} /><span>{t.policy}</span></div>
             </aside>
           </div>
+          {status === "checked" && quote && selectedId && <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId} hours={hours} onConflict={async () => { await selectDate(date); setStatus("changed"); }} />}
         </section>
 
         <section className="space-section" id="space" aria-labelledby="space-title">
