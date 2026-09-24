@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { SiteFooter } from "./SiteFooter";
 import { MobileNavigation } from "./MobileNavigation";
@@ -12,21 +12,52 @@ const copy = {
     preview: "TTD STUDIO · KONTAKT", events: "Events", contact: "Kontakt",
     title: "Kontakt os.", intro: "Spørg os om booking, events eller noget helt tredje. Vi glæder os til at høre fra dig.",
     form: "SEND EN BESKED", name: "Navn", email: "Din e-mail", topic: "Emne", choose: "Vælg emne", bookingTopic: "Booking", eventTopic: "Event", otherTopic: "Andet", message: "Besked", send: "Send besked",
-    unavailable: "Kontaktformularen afventer opsætning. Den kan endnu ikke sende beskeder.",
+    sending: "Sender…", sent: "Din besked er sendt. Tak!", failed: "Beskeden kunne ikke sendes. Prøv igen senere.",
   },
   en: {
     preview: "TTD STUDIO · CONTACT", events: "Events", contact: "Contact",
     title: "Let's talk.", intro: "Ask us about bookings, events, or anything else. We'd love to hear from you.",
     form: "SEND A MESSAGE", name: "Name", email: "Your email", topic: "Topic", choose: "Choose a topic", bookingTopic: "Booking", eventTopic: "Event", otherTopic: "Other", message: "Message", send: "Send message",
-    unavailable: "The contact form is awaiting setup and cannot send messages yet.",
+    sending: "Sending…", sent: "Your message has been sent. Thank you!", failed: "Your message could not be sent. Please try again later.",
   },
 } as const;
 
 export function ContactExperience({ initialLanguage }: { initialLanguage: Language }) {
   const [language, setLanguage] = useState<Language>(initialLanguage);
+  const [sending, setSending] = useState(false);
+  const [status, setStatus] = useState<"sent" | "failed" | null>(null);
   useVisualEffects();
   useEffect(() => { document.documentElement.lang = language; localStorage.setItem("ttd-language", language); }, [language]);
   const t = copy[language];
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const fields = new FormData(form);
+    setSending(true);
+    setStatus(null);
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          site: "booking",
+          name: fields.get("name"),
+          email: fields.get("email"),
+          topic: fields.get("topic"),
+          message: fields.get("message"),
+          website: fields.get("website"),
+        }),
+      });
+      if (!response.ok) throw new Error("Delivery failed");
+      form.reset();
+      setStatus("sent");
+    } catch {
+      setStatus("failed");
+    } finally {
+      setSending(false);
+    }
+  }
 
   return <>
     <div className="preview-bar"><span className="preview-dot" />{t.preview}</div>
@@ -43,15 +74,16 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
     <main className="contact-main">
       <div className="events-heading"><h1>{t.title}</h1><p>{t.intro}</p></div>
       <section className="contact-layout" aria-label={t.form}>
-        <form className="studio-contact-form" onSubmit={(event) => event.preventDefault()}>
+        <form className="studio-contact-form" onSubmit={submit}>
           <div className="contact-form-heading"><span className="section-kicker">01 / {t.form}</span><ArrowUpRight size={25} strokeWidth={1.5} /></div>
           <div className="contact-field-grid">
             <label>{t.name}<input name="name" type="text" autoComplete="name" minLength={2} maxLength={120} required /></label>
             <label>{t.email}<input name="email" type="email" autoComplete="email" maxLength={254} required /></label>
             <label className="contact-wide">{t.topic}<select name="topic" defaultValue="" required><option value="" disabled>{t.choose}</option><option value="booking">{t.bookingTopic}</option><option value="event">{t.eventTopic}</option><option value="other">{t.otherTopic}</option></select></label>
             <label className="contact-wide">{t.message}<textarea name="message" rows={7} minLength={10} maxLength={5000} required /></label>
+            <label className="contact-honeypot" aria-hidden="true">Website<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
           </div>
-          <div className="contact-form-bottom"><button type="submit" disabled>{t.send}<ArrowUpRight size={20} /></button><p role="status">{t.unavailable}</p></div>
+          <div className="contact-form-bottom"><button type="submit" disabled={sending}>{sending ? t.sending : t.send}<ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status ? t[status] : ""}</p></div>
         </form>
         <div className="contact-visual-placeholder" aria-hidden="true" />
       </section>

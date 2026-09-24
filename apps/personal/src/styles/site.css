@@ -178,6 +178,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .contact-submit { display:flex; align-items:start; gap:25px; margin-top:22px; }
 .contact-submit button { display:flex; justify-content:space-between; align-items:center; flex:0 0 auto; gap:20px; min-width:190px; min-height:52px; border:0; padding:0 17px; background:var(--pink); color:var(--black); font-size:12px; font-weight:700; }
 .contact-submit button:hover { background:#f6d5f0; }
+.contact-submit button:disabled { opacity:.6; cursor:wait; }
+.contact-honeypot { position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; clip-path:inset(50%) !important; white-space:nowrap !important; }
 .contact-submit p { color:#aaa3ac; font-size:11px; line-height:1.5; }
 .site-footer { padding:0 2.3vw 23px; background:#08080a; }
 .footer-bottom { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-top:1px solid var(--line); padding-top:21px; color:var(--pink); font-size:9px; font-weight:700; letter-spacing:.1em; }

@@ -339,6 +339,7 @@ body:has(.contact-main) .site-footer { position: relative; --footer-progress: 1 
 .contact-form-bottom button { display: inline-flex; align-items: center; justify-content: space-between; gap: 40px; flex: none; min-height: 55px; border: 0; padding: 0 20px; background: #dc3e16; color: #ffe9e4; font-size: 13px; font-weight: 700; }
 .contact-form-bottom button:hover:not(:disabled) { background: #b72f0d; }
 .contact-form-bottom button:disabled { opacity: .5; cursor: not-allowed; }
+.contact-honeypot { position:absolute !important; width:1px !important; height:1px !important; overflow:hidden !important; clip-path:inset(50%) !important; white-space:nowrap !important; }
 .contact-form-bottom p { max-width: 310px; margin: 0; font-size: 12px; line-height: 1.5; }
 @media (max-width: 600px) {
   .contact-field-grid { grid-template-columns: 1fr; }
