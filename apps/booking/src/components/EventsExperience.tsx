@@ -4,13 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useVisualEffects } from "./useVisualEffects";
+import { SiteFooter } from "./SiteFooter";
 import { ZONE, checkoutPath, type Language, type Occurrence } from "@/lib/events-model";
 import type { Catalog } from "@/lib/events";
 
 type Props = { catalog: Catalog; selected?: Occurrence; initialLanguage: Language };
 const words = {
-  da: { booking: "Book studiet", space: "Rummet", info: "Praktisk", events: "Events", title: "Det sker i studiet.", intro: "Se kommende aktiviteter og vælg den dato, der passer dig.", upcoming: "KOMMENDE DATOER", calendar: "Kalender", list: "Liste", back: "Alle events", location: "Sted", time: "Tid", tickets: "Billetter", places: "pladser tilbage", signup: "Vælg billet hos pretix", sold: "Udsolgt", closed: "Billetsalget er ikke åbent", test: "Testevent · ingen rigtige betalinger", conflict: "Rummet er optaget af en eksisterende booking.", gate: "Tilmelding åbner, når billetsalg og rumplan er verificeret.", empty: "Der er ingen offentlige kommende events endnu.", setup: "Eventkalenderen afventer pretix-opsætning.", error: "Events kan ikke indlæses lige nu. Prøv igen senere.", description: "Beskrivelse følger.", previous: "Forrige måned", next: "Næste måned", preview: "TTD STUDIO · EVENTKALENDER" },
-  en: { booking: "Book the studio", space: "The space", info: "Good to know", events: "Events", title: "What's on at the studio.", intro: "Browse upcoming activities and choose the date that suits you.", upcoming: "UPCOMING DATES", calendar: "Calendar", list: "List", back: "All events", location: "Location", time: "Time", tickets: "Tickets", places: "places left", signup: "Choose tickets on pretix", sold: "Sold out", closed: "Ticket sales are not open", test: "Test event · no real payments", conflict: "The room is occupied by an existing booking.", gate: "Signup opens after ticket sales and room scheduling are verified.", empty: "There are no public upcoming events yet.", setup: "The event calendar is waiting for pretix setup.", error: "Events could not be loaded. Please try again later.", description: "Description to follow.", previous: "Previous month", next: "Next month", preview: "TTD STUDIO · EVENT CALENDAR" },
+  da: { booking: "Book studiet", space: "Rummet", info: "Praktisk", events: "Events", contact: "Kontakt", title: "Det sker i studiet.", intro: "Se kommende aktiviteter og vælg den dato, der passer dig.", upcoming: "KOMMENDE DATOER", calendar: "Kalender", list: "Liste", back: "Alle events", location: "Sted", time: "Tid", tickets: "Billetter", places: "pladser tilbage", signup: "Vælg billet hos pretix", sold: "Udsolgt", closed: "Billetsalget er ikke åbent", test: "Testevent · ingen rigtige betalinger", conflict: "Rummet er optaget af en eksisterende booking.", gate: "Tilmelding åbner, når billetsalg og rumplan er verificeret.", empty: "Der er ingen offentlige kommende events endnu.", setup: "Eventkalenderen afventer pretix-opsætning.", error: "Events kan ikke indlæses lige nu. Prøv igen senere.", description: "Beskrivelse følger.", previous: "Forrige måned", next: "Næste måned", preview: "TTD STUDIO · EVENTKALENDER" },
+  en: { booking: "Book the studio", space: "The space", info: "Good to know", events: "Events", contact: "Contact", title: "What's on at the studio.", intro: "Browse upcoming activities and choose the date that suits you.", upcoming: "UPCOMING DATES", calendar: "Calendar", list: "List", back: "All events", location: "Location", time: "Time", tickets: "Tickets", places: "places left", signup: "Choose tickets on pretix", sold: "Sold out", closed: "Ticket sales are not open", test: "Test event · no real payments", conflict: "The room is occupied by an existing booking.", gate: "Signup opens after ticket sales and room scheduling are verified.", empty: "There are no public upcoming events yet.", setup: "The event calendar is waiting for pretix setup.", error: "Events could not be loaded. Please try again later.", description: "Description to follow.", previous: "Previous month", next: "Next month", preview: "TTD STUDIO · EVENT CALENDAR" },
 };
 function localDay(iso: string) { return DateTime.fromISO(iso, { setZone: true }).setZone(ZONE); }
 function dateText(iso: string, lang: Language) { return localDay(iso).setLocale(lang).toLocaleString({ weekday: "long", day: "numeric", month: "long", year: "numeric" }); }
@@ -49,10 +50,10 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
     <div className="preview-bar"><span className="preview-dot" />{t.preview}</div>
     <header className="site-header event-header">
       <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
-        <a href="/#booking">{t.booking}</a><a href="/#space">{t.space}</a><a href="/#info">{t.info}</a><a href={`/events?lang=${language}`} aria-current={selected ? undefined : "page"}>{t.events}</a>
+        <a href="/#booking">{t.booking}</a><a href="/#space">{t.space}</a><a href="/#info">{t.info}</a><a href={`/events?lang=${language}`} aria-current={selected ? undefined : "page"}>{t.events}</a><a href={`/contact?lang=${language}`}>{t.contact}</a>
       </nav>
       <a className="brand" href="/" aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
-      <div className="header-actions"><div className="lang-switch" aria-label="Language"><button type="button" className={language === "da" ? "active" : ""} onClick={() => setLanguage("da")} aria-pressed={language === "da"}>DA</button><span>/</span><button type="button" className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")} aria-pressed={language === "en"}>EN</button></div><a className="event-mobile-link" href={`/events?lang=${language}`}>{t.events}</a></div>
+      <div className="header-actions"><div className="lang-switch" aria-label="Language"><button type="button" className={language === "da" ? "active" : ""} onClick={() => setLanguage("da")} aria-pressed={language === "da"}>DA</button><span>/</span><button type="button" className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")} aria-pressed={language === "en"}>EN</button></div><a className="event-mobile-link" href={`/contact?lang=${language}`}>{t.contact}</a></div>
     </header>
     <main className="events-main">
       {selected ? <>
@@ -75,6 +76,6 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
         </section>}
       </>}
     </main>
-    <div className="footer-reveal-space" aria-hidden="true" /><footer className="site-footer"><div className="footer-main"><div><span className="footer-mark">TTD</span><p>Time to Dance!</p></div><div className="footer-links"><a href="/">TTD Studio <ArrowUpRight size={17} /></a><a href={`/events?lang=${language}`}>{t.events}<ArrowUpRight size={17} /></a></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} TTD STUDIO</span></div></footer>
+    <SiteFooter links={[{ href: "/", label: "TTD Studio" }, { href: `/events?lang=${language}`, label: t.events }, { href: `/contact?lang=${language}`, label: t.contact }]} />
   </>;
 }

@@ -21,6 +21,7 @@ import type { Availability, Quote, Slot } from "@/lib/booking";
 import { MAX_HOURS, quoteInterval, STUDIO_ZONE } from "@/lib/booking";
 import { CustomerDetailsPreview } from "@/components/CustomerDetailsPreview";
 import { useVisualEffects } from "@/components/useVisualEffects";
+import { SiteFooter } from "@/components/SiteFooter";
 
 type Language = "da" | "en";
 
@@ -31,6 +32,7 @@ const copy = {
     navSpace: "Rummet",
     navInfo: "Praktisk",
     navEvents: "Events",
+    navContact: "Kontakt",
     navAdmin: "Administration",
     heroEyebrow: "KØBENHAVN DANSER / TTD",
     displayLeft: "TTD",
@@ -103,6 +105,7 @@ const copy = {
     navSpace: "The space",
     navInfo: "Good to know",
     navEvents: "Events",
+    navContact: "Contact",
     navAdmin: "Administration",
     heroEyebrow: "KØBENHAVN DANSER / TTD",
     displayLeft: "TTD",
@@ -313,12 +316,13 @@ export function BookingExperience({
           <a href="#space">{t.navSpace}</a>
           <a href="#info">{t.navInfo}</a>
           <a href={`/events?lang=${language}`}>{t.navEvents}</a>
+          <a href={`/contact?lang=${language}`}>{t.navContact}</a>
         </nav>
         <a className="brand" href="#top" aria-label="TTD Studio — top">
           <span className="brand-mark">TTD<br />STUDIO</span>
         </a>
         <div className="header-actions">
-          <a className="event-mobile-link" href={`/events?lang=${language}`}>{t.navEvents}</a>
+          <a className="event-mobile-link" href={`/contact?lang=${language}`}>{t.navContact}</a>
           <div className="lang-switch" aria-label="Language">
             <button type="button" className={language === "da" ? "active" : ""} onClick={() => { setLanguage("da"); localStorage.setItem("ttd-language", "da"); }} aria-pressed={language === "da"}>DA</button>
             <span>/</span>
@@ -423,8 +427,7 @@ export function BookingExperience({
         </section>
       </main>
 
-      <div className="footer-reveal-space" aria-hidden="true" />
-      <footer className="site-footer"><div className="footer-main"><div><span className="footer-mark">TTD</span><p>{t.footerText}</p></div><div className="footer-links"><a href="https://toniah.com/en/">{t.toniahPersonal}<ArrowUpRight size={17} /></a><a href={process.env.NEXT_PUBLIC_PERSONAL_URL || "http://127.0.0.1:4321"}>{t.personal}<ArrowUpRight size={17} /></a><a href="http://127.0.0.1:8345/control/">{t.navAdmin}<ArrowUpRight size={17} /></a></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} TTD STUDIO</span></div></footer>
+      <SiteFooter links={[{ href: `/contact?lang=${language}`, label: t.navContact }, { href: `/events?lang=${language}`, label: t.navEvents }, { href: "https://toniah.com/en/", label: t.toniahPersonal }, { href: process.env.NEXT_PUBLIC_PERSONAL_URL || "http://127.0.0.1:4321", label: t.personal }, { href: "http://127.0.0.1:8345/control/", label: t.navAdmin }]} />
     </>
   );
 }
