@@ -46,6 +46,7 @@ export function ContactPreview() {
         <label className="contact-honeypot" aria-hidden="true">Website<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
       </div>
       <div className="contact-submit"><button type="submit" disabled={sending}>{sending ? "Sending…" : "Send inquiry"} <ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status}</p></div>
+      <p className="form-privacy">We use your details to reply. <a href="/privacy">Read the privacy policy</a>.</p>
     </form>
   );
 }

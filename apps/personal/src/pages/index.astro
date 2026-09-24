@@ -85,7 +85,7 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
       </section>
     </main>
 
-    <footer class="site-footer"><div class="footer-bottom"><span>© {new Date().getFullYear()} DD Production</span><a class="footer-credit" href="https://memoryone.eu" aria-label="Designed by Memory(One)"><span>Designed by</span><span class="footer-credit-logo" aria-hidden="true"></span></a></div></footer>
+    <footer class="site-footer"><div class="footer-bottom"><span>© {new Date().getFullYear()} DD Production</span><a href="/privacy">PRIVACY POLICY</a><a class="footer-credit" href="https://memoryone.eu" aria-label="Designed by Memory(One)"><span>Designed by</span><span class="footer-credit-logo" aria-hidden="true"></span></a></div></footer>
     <script>
       document.querySelectorAll<HTMLAnchorElement>(".mobile-menu nav a").forEach((link) => {
         link.addEventListener("click", () => link.closest("details")?.removeAttribute("open"));

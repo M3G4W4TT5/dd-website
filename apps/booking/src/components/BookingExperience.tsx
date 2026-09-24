@@ -83,7 +83,7 @@ const copy = {
     infoContact: "Kontakt",
     infoContactBody: "Telefon: +45 XX XX XX XX · E-mail: email@example.com",
     infoTerms: "Bookingregler",
-    infoTermsBody: "Gratis afbestilling indtil 24 timer før start.",
+    infoTermsBody: "Gratis afbestilling senest 24 timer før start. Læs de fulde bookingvilkår nedenfor.",
     footerText: "Time to Dance!",
     toniahPersonal: "Toniahs personlige side",
     personal: "DD's personlige side",
@@ -144,7 +144,7 @@ const copy = {
     infoContact: "Contact",
     infoContactBody: "Phone: +45 XX XX XX XX · Email: email@example.com",
     infoTerms: "Booking rules",
-    infoTermsBody: "Free cancellation until 24 hours before the start time.",
+    infoTermsBody: "Free cancellation up to 24 hours before the start. Read the full booking terms below.",
     footerText: "Time to Dance!",
     toniahPersonal: "Toniah's personal site",
     personal: "DD's personal site",
@@ -393,7 +393,7 @@ export function BookingExperience({
         </section>
       </main>
 
-      <SiteFooter links={[{ href: `/contact?lang=${language}`, label: t.navContact }, { href: `/events?lang=${language}`, label: t.navEvents }, { href: "https://toniah.com/en/", label: t.toniahPersonal }, { href: process.env.NEXT_PUBLIC_PERSONAL_URL || "http://127.0.0.1:4321", label: t.personal }, { href: "http://127.0.0.1:8345/control/", label: t.navAdmin }]} />
+      <SiteFooter language={language} links={[{ href: `/contact?lang=${language}`, label: t.navContact }, { href: `/events?lang=${language}`, label: t.navEvents }, { href: "https://toniah.com/en/", label: t.toniahPersonal }, { href: process.env.NEXT_PUBLIC_PERSONAL_URL || "http://127.0.0.1:4321", label: t.personal }, { href: "http://127.0.0.1:8345/control/", label: t.navAdmin }]} />
     </>
   );
 }

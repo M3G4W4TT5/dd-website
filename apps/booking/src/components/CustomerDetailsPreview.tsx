@@ -134,6 +134,7 @@ export function CustomerDetailsPreview({
           <label className="details-wide">{t.comment} <span>({t.optional})</span><textarea name="comment" rows={3} maxLength={2000} /></label>
         </div>
         <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}</div>
+        <p className="form-privacy">{language === "da" ? "Læs vores" : "Read our"} <a href={`/privacy?lang=${language}`}>{language === "da" ? "privatlivspolitik" : "privacy policy"}</a> {language === "da" ? "og" : "and"} <a href={`/terms?lang=${language}`}>{language === "da" ? "bookingvilkår" : "booking terms"}</a>.</p>
       </form>
     </section>
   );

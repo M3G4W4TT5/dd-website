@@ -84,10 +84,11 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
             <label className="contact-honeypot" aria-hidden="true">Website<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
           </div>
           <div className="contact-form-bottom"><button type="submit" disabled={sending}>{sending ? t.sending : t.send}<ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status ? t[status] : ""}</p></div>
+          <p className="form-privacy">{language === "da" ? "Vi bruger dine oplysninger til at svare dig." : "We use your details to reply."} <a href={`/privacy?lang=${language}`}>{language === "da" ? "Læs privatlivspolitikken" : "Read the privacy policy"}</a>.</p>
         </form>
         <div className="contact-visual-placeholder" aria-hidden="true" />
       </section>
     </main>
-    <SiteFooter links={[{ href: "/", label: "Booking" }, { href: `/events?lang=${language}`, label: t.events }]} />
+    <SiteFooter language={language} links={[{ href: "/", label: "Booking" }, { href: `/events?lang=${language}`, label: t.events }]} />
   </>;
 }

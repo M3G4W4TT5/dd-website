@@ -83,7 +83,7 @@ export function FilmCarousel({ films }: { films: readonly Film[] }) {
         </div>
       </div>
       <div className="feed-controls">
-        <span>SELECT A FILM TO WATCH</span>
+        <span>SELECT A FILM TO WATCH · PLAYING LOADS YOUTUBE</span>
         <div>
           <button type="button" onClick={() => api?.scrollPrev()} disabled={!canPrev} aria-label="Previous film"><ArrowLeft size={20} /></button>
           <button type="button" onClick={() => api?.scrollNext()} disabled={!canNext} aria-label="Next film"><ArrowRight size={20} /></button>
