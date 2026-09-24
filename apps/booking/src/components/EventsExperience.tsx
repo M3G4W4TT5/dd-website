@@ -78,6 +78,6 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
         </section>}
       </>}
     </main>
-    <SiteFooter links={[{ href: "/", label: "TTD Studio" }, { href: `/events?lang=${language}`, label: t.events }, { href: `/contact?lang=${language}`, label: t.contact }]} />
+    <SiteFooter links={[{ href: "/", label: "Booking" }, { href: `/contact?lang=${language}`, label: t.contact }]} />
   </>;
 }

@@ -59,6 +59,6 @@ export function ContactExperience({ initialLanguage, phone }: { initialLanguage:
       </section>
       <section className="contact-details" aria-labelledby="contact-details-title"><div className="contact-details-heading"><span className="section-kicker">02 / {t.details}</span><h2 id="contact-details-title">{t.details}</h2></div><div className="contact-detail-rows"><div><Phone size={24} strokeWidth={1.5} /><h3>{t.phone}</h3><p>{phone}</p></div><div><MapPin size={24} strokeWidth={1.5} /><h3>{t.address}</h3><p>{t.location}<br />{t.addressLine}<br />{t.city}</p></div></div></section>
     </main>
-    <SiteFooter links={[{ href: "/", label: "TTD Studio" }, { href: `/events?lang=${language}`, label: t.events }, { href: `/contact?lang=${language}`, label: t.contact }]} />
+    <SiteFooter links={[{ href: "/", label: "Booking" }, { href: `/events?lang=${language}`, label: t.events }]} />
   </>;
 }
