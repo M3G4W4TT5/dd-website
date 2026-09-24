@@ -22,15 +22,14 @@ import { MAX_HOURS, quoteInterval, STUDIO_ZONE } from "@/lib/booking";
 import { CustomerDetailsPreview } from "@/components/CustomerDetailsPreview";
 import { useVisualEffects } from "@/components/useVisualEffects";
 import { SiteFooter } from "@/components/SiteFooter";
+import { MobileNavigation } from "@/components/MobileNavigation";
 
 type Language = "da" | "en";
 
 const copy = {
   da: {
     preview: "LOKAL FORHÅNDSVISNING · INGEN BOOKINGER OPRETTES",
-    navBook: "Book studiet",
-    navSpace: "Rummet",
-    navInfo: "Praktisk",
+    spaceCaption: "Rummet",
     navEvents: "Events",
     navContact: "Kontakt",
     navAdmin: "Administration",
@@ -77,14 +76,6 @@ const copy = {
     checked: "Tiderne er ledige. Udfyld dine oplysninger nedenfor.",
     changed: "Tiderne er ændret. Vælg et nyt interval.",
     policy: "Gratis afbestilling indtil 24 timer før start.",
-    studioEyebrow: "RUM TIL MERE",
-    studioTitle: "TTD Studio.",
-    studioText:
-      "Et kreativt træningsrum for dansere, skabt af Didde-Mie Lykke From og Toniah Pedersen. Her er plads til fordybelse i bevægelse. Rummets mål er anslået ud fra København Dansers plantegning: cirka 6,7 × 10,2 m (68 m²).",
-    featureOne: "Træning & øvelse",
-    featureTwo: "Undervisning",
-    featureThree: "Kreativt arbejde",
-    featureBody: "Eksempel på anvendelse · afventer endelig studiebeskrivelse.",
     infoEyebrow: "DET PRAKTISKE",
     infoTitle: "Før du booker.",
     infoLocation: "Placering",
@@ -101,9 +92,7 @@ const copy = {
   },
   en: {
     preview: "LOCAL PREVIEW · NO BOOKINGS ARE CREATED",
-    navBook: "Book the studio",
-    navSpace: "The space",
-    navInfo: "Good to know",
+    spaceCaption: "The space",
     navEvents: "Events",
     navContact: "Contact",
     navAdmin: "Administration",
@@ -150,14 +139,6 @@ const copy = {
     checked: "These hours are available. Enter your details below.",
     changed: "Availability has changed. Choose another interval.",
     policy: "Free cancellation until 24 hours before the start time.",
-    studioEyebrow: "ROOM FOR MORE",
-    studioTitle: "TTD Studio.",
-    studioText:
-      "A creative training room for dancers, created by Didde-Mie Lykke From and Toniah Pedersen. Its size is estimated from København Danser's floor plan: approximately 6.7 × 10.2 m (68 m²).",
-    featureOne: "Practice & rehearsal",
-    featureTwo: "Teaching",
-    featureThree: "Creative work",
-    featureBody: "Example use · pending the final studio description.",
     infoEyebrow: "GOOD TO KNOW",
     infoTitle: "Before you book.",
     infoLocation: "Location",
@@ -311,10 +292,9 @@ export function BookingExperience({
     <>
       <div className="preview-bar"><span className="preview-dot" />{t.preview}</div>
       <header className="site-header">
+        <MobileNavigation language={language} />
         <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
-          <a href="#booking">{t.navBook}</a>
-          <a href="#space">{t.navSpace}</a>
-          <a href="#info">{t.navInfo}</a>
+          <a href="#booking">Booking</a>
           <a href={`/events?lang=${language}`}>{t.navEvents}</a>
           <a href={`/contact?lang=${language}`}>{t.navContact}</a>
         </nav>
@@ -322,13 +302,11 @@ export function BookingExperience({
           <span className="brand-mark">TTD<br />STUDIO</span>
         </a>
         <div className="header-actions">
-          <a className="event-mobile-link" href={`/contact?lang=${language}`}>{t.navContact}</a>
           <div className="lang-switch" aria-label="Language">
             <button type="button" className={language === "da" ? "active" : ""} onClick={() => { setLanguage("da"); localStorage.setItem("ttd-language", "da"); }} aria-pressed={language === "da"}>DA</button>
             <span>/</span>
             <button type="button" className={language === "en" ? "active" : ""} onClick={() => { setLanguage("en"); localStorage.setItem("ttd-language", "en"); }} aria-pressed={language === "en"}>EN</button>
           </div>
-          <a className="header-book" href="#booking">{t.navBook}<ArrowUpRight size={16} /></a>
         </div>
       </header>
 
@@ -341,7 +319,7 @@ export function BookingExperience({
           <div className="hero-gallery">
             <figure className="hero-photo hero-photo-wide">
               <div className="image-frame" data-image-shadow data-reveal><img src="/concepts/studio-room.png" alt={t.imageOne} /></div>
-              <figcaption><span>01 / {t.navSpace}</span><span>{t.heroNote}</span></figcaption>
+              <figcaption><span>01 / {t.spaceCaption}</span><span>{t.heroNote}</span></figcaption>
             </figure>
             <figure className="hero-photo hero-photo-detail">
               <div className="image-frame" data-image-shadow data-reveal><img src="/concepts/studio-detail.png" loading="lazy" alt={t.imageTwo} /></div>
@@ -410,13 +388,6 @@ export function BookingExperience({
             </aside>
           </div>
           {status === "checked" && quote && selectedId && <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId} hours={hours} onConflict={async () => { await selectDate(date); setStatus("changed"); }} />}
-        </section>
-
-        <section className="space-section" id="space" aria-labelledby="space-title">
-          <div className="space-intro"><span className="section-kicker">{t.studioEyebrow}</span><h2 id="space-title">{t.studioTitle}</h2><p>{t.studioText}</p></div>
-          <div className="feature-cards">
-            {[t.featureOne, t.featureTwo, t.featureThree].map((feature, index) => <article className={`feature-card feature-${index + 1}`} key={feature}><div className="feature-art image-frame" data-image-shadow data-reveal><img src={index === 1 ? "/concepts/studio-detail.png" : "/concepts/studio-room.png"} loading="lazy" alt={index === 1 ? t.imageTwo : t.imageOne} /></div><div className="feature-caption"><div><span>0{index + 1} / 03 · {t.heroNote}</span><h3>{feature}</h3><p>{t.featureBody}</p></div><ArrowUpRight size={22} /></div></article>)}
-          </div>
         </section>
 
         <section className="info-section" id="info" aria-labelledby="info-title">
