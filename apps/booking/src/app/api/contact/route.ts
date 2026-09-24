@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { z } from "zod";
+import { bookingAutoReply, personalAutoReply, reserveContactAutoReply } from "@/lib/contact-email";
 
 export const runtime = "nodejs";
 
@@ -9,7 +10,7 @@ const contactSchema = z.discriminatedUnion("site", [
     site: z.literal("personal"),
     name: z.string().trim().min(1).max(100),
     email: z.email().max(254),
-    subject: z.enum(["dance", "choreography", "modelling", "other"]),
+    subject: z.enum(["dance", "choreography", "modelling", "brand_partnerships", "other"]),
     message: z.string().trim().min(1).max(2000),
     website: z.string().max(200).optional(),
   }),
@@ -25,8 +26,9 @@ const contactSchema = z.discriminatedUnion("site", [
 
 const personalSubjects = {
   dance: "Dance / performance",
-  choreography: "Choreography / movement",
-  modelling: "Modelling / campaign",
+  choreography: "Choreography",
+  modelling: "Modelling",
+  brand_partnerships: "Brand partnerships",
   other: "Other",
 };
 
@@ -123,6 +125,16 @@ export async function POST(request: Request) {
       subject: `[${site}] ${topic}`,
       text: `New ${site} inquiry\n\nName: ${input.name}\nEmail: ${input.email}\nTopic: ${topic}\n\nMessage:\n${input.message}`,
     });
+    if (reserveContactAutoReply(input.site, input.email)) {
+      try {
+        await transport.sendMail(input.site === "personal"
+          ? personalAutoReply(input.name, input.email)
+          : bookingAutoReply(input.name, input.email));
+      } catch {
+        // The inquiry arrived; an auto-reply failure must not prompt a duplicate submission.
+        console.error("Contact auto-reply failed");
+      }
+    }
     return response({ ok: true }, 200, origin);
   } catch {
     console.error("Contact email delivery failed");

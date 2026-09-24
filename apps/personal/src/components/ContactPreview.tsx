@@ -41,7 +41,7 @@ export function ContactPreview() {
       <div className="contact-fields">
         <label>YOUR NAME<input type="text" name="name" autoComplete="name" maxLength={100} required placeholder="Name" /></label>
         <label>EMAIL ADDRESS<input type="email" name="email" autoComplete="email" maxLength={254} required placeholder="name@example.com" /></label>
-        <label className="field-wide">WHAT IS THIS ABOUT?<select name="subject" required defaultValue=""><option value="" disabled>Choose a topic</option><option value="dance">Dance / performance</option><option value="choreography">Choreography / movement</option><option value="modelling">Modelling / campaign</option><option value="other">Other</option></select></label>
+        <label className="field-wide">WHAT IS THIS ABOUT?<select name="subject" required defaultValue=""><option value="" disabled>Choose a topic</option><option value="dance">Dance / performance</option><option value="choreography">Choreography</option><option value="modelling">Modelling</option><option value="brand_partnerships">Brand partnerships</option><option value="other">Other</option></select></label>
         <label className="field-wide">YOUR MESSAGE<textarea name="message" rows={5} maxLength={2000} required placeholder="Tell DD about your inquiry…" /></label>
         <label className="contact-honeypot" aria-hidden="true">Website<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
       </div>
