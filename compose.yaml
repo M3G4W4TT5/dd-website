@@ -5,7 +5,7 @@ x-pretix-environment: &pretix-environment
   PRETIX_PRETIX_URL: http://127.0.0.1:8345
   PRETIX_PRETIX_DATADIR: /data
   PRETIX_PRETIX_CURRENCY: DKK
-  PRETIX_PRETIX_PLUGINS_DEFAULT: pretix.plugins.statistics,pretix.plugins.checkinlists
+  PRETIX_PRETIX_PLUGINS_DEFAULT: pretix.plugins.statistics,pretix.plugins.checkinlists,pretix.plugins.stripe
   PRETIX_PRETIX_PASSWORD_RESET: "off"
   PRETIX_LOCALE_DEFAULT: da
   PRETIX_LOCALE_TIMEZONE: Europe/Copenhagen
