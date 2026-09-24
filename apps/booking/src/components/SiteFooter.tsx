@@ -13,7 +13,7 @@ export function SiteFooter({ links }: { links: FooterLink[] }) {
           <div className="footer-links">{links.map(({ href, label }) => <a href={href} key={href}>{label}<ArrowUpRight size={17} /></a>)}</div>
         </div>
       </div>
-      <div className="footer-bottom"><span>© {new Date().getFullYear()} TTD STUDIO</span><a className="footer-credit" href="https://memoryone.eu" aria-label="Designed by Memory(One)"><span>Designed by</span><img src="/branding/memory-one-full-colour-light-cropped.webp" alt="Memory(One)" width="1534" height="320" /></a></div>
+      <div className="footer-bottom"><span>© {new Date().getFullYear()} TTD STUDIO</span><a className="footer-credit" href="https://memoryone.eu" aria-label="Designed by Memory(One)"><span>Designed by</span><img src="/branding/memory-one-one-colour-dark-cropped.png" alt="Memory(One)" width="1534" height="320" /></a></div>
     </footer>
   </>;
 }
