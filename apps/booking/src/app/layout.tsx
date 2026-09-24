@@ -7,8 +7,8 @@ import "./styles.css";
 import "./art-direction.css";
 
 export const metadata: Metadata = {
-  title: "DD Studio | Booking preview",
-  description: "Local preview of DD Studio's booking experience. No reservations are created yet.",
+  title: "TTD Studio | Booking preview",
+  description: "Preview TTD Studio at Nygaardsvej 5a, 2. sal, 2100 København Ø. No reservations are created yet.",
   robots: { index: false, follow: false },
 };
 

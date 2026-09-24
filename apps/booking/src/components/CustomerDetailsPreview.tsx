@@ -9,7 +9,7 @@ const copy = {
   da: {
     eyebrow: "04 / DINE OPLYSNINGER",
     title: "Gør din booking klar.",
-    intro: "Dette trin afprøver felterne og tjekker tiderne igen. Dine oplysninger bliver ikke gemt, og ingen booking oprettes.",
+    intro: "Indtast dine oplysninger, og gennemgå din booking, før du fortsætter til betaling.",
     name: "Navn",
     email: "E-mail",
     phone: "Telefon",
@@ -25,18 +25,16 @@ const copy = {
     placeholderType: "Vælg type",
     review: "Gennemgå oplysninger",
     reviewing: "Tjekker oplysninger…",
-    initial: "Dette er en lokal forhåndsvisning. Ingen oplysninger sendes til DD.",
-    success: "Felterne er gyldige, og tiderne var ledige ved seneste tjek. Ingen reservation, betaling eller besked blev oprettet.",
+    success: "Dine oplysninger er kontrolleret, og tiden var ledig ved seneste tjek.",
     invalid: "Kontrollér oplysningerne og prøv igen.",
     changed: "Tiderne er ikke længere ledige. Vælg et nyt interval.",
     error: "Tjekket kunne ikke gennemføres lige nu.",
-    occupancy: "Det endelige deltagerloft afventer DD.",
-    checkout: "Betaling og endelig booking bliver først åbnet efter integration og test.",
+    checkout: "Betaling sker på næste trin.",
   },
   en: {
     eyebrow: "04 / YOUR DETAILS",
     title: "Prepare your booking.",
-    intro: "This step validates the fields and checks the hours again. Your details are not stored, and no booking is created.",
+    intro: "Enter your details and review your booking before continuing to payment.",
     name: "Name",
     email: "Email",
     phone: "Phone",
@@ -52,13 +50,11 @@ const copy = {
     placeholderType: "Choose type",
     review: "Review details",
     reviewing: "Checking details…",
-    initial: "This is a local preview. No details are sent to DD.",
-    success: "The fields are valid, and the hours were free at the last check. No reservation, payment, or message was created.",
+    success: "Your details have been checked, and the time was available at the last check.",
     invalid: "Check the details and try again.",
     changed: "These hours are no longer free. Choose another interval.",
     error: "The check could not be completed right now.",
-    occupancy: "DD has not confirmed the final occupancy limit.",
-    checkout: "Payment and final booking will open after integration and testing.",
+    checkout: "Payment takes place in the next step.",
   },
 } as const;
 
@@ -132,12 +128,12 @@ export function CustomerDetailsPreview({
           <label>{t.email}<input name="email" type="email" autoComplete="email" maxLength={254} required /></label>
           <label>{t.phone}<input name="phone" type="tel" autoComplete="tel" minLength={6} maxLength={30} required /></label>
           <label>{t.type}<select name="customerType" value={customerType} onChange={(event) => setCustomerType(event.target.value)} required><option value="" disabled>{t.placeholderType}</option><option value="private">{t.private}</option><option value="instructor">{t.instructor}</option><option value="business">{t.business}</option></select></label>
-          <label>{t.attendeeCount}<input name="attendeeCount" type="number" inputMode="numeric" min={1} max={100} step={1} required /><small>{t.occupancy}</small></label>
+          <label>{t.attendeeCount}<input name="attendeeCount" type="number" inputMode="numeric" min={1} max={100} step={1} required /></label>
           <label>{t.purpose}<input name="purpose" type="text" maxLength={150} minLength={2} required /></label>
           {customerType === "business" && <label className="details-wide">{t.company}<input name="company" type="text" maxLength={150} required /></label>}
           <label className="details-wide">{t.comment} <span>({t.optional})</span><textarea name="comment" rows={3} maxLength={2000} /></label>
         </div>
-        <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button><p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : status === "error" ? t.error : t.initial}</p></div>
+        <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}</div>
       </form>
     </section>
   );

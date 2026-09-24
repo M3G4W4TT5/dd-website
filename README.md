@@ -1,6 +1,6 @@
 # DD website
 
-A website for my friend Didde-Mie, a dancer and choreographer. It brings together her personal portfolio of selected performance, film and modelling work and a separate DD Studio booking preview.
+A website for Didde-Mie Lykke From, a dancer and choreographer. It brings together her personal portfolio of selected performance, film and modelling work and a separate TTD Studio booking preview for the room she owns with Toniah Pedersen at København Danser.
 
 <p align="center">
   <a href="docs/screenshots/personal-hero.png"><img src="docs/screenshots/personal-hero.png" width="48%" alt="DD personal site hero with portrait and IN MOTION heading"></a>

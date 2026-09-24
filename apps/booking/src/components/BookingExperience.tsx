@@ -8,10 +8,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Coins,
   Flower2,
-  Leaf,
   MapPin,
   MoveUpRight,
+  Phone,
   ShieldCheck,
 } from "lucide-react";
 import { DateTime } from "luxon";
@@ -29,25 +30,23 @@ const copy = {
     navSpace: "Rummet",
     navInfo: "Praktisk",
     navAdmin: "Administration",
-    heroEyebrow: "ET RUM TIL BEVÆGELSE",
-    displayLeft: "STUDIET",
-    displayRight: "BOOKING",
-    displaySub: "ET RUM TIL BEVÆGELSE / 01—02",
+    heroEyebrow: "KØBENHAVN DANSER / TTD",
+    displayLeft: "TTD",
+    displayRight: "STUDIO",
+    displaySub: "DANS · TRÆNING · BEVÆGELSE",
     imageOne: "Illustrativt urbant dansestudie med mursten, spejle og trægulv",
     imageTwo: "Illustrativ detalje med spejl og murstensvæg i et urbant dansestudie",
     heroText:
-      "Et enkelt rum til dans, undervisning og kreativt arbejde. Tekst, billeder og praktiske oplysninger er foreløbige og afventer DD.",
+      "TTD Studio er et kreativt træningsrum for dansere hos København Danser på Østerbro. Skabt af Didde-Mie Lykke From og Toniah Pedersen.",
     heroBook: "Se ledige tider",
     heroNote: "Designudkast · Studiebillede afventer",
-    metricOne: "1 rum",
-    metricTwo: "1 time ad gangen",
-    metricThree: "Dit tempo",
+    metricOne: "68 m²",
+    metricTwo: "Alle dage · 08–22",
+    metricThree: "350 kr./time",
     bookingEyebrow: "FIND DIN TID",
     bookingTitle: "Giv din idé tid og rum.",
     bookingIntro:
-      "Vælg en starttid og det antal sammenhængende timer, du har brug for. Tilgængeligheden nedenfor er til visning; booking og betaling åbner senere.",
-    demo: "Eksempeldata — tider og pris er ikke godkendt af DD.",
-    live: "Tider hentes fra den lokale pretix-instans. Ingen reservation oprettes.",
+      "Vælg en starttid og det antal sammenhængende timer, du har brug for. Du modtager en bekræftelse på din email.",
     unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
@@ -68,34 +67,33 @@ const copy = {
     fromTo: "Tidspunkt",
     chooseStart: "Vælg en ledig starttid",
     price: "Samlet pris",
-    priceDemo: "Eksempelpris · afventer DD",
-    priceLive: "Pris fra pretix · bekræftes ved checkout",
     noQuote: "Valgte timer skal være sammenhængende og ledige.",
     check: "Tjek tilgængelighed",
     checking: "Tjekker…",
-    checked: "Tiderne var ledige ved seneste tjek. Udfyld forhåndsvisningen af bookingfelterne nedenfor. Tiderne er ikke reserveret.",
+    checked: "Tiderne er ledige. Udfyld dine oplysninger nedenfor.",
     changed: "Tiderne er ændret. Vælg et nyt interval.",
-    checkoutLater: "Checkout åbner, når online betaling er integreret og testet.",
-    policy: "Planlagt: gratis afbestilling indtil 24 timer før start. Præcis grænse og endelig pris godkendes før lancering.",
+    policy: "Gratis afbestilling indtil 24 timer før start.",
     studioEyebrow: "RUM TIL MERE",
-    studioTitle: "Skabt til bevægelse.",
+    studioTitle: "TTD Studio.",
     studioText:
-      "Her kommer godkendte studiebilleder, faciliteter og beskrivelse. Indtil da viser denne side struktur og retning for oplevelsen.",
+      "Et kreativt træningsrum for dansere, skabt af Didde-Mie Lykke From og Toniah Pedersen. Her er plads til fordybelse i bevægelse. Rummets mål er anslået ud fra København Dansers plantegning: cirka 6,7 × 10,2 m (68 m²).",
     featureOne: "Træning & øvelse",
     featureTwo: "Undervisning",
     featureThree: "Kreativt arbejde",
     featureBody: "Eksempel på anvendelse · afventer endelig studiebeskrivelse.",
     infoEyebrow: "DET PRAKTISKE",
-    infoTitle: "Enkel planlægning.",
+    infoTitle: "Før du booker.",
     infoLocation: "Placering",
-    infoLocationBody: "Adresse og ankomstvejledning tilføjes efter godkendelse.",
-    infoTime: "Time for time",
-    infoTimeBody: "Start med én time, og vælg flere sammenhængende timer i samme reservation.",
+    infoLocationBody: "Hos København Danser · Nygaardsvej 5a, 2. sal · 2100 København Ø.",
+    infoTime: "Åbningstider",
+    infoTimeBody: "Alle dage kl. 08.00–22.00. Vælg én eller flere sammenhængende timer.",
+    infoContact: "Kontakt",
+    infoContactBody: "Telefon: +45 XX XX XX XX · E-mail: email@example.com",
     infoTerms: "Bookingregler",
-    infoTermsBody: "Endelig pris, åbningstider og vilkår bliver bekræftet af DD.",
-    footerText: "Et rum for bevægelse. En hjemmeside under udvikling.",
+    infoTermsBody: "Gratis afbestilling indtil 24 timer før start.",
+    footerText: "Time to Dance!",
+    toniahPersonal: "Toniahs personlige side",
     personal: "DD's personlige side",
-    footerLabel: "LOKAL DEMO · IKKE KLAR TIL KUNDEBOOKINGER",
   },
   en: {
     preview: "LOCAL PREVIEW · NO BOOKINGS ARE CREATED",
@@ -103,25 +101,23 @@ const copy = {
     navSpace: "The space",
     navInfo: "Good to know",
     navAdmin: "Administration",
-    heroEyebrow: "A SPACE FOR MOVEMENT",
-    displayLeft: "STUDIO",
-    displayRight: "BOOKING",
-    displaySub: "A SPACE FOR MOVEMENT / 01—02",
+    heroEyebrow: "KØBENHAVN DANSER / TTD",
+    displayLeft: "TTD",
+    displayRight: "STUDIO",
+    displaySub: "DANCE · PRACTICE · MOVEMENT",
     imageOne: "Illustrative urban dance studio with brick, mirrors and wooden floor",
     imageTwo: "Illustrative urban dance studio detail with mirror and brick wall",
     heroText:
-      "A simple space for dance, teaching and creative work. Copy, images and practical details are placeholders pending DD's approval.",
+      "TTD Studio is a creative training room for dancers at København Danser in Østerbro, created by Didde-Mie Lykke From and Toniah Pedersen.",
     heroBook: "Explore availability",
     heroNote: "Design preview · Studio photo pending",
-    metricOne: "1 space",
-    metricTwo: "1 hour at a time",
-    metricThree: "Your pace",
+    metricOne: "68 m²",
+    metricTwo: "Every day · 08–22",
+    metricThree: "DKK 350/hour",
     bookingEyebrow: "FIND YOUR TIME",
     bookingTitle: "Give your idea room to move.",
     bookingIntro:
-      "Choose a start time and the number of consecutive hours you need. Availability below is a preview; booking and payment will open later.",
-    demo: "Sample data — times and price have not been approved by DD.",
-    live: "Times come from the local pretix instance. No reservation is created.",
+      "Choose a start time and the number of consecutive hours you need. You’ll receive a confirmation by email.",
     unavailable: "Availability could not be loaded. Check the local pretix connection.",
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
@@ -142,34 +138,33 @@ const copy = {
     fromTo: "Time",
     chooseStart: "Choose an available start time",
     price: "Total price",
-    priceDemo: "Example price · awaiting DD",
-    priceLive: "Price from pretix · confirmed at checkout",
     noQuote: "The selected hours must be consecutive and available.",
     check: "Check availability",
     checking: "Checking…",
-    checked: "These hours were available at the last check. Complete the booking-field preview below. The hours are not reserved.",
+    checked: "These hours are available. Enter your details below.",
     changed: "Availability has changed. Choose another interval.",
-    checkoutLater: "Checkout opens after online payment is integrated and tested.",
-    policy: "Planned: free cancellation until 24 hours before start. The exact cutoff and final price require approval before launch.",
+    policy: "Free cancellation until 24 hours before the start time.",
     studioEyebrow: "ROOM FOR MORE",
-    studioTitle: "Made for movement.",
+    studioTitle: "TTD Studio.",
     studioText:
-      "Approved studio photos, facilities and descriptions will go here. For now, this page shows the intended structure and direction.",
+      "A creative training room for dancers, created by Didde-Mie Lykke From and Toniah Pedersen. Its size is estimated from København Danser's floor plan: approximately 6.7 × 10.2 m (68 m²).",
     featureOne: "Practice & rehearsal",
     featureTwo: "Teaching",
     featureThree: "Creative work",
     featureBody: "Example use · pending the final studio description.",
     infoEyebrow: "GOOD TO KNOW",
-    infoTitle: "Easy to plan.",
+    infoTitle: "Before you book.",
     infoLocation: "Location",
-    infoLocationBody: "Address and arrival information will be added after approval.",
-    infoTime: "Hour by hour",
-    infoTimeBody: "Start with one hour and choose more consecutive hours in a single reservation.",
+    infoLocationBody: "At København Danser · Nygaardsvej 5a, 2nd floor · 2100 Copenhagen Ø.",
+    infoTime: "Opening hours",
+    infoTimeBody: "Every day, 08:00–22:00. Choose one or more consecutive hours.",
+    infoContact: "Contact",
+    infoContactBody: "Phone: +45 XX XX XX XX · Email: email@example.com",
     infoTerms: "Booking rules",
-    infoTermsBody: "Final price, opening hours and terms will be confirmed by DD.",
-    footerText: "A space for movement. A website in progress.",
+    infoTermsBody: "Free cancellation until 24 hours before the start time.",
+    footerText: "Time to Dance!",
+    toniahPersonal: "Toniah's personal site",
     personal: "DD's personal site",
-    footerLabel: "LOCAL DEMO · NOT READY FOR CUSTOMER BOOKINGS",
   },
 } as const;
 
@@ -217,6 +212,26 @@ export function BookingExperience({
   }, [language]);
 
   useEffect(() => {
+    if (status !== "checked") return;
+    const frame = window.requestAnimationFrame(() => {
+      const details = document.getElementById("booking-details");
+      if (!details) return;
+      const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height ?? 0;
+      const contentTop = headerHeight + 16;
+      const availableHeight = window.innerHeight - contentTop - 16;
+      const bounds = details.getBoundingClientRect();
+      const targetTop = bounds.height <= availableHeight
+        ? contentTop + (availableHeight - bounds.height) / 2
+        : contentTop;
+      window.scrollTo({
+        top: window.scrollY + bounds.top - targetTop,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [status]);
+
+  useEffect(() => {
     const elements = document.querySelectorAll<HTMLElement>("[data-reveal]");
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
       elements.forEach((element) => element.classList.add("is-visible"));
@@ -232,6 +247,81 @@ export function BookingExperience({
     }, { rootMargin: "0px 0px -6% 0px", threshold: 0.08 });
     elements.forEach((element) => observer.observe(element));
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const images = document.querySelectorAll<HTMLElement>("[data-image-shadow]");
+    const motionAllowed = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    if (!motionAllowed || !finePointer) return;
+
+    let pointer: { x: number; y: number } | null = null;
+    let frame = 0;
+    const updateShadows = () => {
+      frame = 0;
+      const currentPointer = pointer;
+      if (!currentPointer) return;
+      const maxDistance = Math.max(window.innerWidth, window.innerHeight) * 0.6;
+      images.forEach((image) => {
+        const bounds = image.getBoundingClientRect();
+        const dx = currentPointer.x - (bounds.left + bounds.width / 2);
+        const dy = currentPointer.y - (bounds.top + bounds.height / 2);
+        const distance = Math.hypot(dx, dy);
+        const reach = Math.min(distance / maxDistance, 1);
+        image.style.setProperty("--shadow-x", `${(dx / (distance || 1)) * reach * 42}px`);
+        image.style.setProperty("--shadow-y", `${(dy / (distance || 1)) * reach * 42}px`);
+        image.style.setProperty("--shadow-blur", `${18 + reach * 62}px`);
+        image.style.setProperty("--shadow-spread", `${reach * 8}px`);
+      });
+    };
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateShadows);
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      pointer = { x: event.clientX, y: event.clientY };
+      scheduleUpdate();
+    };
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
+    const footer = document.querySelector<HTMLElement>(".site-footer");
+    const revealSpace = document.querySelector<HTMLElement>(".footer-reveal-space");
+    if (!footer || !revealSpace) return;
+
+    let frame = 0;
+    const updateGradient = () => {
+      frame = 0;
+      const bounds = revealSpace.getBoundingClientRect();
+      const progress = Math.min(Math.max((window.innerHeight - bounds.top) / bounds.height, 0), 1);
+      footer.style.setProperty("--footer-progress", progress.toFixed(3));
+    };
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateGradient);
+    };
+    const measureFooter = () => {
+      revealSpace.style.height = `${footer.offsetHeight}px`;
+      scheduleUpdate();
+    };
+    const resizeObserver = new ResizeObserver(measureFooter);
+    resizeObserver.observe(footer);
+    measureFooter();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", measureFooter);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", measureFooter);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   const week = useMemo(
@@ -306,8 +396,8 @@ export function BookingExperience({
           <a href="#space">{t.navSpace}</a>
           <a href="#info">{t.navInfo}</a>
         </nav>
-        <a className="brand" href="#top" aria-label="DD Studio — top">
-          <span className="brand-mark">DD<br />STUDIO</span>
+        <a className="brand" href="#top" aria-label="TTD Studio — top">
+          <span className="brand-mark">TTD<br />STUDIO</span>
         </a>
         <div className="header-actions">
           <div className="lang-switch" aria-label="Language">
@@ -326,12 +416,12 @@ export function BookingExperience({
             <h1 id="hero-title"><span>{t.displayLeft}</span><span>{t.displayRight}</span></h1>
           </div>
           <div className="hero-gallery">
-            <figure className="hero-photo hero-photo-wide" data-reveal>
-              <img src="/concepts/studio-room.png" alt={t.imageOne} />
+            <figure className="hero-photo hero-photo-wide">
+              <div className="image-frame" data-image-shadow data-reveal><img src="/concepts/studio-room.png" alt={t.imageOne} /></div>
               <figcaption><span>01 / {t.navSpace}</span><span>{t.heroNote}</span></figcaption>
             </figure>
-            <figure className="hero-photo hero-photo-detail" data-reveal>
-              <img src="/concepts/studio-detail.png" loading="lazy" alt={t.imageTwo} />
+            <figure className="hero-photo hero-photo-detail">
+              <div className="image-frame" data-image-shadow data-reveal><img src="/concepts/studio-detail.png" loading="lazy" alt={t.imageTwo} /></div>
               <figcaption><span>02 / STUDIO DETAIL</span><span>{t.heroNote}</span></figcaption>
             </figure>
           </div>
@@ -341,7 +431,7 @@ export function BookingExperience({
         <div className="metric-strip" aria-label={language === "da" ? "Om studiet" : "About the studio"}>
           <div><span className="metric-icon"><Flower2 size={24} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
           <div><span className="metric-icon"><Clock3 size={24} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
-          <div><span className="metric-icon"><Leaf size={24} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
+          <div><span className="metric-icon"><Coins size={24} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
         </div>
 
         <section className="booking-section" id="booking" aria-labelledby="booking-title">
@@ -349,7 +439,6 @@ export function BookingExperience({
             <div><span className="section-kicker">{t.bookingEyebrow}</span><h2 id="booking-title">{t.bookingTitle}</h2></div>
             <p>{t.bookingIntro}</p>
           </div>
-          <div className="booking-notice"><span className="notice-pulse" />{error ? t.unavailable : current?.source === "demo" ? t.demo : t.live}</div>
           <div className="booking-layout">
             <div className="picker-panel">
               <div className="picker-head"><span>{t.pickDate}</span><CalendarDays size={19} /></div>
@@ -390,9 +479,9 @@ export function BookingExperience({
                 <div className="summary-row"><span>{t.selectedDay}</span><strong>{dateLabel(date, language)}</strong></div>
                 <div className="duration-block"><div className="picker-head"><span>{t.pickDuration}</span><span>{hours} {hours === 1 ? t.hour : t.hours}</span></div><div className="duration-options">{Array.from({ length: MAX_HOURS }, (_, index) => index + 1).map((amount) => <button key={amount} type="button" className={hours === amount ? "active" : ""} onClick={() => { setHours(amount); setStatus("idle"); }} aria-pressed={hours === amount}>{amount}</button>)}</div></div>
                 <div className="summary-row"><span>{t.fromTo}</span><strong>{quote ? `${timeLabel(quote.start)} — ${timeLabel(quote.end)}` : selectedSlot ? t.noQuote : t.chooseStart}</strong></div>
-                <div className="summary-total"><div><span>{t.price}</span><small>{current?.source === "demo" ? t.priceDemo : t.priceLive}</small></div><strong>{quote ? money(quote.totalOre, language) : "—"}</strong></div>
+                <div className="summary-total"><span>{t.price}</span><strong>{quote ? money(quote.totalOre, language) : "—"}</strong></div>
                 <button className="button button-check" type="button" onClick={() => void checkSelection()} disabled={!quote || checking}>{checking ? t.checking : t.check}<MoveUpRight size={18} /></button>
-                <p className={`check-result ${status}`} role="status">{status === "checked" ? t.checked : status === "changed" ? t.changed : status === "error" ? t.unavailable : t.checkoutLater}</p>
+                {status !== "idle" && <p className={`check-result ${status}`} role="status">{status === "checked" ? t.checked : status === "changed" ? t.changed : t.unavailable}</p>}
               </div>
               <div className="summary-footer"><ShieldCheck size={18} /><span>{t.policy}</span></div>
             </aside>
@@ -403,19 +492,20 @@ export function BookingExperience({
         <section className="space-section" id="space" aria-labelledby="space-title">
           <div className="space-intro"><span className="section-kicker">{t.studioEyebrow}</span><h2 id="space-title">{t.studioTitle}</h2><p>{t.studioText}</p></div>
           <div className="feature-cards">
-            {[t.featureOne, t.featureTwo, t.featureThree].map((feature, index) => <article className={`feature-card feature-${index + 1}`} key={feature} data-reveal><div className="feature-art"><img src={index === 1 ? "/concepts/studio-detail.png" : "/concepts/studio-room.png"} loading="lazy" alt={index === 1 ? t.imageTwo : t.imageOne} /></div><div className="feature-caption"><div><span>0{index + 1} / 03 · {t.heroNote}</span><h3>{feature}</h3><p>{t.featureBody}</p></div><ArrowUpRight size={22} /></div></article>)}
+            {[t.featureOne, t.featureTwo, t.featureThree].map((feature, index) => <article className={`feature-card feature-${index + 1}`} key={feature}><div className="feature-art image-frame" data-image-shadow data-reveal><img src={index === 1 ? "/concepts/studio-detail.png" : "/concepts/studio-room.png"} loading="lazy" alt={index === 1 ? t.imageTwo : t.imageOne} /></div><div className="feature-caption"><div><span>0{index + 1} / 03 · {t.heroNote}</span><h3>{feature}</h3><p>{t.featureBody}</p></div><ArrowUpRight size={22} /></div></article>)}
           </div>
         </section>
 
         <section className="info-section" id="info" aria-labelledby="info-title">
           <div className="info-title"><span className="section-kicker">{t.infoEyebrow}</span><h2 id="info-title">{t.infoTitle}</h2></div>
           <div className="info-list">
-            {[{ icon: MapPin, title: t.infoLocation, body: t.infoLocationBody }, { icon: Clock3, title: t.infoTime, body: t.infoTimeBody }, { icon: ShieldCheck, title: t.infoTerms, body: t.infoTermsBody }].map(({ icon: Icon, title, body }) => <div className="info-row" key={title}><Icon size={23} strokeWidth={1.5} /><h3>{title}</h3><p>{body}</p><ArrowUpRight size={18} /></div>)}
+            {[{ icon: MapPin, title: t.infoLocation, body: t.infoLocationBody }, { icon: Clock3, title: t.infoTime, body: t.infoTimeBody }, { icon: Phone, title: t.infoContact, body: t.infoContactBody }, { icon: ShieldCheck, title: t.infoTerms, body: t.infoTermsBody }].map(({ icon: Icon, title, body }) => <div className="info-row" key={title}><Icon size={23} strokeWidth={1.5} /><h3>{title}</h3><p>{body}</p><ArrowUpRight size={18} /></div>)}
           </div>
         </section>
       </main>
 
-      <footer className="site-footer"><div className="footer-main"><div><span className="footer-mark">dd<span>✳</span></span><p>{t.footerText}</p></div><div className="footer-links"><a href={process.env.NEXT_PUBLIC_PERSONAL_URL || "http://127.0.0.1:4321"}>{t.personal}<ArrowUpRight size={17} /></a><a href="http://127.0.0.1:8345/control/">{t.navAdmin}<ArrowUpRight size={17} /></a></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} DD STUDIO</span><span>{t.footerLabel}</span></div></footer>
+      <div className="footer-reveal-space" aria-hidden="true" />
+      <footer className="site-footer"><div className="footer-main"><div><span className="footer-mark">TTD</span><p>{t.footerText}</p></div><div className="footer-links"><a href="https://toniah.com/en/">{t.toniahPersonal}<ArrowUpRight size={17} /></a><a href={process.env.NEXT_PUBLIC_PERSONAL_URL || "http://127.0.0.1:4321"}>{t.personal}<ArrowUpRight size={17} /></a><a href="http://127.0.0.1:8345/control/">{t.navAdmin}<ArrowUpRight size={17} /></a></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} TTD STUDIO</span></div></footer>
     </>
   );
 }

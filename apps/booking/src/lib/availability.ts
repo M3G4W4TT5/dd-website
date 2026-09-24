@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Availability, Slot, STUDIO_ZONE } from "./booking";
 
 const MAX_LOOKAHEAD_DAYS = 45;
-const DEMO_PRICE_ORE = 30_000; // Example only; never a client-approved price.
+const DEMO_PRICE_ORE = 35_000; // Client-provided hourly rate for the local preview.
 
 const subeventSchema = z.object({
   id: z.number(),
@@ -115,20 +115,18 @@ function toOre(price: string): number {
 
 function demoAvailability(day: DateTime): Availability {
   const slots: Slot[] = [];
-  if (day.weekday !== 7) {
-    for (let hour = 9; hour < 20; hour += 1) {
-      const start = day.set({ hour });
-      const end = start.plus({ hours: 1 });
-      const syntheticBlock =
-        (day.day % 3 === 0 && hour === 12) || (day.day % 4 === 0 && hour === 16);
-      slots.push({
-        id: `demo-${start.toUTC().toISO()}`,
-        start: start.toUTC().toISO()!,
-        end: end.toUTC().toISO()!,
-        available: !syntheticBlock && start > DateTime.now(),
-        priceOre: DEMO_PRICE_ORE,
-      });
-    }
+  for (let hour = 8; hour < 22; hour += 1) {
+    const start = day.set({ hour });
+    const end = start.plus({ hours: 1 });
+    const syntheticBlock =
+      (day.day % 3 === 0 && hour === 12) || (day.day % 4 === 0 && hour === 16);
+    slots.push({
+      id: `demo-${start.toUTC().toISO()}`,
+      start: start.toUTC().toISO()!,
+      end: end.toUTC().toISO()!,
+      available: !syntheticBlock && start > DateTime.now(),
+      priceOre: DEMO_PRICE_ORE,
+    });
   }
   return { date: day.toISODate()!, source: "demo", currency: "DKK", slots, checkedAt: DateTime.utc().toISO()! };
 }
