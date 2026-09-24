@@ -323,6 +323,11 @@ body:has(.contact-main) .site-footer { position: relative; --footer-progress: 1 
 .contact-main { background: #ffe9e4; }
 .contact-layout { border-top: 1px solid var(--line); padding: 28px 0 80px; }
 .studio-contact-form { width: min(100%, 850px); }
+.contact-visual-placeholder { display: none; }
+@media (min-width: 1400px) {
+  .contact-layout { display: grid; grid-template-columns: minmax(0, 850px) minmax(0, 1fr); align-items: start; column-gap: clamp(70px, 7vw, 150px); }
+  .contact-visual-placeholder { display: block; justify-self: center; width: 100%; max-width: 650px; aspect-ratio: 4 / 5; background: url('/concepts/studio-detail.png') center 45% / cover no-repeat; }
+}
 .contact-form-heading { display: flex; align-items: center; justify-content: space-between; padding-bottom: 30px; }
 .contact-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25px 18px; }
 .contact-field-grid label { display: flex; flex-direction: column; gap: 10px; min-width: 0; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }

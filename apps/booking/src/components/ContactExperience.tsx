@@ -53,6 +53,7 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
           </div>
           <div className="contact-form-bottom"><button type="submit" disabled>{t.send}<ArrowUpRight size={20} /></button><p role="status">{t.unavailable}</p></div>
         </form>
+        <div className="contact-visual-placeholder" aria-hidden="true" />
       </section>
     </main>
     <SiteFooter links={[{ href: "/", label: "Booking" }, { href: `/events?lang=${language}`, label: t.events }]} />
