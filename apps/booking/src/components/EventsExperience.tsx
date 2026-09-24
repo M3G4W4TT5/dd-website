@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DateTime } from "luxon";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useVisualEffects } from "./useVisualEffects";
@@ -11,9 +11,10 @@ import type { Catalog } from "@/lib/events";
 
 type Props = { catalog: Catalog; selected?: Occurrence; initialLanguage: Language };
 const words = {
-  da: { events: "Events", contact: "Kontakt", title: "Det sker i studiet.", intro: "Se kommende aktiviteter og vælg den dato, der passer dig.", upcoming: "KOMMENDE DATOER", calendar: "Kalender", list: "Liste", back: "Alle events", location: "Sted", time: "Tid", tickets: "Billetter", places: "pladser tilbage", signup: "Vælg billet hos pretix", sold: "Udsolgt", closed: "Billetsalget er ikke åbent", test: "Testevent · ingen rigtige betalinger", conflict: "Rummet er optaget af en eksisterende booking.", gate: "Tilmelding åbner, når billetsalg og rumplan er verificeret.", empty: "Der er ingen offentlige kommende events endnu.", setup: "Eventkalenderen afventer pretix-opsætning.", error: "Events kan ikke indlæses lige nu. Prøv igen senere.", description: "Beskrivelse følger.", previous: "Forrige måned", next: "Næste måned", preview: "TTD STUDIO · EVENTKALENDER" },
-  en: { events: "Events", contact: "Contact", title: "What's on at the studio.", intro: "Browse upcoming activities and choose the date that suits you.", upcoming: "UPCOMING DATES", calendar: "Calendar", list: "List", back: "All events", location: "Location", time: "Time", tickets: "Tickets", places: "places left", signup: "Choose tickets on pretix", sold: "Sold out", closed: "Ticket sales are not open", test: "Test event · no real payments", conflict: "The room is occupied by an existing booking.", gate: "Signup opens after ticket sales and room scheduling are verified.", empty: "There are no public upcoming events yet.", setup: "The event calendar is waiting for pretix setup.", error: "Events could not be loaded. Please try again later.", description: "Description to follow.", previous: "Previous month", next: "Next month", preview: "TTD STUDIO · EVENT CALENDAR" },
+  da: { events: "Events", contact: "Kontakt", title: "Det sker i studiet.", intro: "Se kommende aktiviteter og vælg den dato, der passer dig.", upcoming: "KOMMENDE DATOER", calendar: "Kalender", list: "Liste", back: "Alle events", location: "Sted", time: "Tid", tickets: "Billetter", places: "pladser tilbage", signup: "Vælg billet hos pretix", sold: "Udsolgt", closed: "Billetsalget er ikke åbent", test: "Testevent · ingen rigtige betalinger", conflict: "Rummet er optaget af en eksisterende booking.", gate: "Tilmelding åbner, når billetsalg og rumplan er verificeret.", empty: "Der er ingen offentlige kommende events endnu.", setup: "Eventkalenderen afventer pretix-opsætning.", error: "Events kan ikke indlæses lige nu. Prøv igen senere.", description: "Beskrivelse følger.", previous: "Forrige måned", next: "Næste måned", previousEvents: "Forrige events", nextEvents: "Næste events", of: "af", preview: "TTD STUDIO · EVENTKALENDER" },
+  en: { events: "Events", contact: "Contact", title: "What's on at the studio.", intro: "Browse upcoming activities and choose the date that suits you.", upcoming: "UPCOMING DATES", calendar: "Calendar", list: "List", back: "All events", location: "Location", time: "Time", tickets: "Tickets", places: "places left", signup: "Choose tickets on pretix", sold: "Sold out", closed: "Ticket sales are not open", test: "Test event · no real payments", conflict: "The room is occupied by an existing booking.", gate: "Signup opens after ticket sales and room scheduling are verified.", empty: "There are no public upcoming events yet.", setup: "The event calendar is waiting for pretix setup.", error: "Events could not be loaded. Please try again later.", description: "Description to follow.", previous: "Previous month", next: "Next month", previousEvents: "Previous events", nextEvents: "Next events", of: "of", preview: "TTD STUDIO · EVENT CALENDAR" },
 };
+const EVENTS_PER_PAGE = 6;
 function localDay(iso: string) { return DateTime.fromISO(iso, { setZone: true }).setZone(ZONE); }
 function dateText(iso: string, lang: Language) { return localDay(iso).setLocale(lang).toLocaleString({ weekday: "long", day: "numeric", month: "long", year: "numeric" }); }
 function timeText(iso: string) { return localDay(iso).toFormat("HH:mm"); }
@@ -22,9 +23,21 @@ function href(item: Occurrence, lang: Language) { return `/events/${encodeURICom
 export function EventsExperience({ catalog, selected, initialLanguage }: Props) {
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [month, setMonth] = useState(() => catalog.occurrences.length ? localDay(catalog.occurrences[0].start).startOf("month") : DateTime.now().setZone(ZONE).startOf("month"));
+  const [listPage, setListPage] = useState(0);
+  const listRef = useRef<HTMLDivElement>(null);
   useVisualEffects();
   useEffect(() => { document.documentElement.lang = language; localStorage.setItem("ttd-language", language); }, [language]);
   const t = words[language];
+  const pageCount = Math.ceil(catalog.occurrences.length / EVENTS_PER_PAGE);
+  const currentPage = Math.min(listPage, Math.max(0, pageCount - 1));
+  const firstEvent = currentPage * EVENTS_PER_PAGE;
+  const lastEvent = Math.min(firstEvent + EVENTS_PER_PAGE, catalog.occurrences.length);
+  const pageRange = lastEvent === firstEvent + 1 ? `${lastEvent}` : `${firstEvent + 1}–${lastEvent}`;
+  const visibleEvents = catalog.occurrences.slice(firstEvent, firstEvent + EVENTS_PER_PAGE);
+  function changeListPage(nextPage: number) {
+    setListPage(nextPage);
+    listRef.current?.scrollIntoView({ block: "start" });
+  }
   const days = useMemo(() => {
     const first = month.startOf("month");
     const offset = first.weekday - 1;
@@ -68,13 +81,17 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
         </div>
       </> : <>
         <div className="events-heading"><h1>{t.title}</h1><p>{t.intro}</p></div>
-        {catalog.state !== "ready" ? <p className="events-message" role="status">{catalog.state === "setup" ? t.setup : t.error}</p> : catalog.occurrences.length === 0 ? <p className="events-message" role="status">{t.empty}</p> : <section className="events-section" aria-labelledby="events-calendar-title">
-          <div className="events-toolbar"><h2 id="events-calendar-title">{t.calendar}</h2><div><button aria-label={t.previous} onClick={() => setMonth(month.minus({ months: 1 }))}><ChevronLeft /></button><strong>{month.setLocale(language).toLocaleString({ month: "long", year: "numeric" })}</strong><button aria-label={t.next} onClick={() => setMonth(month.plus({ months: 1 }))}><ChevronRight /></button></div></div>
+        {catalog.state !== "ready" ? <p className="events-message" role="status">{catalog.state === "setup" ? t.setup : t.error}</p> : catalog.occurrences.length === 0 ? <p className="events-message" role="status">{t.empty}</p> : <section className="events-section" aria-label={t.events}>
+          <div className="events-list" ref={listRef} key={currentPage}>{visibleEvents.map((item, index) => {
+            const date = localDay(item.start).setLocale(language);
+            return <a className="event-row" key={item.key} href={href(item, language)} style={{ animationDelay: `${index * 45}ms` }}><time dateTime={item.start}><span className="event-day-number">{date.toFormat("dd")}</span><span>{date.toFormat("LLL")}</span></time><span className="event-row-details"><strong>{language === "da" ? item.title : item.titleEn}</strong><small>{timeText(item.start)}–{timeText(item.end)} · {(language === "da" ? item.location : item.locationEn) || "TTD Studio"}</small></span><span className="event-row-status">{item.status === "sold-out" ? t.sold : item.status === "test" ? t.test : item.status === "not-on-sale" ? t.closed : item.status === "room-conflict" ? t.conflict : "↗"}</span></a>;
+          })}</div>
+          {pageCount > 1 && <nav className="events-list-pagination" aria-label={language === "da" ? "Sider med events" : "Event pages"}><button type="button" aria-label={t.previousEvents} disabled={currentPage === 0} onClick={() => changeListPage(currentPage - 1)}><ChevronLeft aria-hidden="true" /></button><span aria-live="polite">{pageRange} {t.of} {catalog.occurrences.length}</span><button type="button" aria-label={t.nextEvents} disabled={currentPage >= pageCount - 1} onClick={() => changeListPage(currentPage + 1)}><ChevronRight aria-hidden="true" /></button></nav>}
+          <div className="events-toolbar"><h2>{t.calendar}</h2><div><button aria-label={t.previous} onClick={() => setMonth(month.minus({ months: 1 }))}><ChevronLeft /></button><strong>{month.setLocale(language).toLocaleString({ month: "long", year: "numeric" })}</strong><button aria-label={t.next} onClick={() => setMonth(month.plus({ months: 1 }))}><ChevronRight /></button></div></div>
           <div className="events-calendar" role="group" aria-label={`${t.calendar} ${month.toFormat("yyyy-MM")}`}>
             {Array.from({ length: 7 }, (_, i) => <div className="calendar-weekday" key={i}>{month.setLocale(language).startOf("week").plus({ days: i }).toFormat("ccc")}</div>)}
             {days.map(day => <div className={`calendar-day ${day.month !== month.month ? "other-month" : ""}`} key={day.toISODate()} role="group" aria-label={day.setLocale(language).toLocaleString(DateTime.DATE_FULL)}><span>{day.day}</span>{(byDay.get(day.toISODate()!) || []).map(item => <a key={item.key} href={href(item, language)}><strong>{language === "da" ? item.title : item.titleEn}</strong><small>{timeText(item.start)}</small></a>)}</div>)}
           </div>
-          <h2 className="events-list-title">{t.list}</h2><div className="events-list">{catalog.occurrences.map(item => <a className="event-row" key={item.key} href={href(item, language)}><time dateTime={item.start}>{localDay(item.start).setLocale(language).toFormat("dd LLL")}</time><span><strong>{language === "da" ? item.title : item.titleEn}</strong><small>{timeText(item.start)}–{timeText(item.end)} · {(language === "da" ? item.location : item.locationEn) || "TTD Studio"}</small></span><span className="event-row-status">{item.status === "sold-out" ? t.sold : item.status === "test" ? t.test : item.status === "not-on-sale" ? t.closed : item.status === "room-conflict" ? t.conflict : "↗"}</span></a>)}</div>
         </section>}
       </>}
     </main>
