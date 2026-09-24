@@ -7,4 +7,4 @@ A website for Didde-Mie Lykke From, a dancer and choreographer. It brings togeth
   <a href="docs/screenshots/personal-work.png"><img src="docs/screenshots/personal-work.png" width="48%" alt="DD personal site selected work section"></a>
 </p>
 
-The personal site uses **Astro, React, TypeScript and CSS**. The studio site uses **Next.js, React and TypeScript**, with a local **pretix Community** availability preview backed by PostgreSQL and Redis. Booking and payment are not yet live.
+The personal site uses **Astro, React, TypeScript and CSS**. The studio site uses **Next.js, React and TypeScript**, with a local **pretix Community** availability preview backed by PostgreSQL and Redis. Hourly studio booking and payment are not yet live. The studio events calendar reads pretix events and dates, while event checkout remains gated until the payment and one-room inventory setup is verified. See [events integration](apps/booking/EVENTS.md).

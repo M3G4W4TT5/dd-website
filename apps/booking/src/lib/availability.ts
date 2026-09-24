@@ -3,6 +3,8 @@ import "server-only";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { Availability, Slot, STUDIO_ZONE } from "./booking";
+import { getRoomOccupancy } from "./events";
+import { overlaps } from "./events-model";
 
 const MAX_LOOKAHEAD_DAYS = 45;
 const DEMO_PRICE_ORE = 35_000; // Client-provided hourly rate for the local preview.
@@ -139,10 +141,11 @@ async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<
   const quotasUrl = new URL(`${prefix}quotas/?with_availability=true`, config.base);
   const itemUrl = new URL(`${prefix}items/${config.itemId}/`, config.base);
 
-  const [subevents, quotas, rawItem] = await Promise.all([
+  const [subevents, quotas, rawItem, occupied] = await Promise.all([
     listAll(subeventsUrl, config, subeventSchema),
     listAll(quotasUrl, config, quotaSchema),
     getJson(itemUrl, config),
+    getRoomOccupancy(day.toISODate()!),
   ]);
   const item = itemSchema.parse(rawItem);
   if (!item.active || item.id !== config.itemId) throw new Error("Pretix room product is inactive");
@@ -187,6 +190,7 @@ async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<
           slotQuotas.length > 0 &&
           hasCapacity &&
           !override?.disabled &&
+          !occupied.some(interval => overlaps(start.toISO()!, end.toISO()!, interval.start, interval.end)) &&
           start > DateTime.now(),
         priceOre,
       };

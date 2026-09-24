@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Availability, Quote, Slot } from "@/lib/booking";
 import { MAX_HOURS, quoteInterval, STUDIO_ZONE } from "@/lib/booking";
 import { CustomerDetailsPreview } from "@/components/CustomerDetailsPreview";
+import { useVisualEffects } from "@/components/useVisualEffects";
 
 type Language = "da" | "en";
 
@@ -29,6 +30,7 @@ const copy = {
     navBook: "Book studiet",
     navSpace: "Rummet",
     navInfo: "Praktisk",
+    navEvents: "Events",
     navAdmin: "Administration",
     heroEyebrow: "KØBENHAVN DANSER / TTD",
     displayLeft: "TTD",
@@ -46,7 +48,7 @@ const copy = {
     bookingEyebrow: "FIND DIN TID",
     bookingTitle: "Giv din idé tid og rum.",
     bookingIntro:
-      "Vælg en starttid og det antal sammenhængende timer, du har brug for. Du modtager en bekræftelse på din email.",
+      "Vælg en starttid og det antal sammenhængende timer, du har brug for. Denne forhåndsvisning opretter ikke en booking.",
     unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
@@ -100,6 +102,7 @@ const copy = {
     navBook: "Book the studio",
     navSpace: "The space",
     navInfo: "Good to know",
+    navEvents: "Events",
     navAdmin: "Administration",
     heroEyebrow: "KØBENHAVN DANSER / TTD",
     displayLeft: "TTD",
@@ -117,7 +120,7 @@ const copy = {
     bookingEyebrow: "FIND YOUR TIME",
     bookingTitle: "Give your idea room to move.",
     bookingIntro:
-      "Choose a start time and the number of consecutive hours you need. You’ll receive a confirmation by email.",
+      "Choose a start time and the number of consecutive hours you need. This preview does not create a booking.",
     unavailable: "Availability could not be loaded. Check the local pretix connection.",
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
@@ -208,6 +211,11 @@ export function BookingExperience({
   const maxDay = DateTime.fromISO(initialDate).plus({ days: 45 }).toISODate()!;
 
   useEffect(() => {
+    const saved = localStorage.getItem("ttd-language");
+    if (saved === "en") setLanguage("en");
+  }, []);
+
+  useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
 
@@ -231,98 +239,7 @@ export function BookingExperience({
     return () => window.cancelAnimationFrame(frame);
   }, [status]);
 
-  useEffect(() => {
-    const elements = document.querySelectorAll<HTMLElement>("[data-reveal]");
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
-      elements.forEach((element) => element.classList.add("is-visible"));
-      return;
-    }
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { rootMargin: "0px 0px -6% 0px", threshold: 0.08 });
-    elements.forEach((element) => observer.observe(element));
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const images = document.querySelectorAll<HTMLElement>("[data-image-shadow]");
-    const motionAllowed = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    if (!motionAllowed || !finePointer) return;
-
-    let pointer: { x: number; y: number } | null = null;
-    let frame = 0;
-    const updateShadows = () => {
-      frame = 0;
-      const currentPointer = pointer;
-      if (!currentPointer) return;
-      const maxDistance = Math.max(window.innerWidth, window.innerHeight) * 0.6;
-      images.forEach((image) => {
-        const bounds = image.getBoundingClientRect();
-        const dx = currentPointer.x - (bounds.left + bounds.width / 2);
-        const dy = currentPointer.y - (bounds.top + bounds.height / 2);
-        const distance = Math.hypot(dx, dy);
-        const reach = Math.min(distance / maxDistance, 1);
-        image.style.setProperty("--shadow-x", `${(dx / (distance || 1)) * reach * 42}px`);
-        image.style.setProperty("--shadow-y", `${(dy / (distance || 1)) * reach * 42}px`);
-        image.style.setProperty("--shadow-blur", `${18 + reach * 62}px`);
-        image.style.setProperty("--shadow-spread", `${reach * 8}px`);
-      });
-    };
-    const scheduleUpdate = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateShadows);
-    };
-    const onPointerMove = (event: PointerEvent) => {
-      pointer = { x: event.clientX, y: event.clientY };
-      scheduleUpdate();
-    };
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("scroll", scheduleUpdate, { passive: true });
-    window.addEventListener("resize", scheduleUpdate);
-    return () => {
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("scroll", scheduleUpdate);
-      window.removeEventListener("resize", scheduleUpdate);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, []);
-
-  useEffect(() => {
-    const footer = document.querySelector<HTMLElement>(".site-footer");
-    const revealSpace = document.querySelector<HTMLElement>(".footer-reveal-space");
-    if (!footer || !revealSpace) return;
-
-    let frame = 0;
-    const updateGradient = () => {
-      frame = 0;
-      const bounds = revealSpace.getBoundingClientRect();
-      const progress = Math.min(Math.max((window.innerHeight - bounds.top) / bounds.height, 0), 1);
-      footer.style.setProperty("--footer-progress", progress.toFixed(3));
-    };
-    const scheduleUpdate = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateGradient);
-    };
-    const measureFooter = () => {
-      revealSpace.style.height = `${footer.offsetHeight}px`;
-      scheduleUpdate();
-    };
-    const resizeObserver = new ResizeObserver(measureFooter);
-    resizeObserver.observe(footer);
-    measureFooter();
-    window.addEventListener("scroll", scheduleUpdate, { passive: true });
-    window.addEventListener("resize", measureFooter);
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("scroll", scheduleUpdate);
-      window.removeEventListener("resize", measureFooter);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, []);
+  useVisualEffects();
 
   const week = useMemo(
     () => Array.from({ length: 7 }, (_, index) => DateTime.fromISO(weekStart).plus({ days: index }).toISODate()!),
@@ -395,15 +312,17 @@ export function BookingExperience({
           <a href="#booking">{t.navBook}</a>
           <a href="#space">{t.navSpace}</a>
           <a href="#info">{t.navInfo}</a>
+          <a href={`/events?lang=${language}`}>{t.navEvents}</a>
         </nav>
         <a className="brand" href="#top" aria-label="TTD Studio — top">
           <span className="brand-mark">TTD<br />STUDIO</span>
         </a>
         <div className="header-actions">
+          <a className="event-mobile-link" href={`/events?lang=${language}`}>{t.navEvents}</a>
           <div className="lang-switch" aria-label="Language">
-            <button type="button" className={language === "da" ? "active" : ""} onClick={() => setLanguage("da")} aria-pressed={language === "da"}>DA</button>
+            <button type="button" className={language === "da" ? "active" : ""} onClick={() => { setLanguage("da"); localStorage.setItem("ttd-language", "da"); }} aria-pressed={language === "da"}>DA</button>
             <span>/</span>
-            <button type="button" className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")} aria-pressed={language === "en"}>EN</button>
+            <button type="button" className={language === "en" ? "active" : ""} onClick={() => { setLanguage("en"); localStorage.setItem("ttd-language", "en"); }} aria-pressed={language === "en"}>EN</button>
           </div>
           <a className="header-book" href="#booking">{t.navBook}<ArrowUpRight size={16} /></a>
         </div>
