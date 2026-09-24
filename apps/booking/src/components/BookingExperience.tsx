@@ -308,9 +308,6 @@ export function BookingExperience({
 
       <main id="top">
         <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-title-row">
-            <h1 id="hero-title"><span>{t.displayLeft}</span><span>{t.displayRight}</span></h1>
-          </div>
           <div className="hero-gallery">
             <figure className="hero-photo hero-photo-wide">
               <div className="image-frame" data-image-shadow data-reveal><img src="/concepts/studio-room.png" alt={t.imageOne} /></div>
@@ -321,13 +318,16 @@ export function BookingExperience({
               <figcaption><span>02 / STUDIO DETAIL</span><span>{t.heroNote}</span></figcaption>
             </figure>
           </div>
+          <div className="hero-title-row">
+            <h1 id="hero-title"><span>{t.displayLeft}</span><span>{t.displayRight}</span></h1>
+          </div>
           <div className="hero-after"><p>{t.heroText}</p><a href="#booking">{t.heroBook}<ArrowDownRight size={21} /></a></div>
         </section>
 
         <div className="metric-strip" aria-label={language === "da" ? "Om studiet" : "About the studio"}>
-          <div><span className="metric-icon"><Flower2 size={24} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
           <div><span className="metric-icon"><Clock3 size={24} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
           <div><span className="metric-icon"><Coins size={24} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
+          <div><span className="metric-icon"><Flower2 size={24} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
         </div>
 
         <section className="booking-section" id="booking" aria-labelledby="booking-title">
