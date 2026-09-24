@@ -67,7 +67,7 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
           </aside>
         </div>
       </> : <>
-        <div className="events-heading"><span className="section-kicker">TTD STUDIO / {t.events}</span><h1>{t.title}</h1><p>{t.intro}</p></div>
+        <div className="events-heading"><h1>{t.title}</h1><p>{t.intro}</p></div>
         {catalog.state !== "ready" ? <p className="events-message" role="status">{catalog.state === "setup" ? t.setup : t.error}</p> : catalog.occurrences.length === 0 ? <p className="events-message" role="status">{t.empty}</p> : <section className="events-section" aria-labelledby="events-calendar-title">
           <div className="events-toolbar"><h2 id="events-calendar-title">{t.calendar}</h2><div><button aria-label={t.previous} onClick={() => setMonth(month.minus({ months: 1 }))}><ChevronLeft /></button><strong>{month.setLocale(language).toLocaleString({ month: "long", year: "numeric" })}</strong><button aria-label={t.next} onClick={() => setMonth(month.plus({ months: 1 }))}><ChevronRight /></button></div></div>
           <div className="events-calendar" role="group" aria-label={`${t.calendar} ${month.toFormat("yyyy-MM")}`}>

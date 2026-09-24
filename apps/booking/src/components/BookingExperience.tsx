@@ -33,10 +33,8 @@ const copy = {
     navEvents: "Events",
     navContact: "Kontakt",
     navAdmin: "Administration",
-    heroEyebrow: "KØBENHAVN DANSER / TTD",
     displayLeft: "TTD",
     displayRight: "STUDIO",
-    displaySub: "DANS · TRÆNING · BEVÆGELSE",
     imageOne: "Illustrativt urbant dansestudie med mursten, spejle og trægulv",
     imageTwo: "Illustrativ detalje med spejl og murstensvæg i et urbant dansestudie",
     heroText:
@@ -96,10 +94,8 @@ const copy = {
     navEvents: "Events",
     navContact: "Contact",
     navAdmin: "Administration",
-    heroEyebrow: "KØBENHAVN DANSER / TTD",
     displayLeft: "TTD",
     displayRight: "STUDIO",
-    displaySub: "DANCE · PRACTICE · MOVEMENT",
     imageOne: "Illustrative urban dance studio with brick, mirrors and wooden floor",
     imageTwo: "Illustrative urban dance studio detail with mirror and brick wall",
     heroText:
@@ -312,7 +308,6 @@ export function BookingExperience({
 
       <main id="top">
         <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-introline"><span>{t.heroEyebrow}</span><span>{t.displaySub}</span></div>
           <div className="hero-title-row">
             <h1 id="hero-title"><span>{t.displayLeft}</span><span>{t.displayRight}</span></h1>
           </div>

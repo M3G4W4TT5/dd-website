@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
   const language = (await searchParams).lang === "en" ? "en" : "da";
-  return <ContactExperience initialLanguage={language} phone={process.env.CONTACT_PHONE || "+45 XX XX XX XX"} />;
+  return <ContactExperience initialLanguage={language} />;
 }
