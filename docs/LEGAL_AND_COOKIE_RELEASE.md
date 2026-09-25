@@ -1,11 +1,11 @@
 # Legal pages and cookie release check
 
-The current pages are reviewable drafts for the DD portfolio and TTD Studio. They contain visible placeholders because the legal operator and some production services are not yet confirmed. Do not treat these placeholders as publication-ready facts.
+The current pages are reviewable drafts for the DD portfolio and TTD Studio. The legal operators are confirmed, but production services and several policy details still require verification. Do not treat the drafts as final publication-ready policies.
 
 ## Fill before public launch
 
-- The owner supplied DD Production (CVR 42234958, Rathsacksvej 3, 3., 1862 Frederiksberg C) for `didde-mie.com` and TOTAL ENTERTAINMENT (CVR 21285870, Skydebanegade 10, st., 1709 København V) for `ttd.didde-mie.com`. These identities and addresses are now in the policies and booking terms. Confirm the final controller arrangement for TTD Studio and fill the remaining phone placeholder in the booking terms before checkout opens.
-- Confirm which monitored email address handles privacy, booking and cancellation requests. Update the policy, terms and transactional emails consistently.
+- The owner confirmed DD Production (CVR 42234958, Rathsacksvej 3, 3., 1862 Frederiksberg C) for `didde-mie.com` and TOTAL ENTERTAINMENT (CVR 21285870, Skydebanegade 10, st., 1709 København V) for `ttd.didde-mie.com`. These identities and addresses are in the policies and booking terms. The studio phone placeholder has been removed from the preview. Before consumer checkout opens, settle the business telephone disclosure required by [forbrugeraftaleloven § 8, stk. 1, nr. 2](https://www.retsinformation.dk/eli/lta/2025/1184) and publish the required contact details before payment; a number first supplied in the confirmation email would be too late.
+- Use `contact@didde-mie.com` for personal-site privacy requests and `booking@didde-mie.com` for studio privacy, booking, and cancellation requests; verify both are monitored and keep the policies, terms, and transactional emails consistent.
 - Confirm the consumer complaint body for the final legal entity and service. The current terms point to Nævnenes Hus as a likely route, subject to the service and price.
 - Enforce the exact 24-hour boundary as written: self-service change or free cancellation is allowed only while **more than 24 elapsed hours** remain before the first booked hour. At exactly 24 hours or less, self-service closes. Verify this against the final pretix/customer flow, including multi-hour bookings and daylight-saving transitions. Show the applicable terms and total price immediately before payment and include the terms in a durable confirmation.
 - Confirm the operational retention schedule for inquiries, order data, email, security logs, SMS verification and backups. The draft chooses 12 months for ordinary inquiries and follows the five-year accounting rule for records that qualify as accounting material.
