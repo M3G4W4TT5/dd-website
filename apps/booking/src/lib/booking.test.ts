@@ -45,6 +45,36 @@ test("a missing hour or a request past closing cannot produce a quote", () => {
 
 test("invalid durations and unknown slot IDs are rejected", () => {
   assert.equal(quoteInterval(availability, "9", 0), null);
-  assert.equal(quoteInterval(availability, "9", 9), null);
+  assert.equal(quoteInterval(availability, "9", 15), null);
   assert.equal(quoteInterval(availability, "missing", 1), null);
+});
+
+test("all fourteen studio hours can form one full-day quote", () => {
+  const fullDay: Availability = {
+    ...availability,
+    slots: Array.from({ length: 14 }, (_, index) => {
+      const hour = index + 6; // 08:00–22:00 in Copenhagen daylight time.
+      return {
+        id: String(index),
+        start: `2026-10-05T${String(hour).padStart(2, "0")}:00:00.000Z`,
+        end: `2026-10-05T${String(hour + 1).padStart(2, "0")}:00:00.000Z`,
+        available: true,
+        priceOre: 30_000,
+      };
+    }),
+  };
+  const quote = quoteInterval({ ...fullDay, fullDayDiscount: { discountedHours: 2 } }, "0", 14);
+  assert.equal(quote?.hours, 14);
+  assert.equal(quote?.totalOre, 360_000);
+  assert.equal(quoteInterval({ ...fullDay, fullDayDiscount: { discountedHours: 2 } }, "0", 13)?.totalOre, 390_000);
+  assert.equal(quoteInterval(fullDay, "0", 15), null);
+});
+
+test("a booking cannot cross into another Copenhagen calendar day", () => {
+  const overnight: Availability = {
+    ...availability,
+    slots: [{ id: "late", start: "2026-10-05T21:00:00.000Z", end: "2026-10-05T22:00:00.000Z", available: true, priceOre: 30_000 },
+      { id: "next", start: "2026-10-05T22:00:00.000Z", end: "2026-10-05T23:00:00.000Z", available: true, priceOre: 30_000 }],
+  };
+  assert.equal(quoteInterval(overnight, "late", 2), null);
 });

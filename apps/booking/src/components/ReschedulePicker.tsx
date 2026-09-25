@@ -16,7 +16,7 @@ const copy = {
     loading: "Henter ledige tider…", error: "Ledige tider kunne ikke indlæses. Prøv en anden uge eller kontakt studiet.",
     chooseTime: "Ledige starttider", noTimes: "Ingen sammenhængende ledige timer denne dag. Vælg en anden dato.",
     demo: "Demotider – ingen reel booking ændres.", duration: "Bookingen flyttes med samme varighed:",
-    hours: "timer", hour: "time", selected: "Valgt nyt tidsrum",
+    hours: "timer", hour: "time", fullDay: "Hele dagen", selected: "Valgt nyt tidsrum",
   },
   en: {
     previousMonth: "Previous month", nextMonth: "Next month",
@@ -25,7 +25,7 @@ const copy = {
     loading: "Loading availability…", error: "Availability could not be loaded. Try another week or contact the studio.",
     chooseTime: "Available start times", noTimes: "No consecutive hours are available on this day. Choose another date.",
     demo: "Demo availability – no real booking is changed.", duration: "The booking keeps the same duration:",
-    hours: "hours", hour: "hour", selected: "Selected new interval",
+    hours: "hours", hour: "hour", fullDay: "Full day", selected: "Selected new interval",
   },
 } as const;
 
@@ -119,7 +119,7 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
   const nextMonth = DateTime.fromISO(date).startOf("month").plus({ months: 1 });
 
   return <div className="reschedule-picker">
-    <p className="reschedule-duration">{t.duration} <strong>{hours} {hours === 1 ? t.hour : t.hours}</strong></p>
+    <p className="reschedule-duration">{t.duration} <strong>{hours === MAX_HOURS ? t.fullDay : `${hours} ${hours === 1 ? t.hour : t.hours}`}</strong></p>
     <div className="reschedule-navigation" aria-label={t.chooseDate}>
       <div className="reschedule-nav-group">
         <button type="button" onClick={() => shiftMonth(-1)} disabled={previousMonth.endOf("month").toISODate()! < todayDate} aria-label={t.previousMonth}><ChevronLeft size={17} /><ChevronLeft size={17} /></button>

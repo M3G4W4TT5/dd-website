@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAvailability } from "@/lib/availability";
-import { quoteInterval } from "@/lib/booking";
+import { MAX_HOURS, quoteInterval } from "@/lib/booking";
 
 export const dynamic = "force-dynamic";
 
 const requestSchema = z.object({
   date: z.iso.date(),
   startId: z.string().min(1).max(100),
-  hours: z.number().int().min(1).max(8),
+  hours: z.number().int().min(1).max(MAX_HOURS),
 });
 
 export async function POST(request: Request) {

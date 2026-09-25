@@ -1,5 +1,7 @@
+import { DateTime } from "luxon";
+
 export const STUDIO_ZONE = "Europe/Copenhagen";
-export const MAX_HOURS = 8;
+export const MAX_HOURS = 14;
 
 export type Slot = {
   id: string;
@@ -14,6 +16,7 @@ export type Availability = {
   source: "demo" | "pretix";
   currency: "DKK";
   slots: Slot[];
+  fullDayDiscount?: { discountedHours: number };
   checkedAt: string;
 };
 
@@ -43,18 +46,30 @@ export function quoteInterval(
   const selected = ordered.slice(index, index + hours);
   if (selected.length !== hours || selected.some((slot) => !slot.available)) return null;
 
+  // A proposed online booking must stay within the requested studio day.
+  const studioDate = (iso: string) => DateTime.fromISO(iso).setZone(STUDIO_ZONE).toISODate();
+  if (studioDate(selected[0].start) !== availability.date || studioDate(selected[selected.length - 1].end) !== availability.date) return null;
+
   for (let i = 0; i < selected.length; i += 1) {
     const slot = selected[i];
     if (Date.parse(slot.end) - Date.parse(slot.start) !== 3_600_000) return null;
     if (i > 0 && selected[i - 1].end !== slot.start) return null;
   }
 
+  const subtotalOre = selected.reduce((sum, slot) => sum + slot.priceOre, 0);
+  const discountOre = hours === MAX_HOURS && availability.fullDayDiscount
+    ? [...selected]
+      .sort((a, b) => a.priceOre - b.priceOre)
+      .slice(0, availability.fullDayDiscount.discountedHours)
+      .reduce((sum, slot) => sum + slot.priceOre, 0)
+    : 0;
+
   return {
     slotIds: selected.map((slot) => slot.id),
     start: selected[0].start,
     end: selected[selected.length - 1].end,
     hours,
-    totalOre: selected.reduce((sum, slot) => sum + slot.priceOre, 0),
+    totalOre: subtotalOre - discountOre,
     currency: availability.currency,
   };
 }

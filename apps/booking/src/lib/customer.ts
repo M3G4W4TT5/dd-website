@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_HOURS } from "./booking";
 
 export const customerDetailsSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -18,6 +19,6 @@ export const customerDetailsSchema = z.object({
 export const preflightSchema = z.object({
   date: z.iso.date(),
   startId: z.string().min(1).max(100),
-  hours: z.number().int().min(1).max(8),
+  hours: z.number().int().min(1).max(MAX_HOURS),
   details: customerDetailsSchema,
 });

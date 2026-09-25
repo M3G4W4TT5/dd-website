@@ -94,7 +94,7 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 .date-tile.selected { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); box-shadow: none; }
 .date-tile strong { font-family: Anton, Impact, sans-serif; font-size: 30px; }
 .time-slot { border-radius: 0; background: var(--mellow-white); }
-.time-slot.selected { background: var(--green-bg); border-color: var(--green-ink); }
+.time-slot.selected { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); }
 .time-slot:disabled { background: color-mix(in srgb, var(--mellow-white) 75%, var(--green-bg)); }
 .time-value { font-family: "DM Sans", sans-serif; font-size: 17px; font-weight: 700; }
 .summary-panel { border-left: 1px solid var(--line); background: var(--green-bg); }
@@ -109,9 +109,7 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
   .summary-fact { grid-column: 2; }
 }
 .summary-content { background: var(--green-bg); }
-.summary-row, .duration-block { border-color: var(--line); }
-.duration-options button { border-color: var(--line); border-radius: 0; background: var(--mellow-white); color: var(--green-ink); }
-.duration-options button.active { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); }
+.summary-row { border-color: var(--line); }
 .summary-total strong { font-family: Anton, Impact, sans-serif; font-size: 34px; }
 .button-check, .details-actions button { border-radius: 0; background: var(--green-ink); }
 .summary-footer { background: var(--green-bg); border-color: var(--line); }
@@ -120,7 +118,7 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 .details-fields input, .details-fields select, .details-fields textarea { border-radius: 0; }
 .date-navigation button, .date-input-label input, .details-fields input, .details-fields select, .details-fields textarea { border-color: var(--line); color: var(--green-ink); }
 .date-input-label input, .details-fields input, .details-fields select, .details-fields textarea { background: var(--mellow-white); }
-.date-tile:hover:not(:disabled), .time-slot:hover:not(:disabled), .duration-options button:hover:not(.active) { border-color: var(--green-ink); }
+.date-tile:hover:not(:disabled), .time-slot:hover:not(:disabled) { border-color: var(--green-ink); }
 .time-slot, .slot-message, .picker-legend, .summary-row > span, .summary-total small,
 .check-result, .summary-footer, .details-reminder, .details-fields label, .details-fields label > span,
 .details-fields small, .details-status, .timezone { color: var(--green-ink); }

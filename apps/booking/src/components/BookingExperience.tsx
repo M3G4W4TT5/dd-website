@@ -3,7 +3,6 @@
 import {
   ArrowUpRight,
   CalendarDays,
-  Check,
   ChevronLeft,
   ChevronRight,
   Clock3,
@@ -37,13 +36,17 @@ const copy = {
     heroTextAfterVenue: " på Østerbro. Skabt af Didde-Mie Lykke From og Toniah Pedersen.",
     metricOne: "68 m²",
     metricTwo: "Alle dage · 08–22",
-    metricThree: "350 kr./time",
+    perHour: "/time",
     bookingEyebrow: "FIND DIN TID",
     bookingTitle: "Giv din idé tid og rum.",
     unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
-    pickDuration: "03 / ANTAL TIMER",
+    pickEnd: "02 / VÆLG SLUTTID (VALGFRIT)",
+    endHint: "Vælg den sidste time i tidsrummet, eller behold én time.",
+    fullDay: "Hele dagen",
+    multiDayLink: "Kontakt os",
+    multiDayText: ", hvis du vil booke mere end én dag.",
     previousWeek: "Forrige uge",
     nextWeek: "Næste uge",
     chooseDate: "Vælg dato",
@@ -79,13 +82,17 @@ const copy = {
     heroTextAfterVenue: " in Østerbro, created by Didde-Mie and Toniah Pedersen.",
     metricOne: "68 m²",
     metricTwo: "Every day · 08–22",
-    metricThree: "DKK 350/hour",
+    perHour: "/hour",
     bookingEyebrow: "FIND YOUR TIME",
     bookingTitle: "Give your idea room to move.",
     unavailable: "Availability could not be loaded. Check the local pretix connection.",
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
-    pickDuration: "03 / NUMBER OF HOURS",
+    pickEnd: "02 / CHOOSE AN END TIME (OPTIONAL)",
+    endHint: "Choose the last hour of your booking, or keep one hour.",
+    fullDay: "Full day",
+    multiDayLink: "Contact us",
+    multiDayText: " if you want to book more than one day.",
     previousWeek: "Previous week",
     nextWeek: "Next week",
     chooseDate: "Choose date",
@@ -141,7 +148,8 @@ export function BookingExperience({
   const [date, setDate] = useState(initialDate);
   const [availability, setAvailability] = useState(initialAvailability);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [hours, setHours] = useState(2);
+  const [hours, setHours] = useState(1);
+  const [endSelected, setEndSelected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<"idle" | "checked" | "changed" | "error">("idle");
@@ -188,11 +196,35 @@ export function BookingExperience({
   const current = availability?.date === date ? availability : null;
   const selectedSlot = current?.slots.find((slot) => slot.id === selectedId) || null;
   const quote = current && selectedId ? quoteInterval(current, selectedId, hours) : null;
+  const validEndIds = current && selectedId && !endSelected
+    ? new Set(Array.from({ length: MAX_HOURS }, (_, index) => quoteInterval(current, selectedId, index + 1)?.slotIds.at(-1)).filter((id): id is string => !!id))
+    : null;
+
+  function selectTime(slot: Slot) {
+    if (!current || !slot.available) return;
+    if (!selectedId || endSelected) {
+      setSelectedId(slot.id);
+      setHours(1);
+      setEndSelected(false);
+      setStatus("idle");
+      return;
+    }
+    const ordered = [...current.slots].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+    const startIndex = ordered.findIndex((entry) => entry.id === selectedId);
+    const endIndex = ordered.findIndex((entry) => entry.id === slot.id);
+    const nextHours = endIndex - startIndex + 1;
+    if (!quoteInterval(current, selectedId, nextHours)) return;
+    setHours(nextHours);
+    setEndSelected(true);
+    setStatus("idle");
+  }
 
   async function selectDate(nextDate: string) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(nextDate) || nextDate < today || nextDate > maxDay) return;
     setDate(nextDate);
     setSelectedId(null);
+    setHours(1);
+    setEndSelected(false);
     setStatus("idle");
     setLoading(true);
     setError(false);
@@ -286,33 +318,35 @@ export function BookingExperience({
                 })}
               </div>
 
-              <div className="picker-head time-head"><span>{t.pickTime}</span><span className="timezone">EUROPE / COPENHAGEN</span></div>
+              <div className="picker-head time-head"><span>{selectedId && !endSelected ? t.pickEnd : t.pickTime}</span><span className="timezone">EUROPE / COPENHAGEN</span></div>
               {loading ? <div className="slot-message">{t.loading}</div> : error ? <div className="slot-message error-message">{t.unavailable}</div> : !current?.slots.length ? <div className="slot-message">{t.noTimes}</div> : (
                 <div className="time-grid">
                   {current.slots.map((slot: Slot) => (
-                    <button type="button" key={slot.id} className={`time-slot ${selectedId === slot.id ? "selected" : ""}`} disabled={!slot.available} onClick={() => { setSelectedId(slot.id); setStatus("idle"); }} aria-pressed={selectedId === slot.id}>
+                    <button type="button" key={slot.id} className={`time-slot ${quote?.slotIds.includes(slot.id) ? "selected" : ""}`} disabled={!slot.available || (validEndIds !== null && !validEndIds.has(slot.id))} onClick={() => selectTime(slot)} aria-pressed={quote?.slotIds.includes(slot.id) ?? false}>
                       <span className="time-value">{timeLabel(slot.start)}</span>
-                      <span className="slot-state">{slot.available ? selectedId === slot.id ? <Check size={15} /> : t.available : t.taken}</span>
+                      {!quote?.slotIds.includes(slot.id) && <span className="slot-state">{slot.available ? t.available : t.taken}</span>}
                     </button>
                   ))}
                 </div>
               )}
               <div className="picker-legend"><span><i className="legend-available" />{t.available}</span><span><i className="legend-taken" />{t.taken}</span></div>
+              {selectedSlot && !endSelected && <p className="time-selection-hint">{t.endHint}</p>}
             </div>
 
             <aside className="summary-panel" aria-labelledby="summary-title">
               <div className="summary-header">
                 <div className="summary-heading"><span className="section-kicker">{t.summaryEyebrow}</span><h3 id="summary-title">{t.summaryTitle}</h3></div>
                 <div className="summary-fact"><span className="metric-icon"><Clock3 size={17} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
-                <div className="summary-fact"><span className="metric-icon"><Coins size={17} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
+                <div className="summary-fact"><span className="metric-icon"><Coins size={17} strokeWidth={1.4} /></span><span>{current?.slots[0] ? `${money(current.slots[0].priceOre, language)}${t.perHour}` : "—"}</span></div>
                 <div className="summary-fact"><span className="metric-icon"><Maximize2 size={17} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
               </div>
               <div className="summary-content">
                 <div className="summary-row"><span>{t.selectedDay}</span><strong>{dateLabel(date, language)}</strong></div>
-                <div className="duration-block"><div className="picker-head"><span>{t.pickDuration}</span><span>{hours} {hours === 1 ? t.hour : t.hours}</span></div><div className="duration-options">{Array.from({ length: MAX_HOURS }, (_, index) => index + 1).map((amount) => <button key={amount} type="button" className={hours === amount ? "active" : ""} onClick={() => { setHours(amount); setStatus("idle"); }} aria-pressed={hours === amount}>{amount}</button>)}</div></div>
+                <div className="summary-row"><span>{t.selectedHours}</span><strong>{quote ? hours === MAX_HOURS ? t.fullDay : `${hours} ${hours === 1 ? t.hour : t.hours}` : "—"}</strong></div>
                 <div className="summary-row"><span>{t.fromTo}</span><strong>{quote ? `${timeLabel(quote.start)} — ${timeLabel(quote.end)}` : selectedSlot ? t.noQuote : t.chooseStart}</strong></div>
                 <div className="summary-total"><span>{t.price}</span><strong>{quote ? money(quote.totalOre, language) : "—"}</strong></div>
                 <button className="button button-check" type="button" onClick={() => void checkSelection()} disabled={!quote || checking}>{checking ? t.checking : t.check}<MoveUpRight size={18} /></button>
+                <p className="multi-day-note"><a href={`/contact?lang=${language}`}>{t.multiDayLink}</a>{t.multiDayText}</p>
                 {status !== "idle" && <p className={`check-result ${status}`} role="status">{status === "checked" ? t.checked : status === "changed" ? t.changed : t.unavailable}</p>}
               </div>
               <div className="summary-footer"><ShieldCheck size={18} /><span>{t.policy} <a href={`/terms?lang=${language}`}>{language === "da" ? "Bookingvilkår" : "Booking terms"}</a></span></div>

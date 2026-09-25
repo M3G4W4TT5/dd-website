@@ -2,7 +2,7 @@ import "server-only";
 
 import { DateTime } from "luxon";
 import { z } from "zod";
-import { Availability, Slot, STUDIO_ZONE } from "./booking";
+import { Availability, MAX_HOURS, Slot, STUDIO_ZONE } from "./booking";
 import { getRoomOccupancy } from "./events";
 import { overlaps } from "./events-model";
 
@@ -33,6 +33,23 @@ const itemSchema = z.object({
   id: z.number(),
   active: z.boolean(),
   default_price: z.string(),
+});
+
+const discountSchema = z.object({
+  active: z.boolean(),
+  all_sales_channels: z.boolean(),
+  available_from: z.string().nullable(),
+  available_until: z.string().nullable(),
+  subevent_mode: z.enum(["mixed", "same", "distinct"]),
+  subevent_date_from: z.string().nullable(),
+  subevent_date_until: z.string().nullable(),
+  condition_all_products: z.boolean(),
+  condition_limit_products: z.array(z.number()),
+  condition_min_count: z.number(),
+  condition_min_value: z.string(),
+  benefit_same_products: z.boolean(),
+  benefit_discount_matching_percent: z.string(),
+  benefit_only_apply_to_cheapest_n_matches: z.number().nullable(),
 });
 
 type PretixConfig = {
@@ -140,16 +157,36 @@ async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<
   subeventsUrl.searchParams.set("date_from_before", day.plus({ days: 1 }).toUTC().minus({ milliseconds: 1 }).toISO()!);
   const quotasUrl = new URL(`${prefix}quotas/?with_availability=true`, config.base);
   const itemUrl = new URL(`${prefix}items/${config.itemId}/`, config.base);
+  const discountsUrl = new URL(`${prefix}discounts/`, config.base);
 
-  const [subevents, quotas, rawItem, occupied] = await Promise.all([
+  const [subevents, quotas, rawItem, discounts, occupied] = await Promise.all([
     listAll(subeventsUrl, config, subeventSchema),
     listAll(quotasUrl, config, quotaSchema),
     getJson(itemUrl, config),
+    listAll(discountsUrl, config, discountSchema),
     getRoomOccupancy(day.toISODate()!),
   ]);
   const item = itemSchema.parse(rawItem);
   if (!item.active || item.id !== config.itemId) throw new Error("Pretix room product is inactive");
   const defaultPrice = toOre(item.default_price);
+  const relevantDiscounts = discounts.filter((discount) => discount.active &&
+    (discount.condition_all_products || discount.condition_limit_products.includes(config.itemId)));
+  if (relevantDiscounts.length !== 1) throw new Error("Expected one studio full-day discount");
+  const fullDayRule = relevantDiscounts[0];
+  if (
+    !fullDayRule.all_sales_channels ||
+    fullDayRule.available_from !== null || fullDayRule.available_until !== null ||
+    fullDayRule.subevent_date_from !== null || fullDayRule.subevent_date_until !== null ||
+    fullDayRule.subevent_mode !== "distinct" ||
+    fullDayRule.condition_all_products ||
+    fullDayRule.condition_limit_products.length !== 1 ||
+    fullDayRule.condition_min_count !== MAX_HOURS ||
+    fullDayRule.condition_min_value !== "0.00" ||
+    !fullDayRule.benefit_same_products ||
+    fullDayRule.benefit_discount_matching_percent !== "100.00" ||
+    !fullDayRule.benefit_only_apply_to_cheapest_n_matches ||
+    fullDayRule.benefit_only_apply_to_cheapest_n_matches >= MAX_HOURS
+  ) throw new Error("Unsupported studio discount configuration");
   const starts = new Set<string>();
 
   const slots = subevents
@@ -197,7 +234,11 @@ async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<
     })
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
 
-  return { date: day.toISODate()!, source: "pretix", currency: "DKK", slots, checkedAt: DateTime.utc().toISO()! };
+  return {
+    date: day.toISODate()!, source: "pretix", currency: "DKK", slots,
+    fullDayDiscount: { discountedHours: fullDayRule.benefit_only_apply_to_cheapest_n_matches! },
+    checkedAt: DateTime.utc().toISO()!,
+  };
 }
 
 export async function getAvailability(date: string): Promise<Availability> {

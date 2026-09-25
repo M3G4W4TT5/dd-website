@@ -117,13 +117,7 @@ h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
 .summary-row { display: flex; justify-content: space-between; gap: 16px; align-items: start; padding: 20px 0; border-bottom: 1px solid #e7e9e0; font-size: 12px; }
 .summary-row > span { color: #819183; }
 .summary-row strong { max-width: 65%; text-align: right; font-weight: 700; }
-.duration-block { padding: 25px 0 18px; border-bottom: 1px solid #e7e9e0; }
-.duration-block .picker-head { font-size: 10px; }
-.duration-block .picker-head span:last-child { color: var(--muted); letter-spacing: 0; text-transform: none; }
-.duration-options { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 5px; margin-top: 17px; }
-.duration-options button { height: 37px; border: 1px solid #dce2d6; background: #fafaf6; color: #516e56; font-size: 12px; font-weight: 700; }
-.duration-options button.active { color: var(--white); background: var(--deep); border-color: var(--deep); }
-.duration-options button:hover:not(.active) { border-color: #749578; }
+.time-selection-hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .summary-total { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin: 23px 0 21px; }
 .summary-total span { display: block; font-size: 13px; font-weight: 800; }
 .summary-total small { display: block; margin-top: 4px; color: #8b978a; font-size: 10px; }
@@ -131,6 +125,8 @@ h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
 .button-check { justify-content: space-between; width: 100%; color: var(--white); background: var(--deep); }
 .button-check:hover:not(:disabled) { background: #446b50; }
 .button-check:disabled { opacity: .43; cursor: not-allowed; }
+.multi-day-note { margin: 15px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.multi-day-note a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 .check-result { min-height: 29px; margin: 12px 0 0; color: #89988b; font-size: 11px; line-height: 1.5; }
 .check-result.checked { color: #3d7653; font-weight: 700; }
 .check-result.changed, .check-result.error { color: #a25c4e; font-weight: 700; }
