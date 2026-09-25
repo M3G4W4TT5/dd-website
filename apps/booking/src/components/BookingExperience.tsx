@@ -12,7 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { DateTime } from "luxon";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Availability, Quote, Slot } from "@/lib/booking";
 import { MAX_HOURS, quoteInterval, STUDIO_ZONE } from "@/lib/booking";
 import { CustomerDetailsPreview } from "@/components/CustomerDetailsPreview";
@@ -151,6 +151,7 @@ export function BookingExperience({
   const [phase, setPhase] = useState<"selection" | "selection-out" | "details" | "details-out">("selection");
   const [hasVisitedDetails, setHasVisitedDetails] = useState(false);
   const [error, setError] = useState(!initialAvailability);
+  const availabilityRequest = useRef(0);
   const t = copy[language];
   const today = initialDate;
   const maxDay = DateTime.fromISO(initialDate).plus({ days: 45 }).toISODate()!;
@@ -190,6 +191,7 @@ export function BookingExperience({
     [weekStart],
   );
   const current = availability?.date === date ? availability : null;
+  const displayedSlots = loading ? availability?.slots : current?.slots;
   const selectedSlot = current?.slots.find((slot) => slot.id === selectedId) || null;
   const quote = current && selectedId ? quoteInterval(current, selectedId, hours) : null;
   function selectTime(slot: Slot) {
@@ -219,6 +221,7 @@ export function BookingExperience({
 
   async function selectDate(nextDate: string) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(nextDate) || nextDate < today || nextDate > maxDay) return;
+    const request = ++availabilityRequest.current;
     setDate(nextDate);
     setSelectedId(null);
     setHours(1);
@@ -226,17 +229,25 @@ export function BookingExperience({
     setStatus("idle");
     setLoading(true);
     setError(false);
+    const blurDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => window.setTimeout(resolve, 380));
     try {
       const response = await fetch(`/api/availability?date=${encodeURIComponent(nextDate)}`, {
         cache: "no-store",
       });
       if (!response.ok) throw new Error("Availability request failed");
-      setAvailability((await response.json()) as Availability);
+      const nextAvailability = (await response.json()) as Availability;
+      await blurDelay;
+      if (availabilityRequest.current === request) setAvailability(nextAvailability);
     } catch {
-      setAvailability(null);
-      setError(true);
+      await blurDelay;
+      if (availabilityRequest.current === request) {
+        setAvailability(null);
+        setError(true);
+      }
     } finally {
-      setLoading(false);
+      if (availabilityRequest.current === request) setLoading(false);
     }
   }
 
@@ -324,14 +335,20 @@ export function BookingExperience({
               </div>
 
               <div className="picker-head time-head"><span>{selectedId && !endSelected ? t.pickEnd : t.pickTime}</span><span className="timezone">EUROPE / COPENHAGEN</span></div>
-              {loading ? <div className="slot-message">{t.loading}</div> : error ? <div className="slot-message error-message">{t.unavailable}</div> : !current?.slots.length ? <div className="slot-message">{t.noTimes}</div> : (
-                <div className="time-grid">
-                  {current.slots.map((slot: Slot) => (
-                    <button type="button" key={slot.id} className={`time-slot ${quote?.slotIds.includes(slot.id) ? "selected" : ""}`} disabled={!slot.available} onClick={() => selectTime(slot)} aria-pressed={quote?.slotIds.includes(slot.id) ?? false}>
-                      <span className="time-value">{timeLabel(slot.start)}</span>
-                      {!quote?.slotIds.includes(slot.id) && <span className="slot-state">{slot.available ? t.available : t.taken}</span>}
-                    </button>
-                  ))}
+              <span className="time-loading-status" role="status" aria-live="polite">{loading ? t.loading : ""}</span>
+              {error && !loading ? <div className="slot-message error-message">{t.unavailable}</div> : !displayedSlots?.length ? <div className="slot-message">{loading ? t.loading : t.noTimes}</div> : (
+                <div className="time-slot-area">
+                  <div className={`time-grid ${loading ? "time-grid--loading" : ""}`} aria-busy={loading} inert={loading}>
+                    {displayedSlots.map((slot: Slot) => (
+                      <button type="button" key={slot.id} className={`time-slot ${quote?.slotIds.includes(slot.id) ? "selected" : ""}`} disabled={loading || !slot.available} onClick={() => selectTime(slot)} aria-pressed={quote?.slotIds.includes(slot.id) ?? false}>
+                        <span className="time-value">{timeLabel(slot.start)}</span>
+                        {!quote?.slotIds.includes(slot.id) && <span className="slot-state">{slot.available ? t.available : t.taken}</span>}
+                      </button>
+                    ))}
+                  </div>
+                  <div className={`time-loader ${loading ? "time-loader--visible" : ""}`} aria-hidden="true">
+                    <div className="time-loader-ping" />
+                  </div>
                 </div>
               )}
               <div className="picker-legend"><span><i className="legend-available" />{t.available}</span><span><i className="legend-taken" />{t.taken}</span></div>

@@ -99,6 +99,17 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 .date-tile.selected { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); box-shadow: none; }
 .date-tile strong { font-family: Anton, Impact, sans-serif; font-size: 30px; }
 .time-slot { border-radius: 0; background: var(--mellow-white); }
+.time-slot-area { position: relative; margin-top: 20px; }
+.time-slot-area .time-grid { margin-top: 0; }
+.time-grid { transition: filter .34s ease, opacity .34s ease; }
+.time-grid--loading { filter: blur(9px); opacity: .28; pointer-events: none; }
+.time-loader { position: absolute; inset: 0; display: grid; place-items: center; opacity: 0; filter: blur(9px); pointer-events: none; transition: filter .34s ease, opacity .34s ease; }
+.time-loader--visible { opacity: 1; filter: blur(0); }
+.time-loader-ping { --uib-size: 50px; --uib-speed: 1s; --uib-color: var(--green-ink); position: relative; width: var(--uib-size); height: var(--uib-size); }
+.time-loader-ping::before, .time-loader-ping::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background-color: var(--uib-color); animation: time-loader-pulse var(--uib-speed) linear infinite; transform: scale(0); opacity: 0; }
+.time-loader-ping::after { animation-delay: calc(var(--uib-speed) / -2); }
+@keyframes time-loader-pulse { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+.time-loading-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .time-slot.selected { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); }
 .time-slot:disabled { background: color-mix(in srgb, var(--mellow-white) 75%, var(--green-bg)); }
 .time-value { font-family: "DM Sans", sans-serif; font-size: 17px; font-weight: 700; }
@@ -225,6 +236,8 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 
 @media (prefers-reduced-motion: reduce) {
   .booking-stage--leaving, .booking-stage--entering { animation: none; }
+  .time-loader-ping::before { animation: none; transform: scale(.7); opacity: 1; }
+  .time-loader-ping::after { animation: none; transform: scale(1); opacity: .4; }
   [data-reveal], [data-reveal] img { opacity: 1; filter: none; transform: none; transition: none; }
   .image-frame { box-shadow: 0 14px 36px 0 var(--shadow-color); }
   .footer-reveal-space { display: none; }
