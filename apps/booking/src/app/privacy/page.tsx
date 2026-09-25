@@ -10,7 +10,7 @@ export default async function PrivacyPage({ searchParams }: { searchParams: Prom
 
 function Danish() { return <>
   <p>Her kan du læse, hvordan TTD Studio behandler personoplysninger, når du besøger hjemmesiden, kontakter os eller bruger booking og events, når disse funktioner åbner.</p>
-  <section><h2>1. Dataansvarlig</h2><p>[Indsæt den juridiske virksomhed eller de fælles dataansvarlige bag TTD Studio], CVR [indsæt CVR], [indsæt virksomhedsadresse]. Studiet ligger hos København Danser, Nygaardsvej 5a, 2. sal, 2100 København Ø. Skriv til <a href="mailto:booking@didde-mie.com">booking@didde-mie.com</a> om dine personoplysninger. Den juridiske identitet og den endelige kontaktadresse skal udfyldes før offentlig lancering.</p></section>
+  <section><h2>1. Dataansvarlig</h2><p>TOTAL ENTERTAINMENT, CVR-nr. 21285870, Skydebanegade 10, st., 1709 København V. Studiet ligger hos København Danser, Nygaardsvej 5a, 2. sal, 2100 København Ø. Skriv til <a href="mailto:booking@didde-mie.com">booking@didde-mie.com</a> om dine personoplysninger.</p></section>
   <section><h2>2. Hvilke oplysninger og hvorfor?</h2><ul>
     <li><strong>Besøg på siden:</strong> Tekniske oplysninger som IP-adresse, tidspunkt og browser kan indgå i hostingens sikkerheds- og driftslogs. Formålet er at levere og beskytte siden. Grundlaget er vores legitime interesse i sikker drift, GDPR artikel 6, stk. 1, litra f.</li>
     <li><strong>Kontakt:</strong> Navn, e-mail, emne og besked bruges til at besvare din henvendelse. Grundlaget er artikel 6, stk. 1, litra b, når henvendelsen vedrører en mulig aftale, og ellers litra f om at kunne besvare henvendelser. Kontaktformularen sender din besked via vores server og mailudbyder.</li>
@@ -26,7 +26,7 @@ function Danish() { return <>
 
 function English() { return <>
   <p>This policy explains how TTD Studio processes personal data when you visit the site, contact us or use bookings and events once those features open.</p>
-  <section><h2>1. Controller</h2><p>[Insert the legal business or joint controllers behind TTD Studio], Danish business registration no. (CVR) [insert CVR], [insert business address]. The studio is at København Danser, Nygaardsvej 5a, 2nd floor, 2100 Copenhagen Ø. For privacy requests, write to <a href="mailto:booking@didde-mie.com">booking@didde-mie.com</a>. Confirm the legal identity and final contact address before public launch.</p></section>
+  <section><h2>1. Controller</h2><p>TOTAL ENTERTAINMENT, Danish business registration no. (CVR) 21285870, Skydebanegade 10, st., 1709 København V, Denmark. The studio is at København Danser, Nygaardsvej 5a, 2nd floor, 2100 Copenhagen Ø. For privacy requests, write to <a href="mailto:booking@didde-mie.com">booking@didde-mie.com</a>.</p></section>
   <section><h2>2. Data and purposes</h2><ul>
     <li><strong>Site visits:</strong> Hosting security and operations logs may include IP address, time and browser information. The basis is our legitimate interest in running a secure site, GDPR Article 6(1)(f).</li>
     <li><strong>Contact:</strong> We use your name, email, subject and message to answer you. The basis is Article 6(1)(b) for a potential contract, or Article 6(1)(f) for other inquiries. The form sends your message through our server and email provider.</li>

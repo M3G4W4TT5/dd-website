@@ -4,7 +4,7 @@ The current pages are reviewable drafts for the DD portfolio and TTD Studio. The
 
 ## Fill before public launch
 
-- Identify the legal controller for `didde-mie.com` and the legal seller/controller for `ttd.didde-mie.com`. Confirm whether TTD Studio has one operator or joint controllers. Replace the business name, CVR, business address, phone and contact placeholders in both policies and the booking terms.
+- The owner supplied DD Production (CVR 42234958, Rathsacksvej 3, 3., 1862 Frederiksberg C) for `didde-mie.com` and TOTAL ENTERTAINMENT (CVR 21285870, Skydebanegade 10, st., 1709 København V) for `ttd.didde-mie.com`. These identities and addresses are now in the policies and booking terms. Confirm the final controller arrangement for TTD Studio and fill the remaining phone placeholder in the booking terms before checkout opens.
 - Confirm which monitored email address handles privacy, booking and cancellation requests. Update the policy, terms and transactional emails consistently.
 - Confirm the consumer complaint body for the final legal entity and service. The current terms point to Nævnenes Hus as a likely route, subject to the service and price.
 - Decide and configure the exact 24-hour boundary as written: cancellation received **at or before** 24 hours before the first booked hour gives a full refund; inside 24 hours normally gives no refund. Verify this against the final pretix/customer flow, including multi-hour bookings and daylight-saving transitions. Show the applicable terms and total price immediately before payment and include the terms in a durable confirmation.
