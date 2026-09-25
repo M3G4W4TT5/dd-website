@@ -2,9 +2,10 @@ import { HeaderBookingActions } from "./HeaderBookingActions";
 import { MobileNavigation } from "./MobileNavigation";
 import type { Language } from "@/lib/language";
 
-export function StaticSiteHeader({ language, languagePath, hideManageLink = false }: {
+export function StaticSiteHeader({ language, languagePath, hideLanguageSwitch = false, hideManageLink = false }: {
   language: Language;
   languagePath: string;
+  hideLanguageSwitch?: boolean;
   hideManageLink?: boolean;
 }) {
   return <header className="site-header">
@@ -15,6 +16,6 @@ export function StaticSiteHeader({ language, languagePath, hideManageLink = fals
       <a href={`/contact?lang=${language}`}>{language === "da" ? "Kontakt" : "Contact"}</a>
     </nav>
     <a className="brand" href={`/?lang=${language}`} aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
-    <HeaderBookingActions language={language} languagePath={languagePath} hideManageLink={hideManageLink} />
+    <HeaderBookingActions language={language} languagePath={languagePath} hideLanguageSwitch={hideLanguageSwitch} hideManageLink={hideManageLink} />
   </header>;
 }

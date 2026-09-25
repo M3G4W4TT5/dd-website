@@ -24,7 +24,7 @@ Stripe is enabled in the three private test events. Keep the events unpublished,
 3. Using test cards and synthetic customer details, test a successful payment, a decline, a refund initiated in pretix, and an asynchronous state change. Check the final order and refund states in both systems, including repeated callback delivery. Repeat for an event-series date and the singular event.
 4. Test Apple Pay on a compatible device/browser after verifying the actual HTTPS checkout domain. Keep MobilePay disabled. Leave all events unpublished and the public booking checkout gate off during these tests.
 
-Before testing customer-initiated changes or cancellations, complete the server-side mutation and refund gates in [Booking management: deployment and remaining work](BOOKING_MANAGEMENT_DEPLOYMENT.md). The current eligibility endpoint is read-only and the local management preview changes no pretix order.
+The app now has server-side management mutation routes, but `BOOKING_SELF_SERVICE_ENABLED` stays false until the private HTTPS sandbox checks in [Booking management deployment](BOOKING_MANAGEMENT_DEPLOYMENT.md) pass. The eligibility endpoint remains read-only and the local management preview changes no pretix order.
 
 ## Before any live sale
 

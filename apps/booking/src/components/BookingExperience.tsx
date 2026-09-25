@@ -36,12 +36,11 @@ const copy = {
     metricOne: "68 m²",
     metricTwo: "Alle dage · 08–22",
     perHour: "/time",
-    bookingTitle: "Giv din idé tid og rum.",
+    bookingTitle: ["Tid og rum", "til bevægelse."],
     unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
     pickEnd: "02 / VÆLG SLUTTID (VALGFRIT)",
-    endHint: "Vælg sidste time, eller vælg en tidligere time for at starte forfra. Én time er valgt som standard.",
     fullDay: "Hele dagen",
     multiDayLink: "Kontakt os",
     multiDayText: ", hvis du vil booke mere end én dag.",
@@ -62,7 +61,7 @@ const copy = {
     chooseStart: "Vælg en ledig starttid",
     price: "Samlet pris",
     noQuote: "Valgte timer skal være sammenhængende og ledige.",
-    check: "Bekræft",
+    check: "Bekræft tidsrum",
     checking: "Bekræfter…",
     changed: "Tiderne er ændret. Vælg et nyt interval.",
     policy: "Gratis afbestilling indtil 24 timer før første bookede time.",
@@ -79,12 +78,11 @@ const copy = {
     metricOne: "68 m²",
     metricTwo: "Every day · 08–22",
     perHour: "/hour",
-    bookingTitle: "Give your idea room to move.",
+    bookingTitle: ["Give your idea room to move.", ""],
     unavailable: "Availability could not be loaded. Check the local pretix connection.",
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
     pickEnd: "02 / CHOOSE AN END TIME (OPTIONAL)",
-    endHint: "Choose the last hour, or choose an earlier hour to start again. One hour is selected by default.",
     fullDay: "Full day",
     multiDayLink: "Contact us",
     multiDayText: " if you want to book more than one day.",
@@ -96,7 +94,7 @@ const copy = {
     noTimes: "No times on this day. Try another date.",
     loading: "Loading times…",
     summaryEyebrow: "YOUR STUDIO TIME",
-    summaryTitle: "At a glance",
+    summaryTitle: "Overview",
     selectedDay: "Date",
     selectedHours: "Duration",
     hour: "hour",
@@ -105,7 +103,7 @@ const copy = {
     chooseStart: "Choose an available start time",
     price: "Total price",
     noQuote: "The selected hours must be consecutive and available.",
-    check: "Confirm",
+    check: "Confirm period",
     checking: "Confirming…",
     changed: "Availability has changed. Choose another interval.",
     policy: "Free cancellation until 24 hours before the first booked hour.",
@@ -298,7 +296,7 @@ export function BookingExperience({
       <main id="top">
         <section className="booking-section" id="booking" aria-labelledby="booking-title">
           <div className="section-heading booking-heading">
-            <div><h1 id="booking-title">{t.bookingTitle}</h1></div>
+            <div><h1 id="booking-title">{t.bookingTitle[0]}{t.bookingTitle[1] && <><br />{t.bookingTitle[1]}</>}</h1></div>
             <div className="booking-heading-side"><p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p></div>
           </div>
           <div id="booking-flow" className={`booking-layout booking-stage ${phase.endsWith("-out") ? "booking-stage--leaving" : phase === "details" || hasVisitedDetails ? "booking-stage--entering" : ""} ${phase === "details" || phase === "details-out" ? "booking-layout--details" : ""}`} tabIndex={-1} inert={phase.endsWith("-out")}>
@@ -336,7 +334,6 @@ export function BookingExperience({
                 </div>
               )}
               <div className="picker-legend"><span><i className="legend-available" />{t.available}</span><span><i className="legend-taken" />{t.taken}</span></div>
-              {selectedSlot && !endSelected && <p className="time-selection-hint">{t.endHint}</p>}
             </div>
 
             <aside className="summary-panel" aria-labelledby="summary-title">

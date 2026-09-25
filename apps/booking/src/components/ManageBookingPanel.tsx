@@ -33,6 +33,8 @@ const copy = {
     done: "Gennemført",
     failed: "Kræver hjælp fra studiet",
     late: "Der er 24 timer eller mindre til den første bookede time. Du kan ikke længere ændre eller afbestille her. Kontakt studiet, hvis du har brug for hjælp.",
+    unavailable: "Online ændring og afbestilling er midlertidigt utilgængelig. Kontakt studiet for hjælp.",
+    refundInProgress: "En refusion er registreret for denne booking. Kontakt studiet, hvis bookingens status ikke stemmer.",
     choose: "Hvad vil du gøre?",
     change: "Ændr dato eller tidspunkt",
     changeDescription: "Flyt din booking til et andet ledigt tidsrum af samme længde.",
@@ -42,7 +44,7 @@ const copy = {
     confirmChange: "Bekræft nyt tidspunkt",
     changing: "Ændrer…",
     changed: "Din booking er flyttet til det nye tidsrum.",
-    changeError: "Tidspunktet kunne ikke ændres. Din nuværende booking er beholdt. Vælg et andet tidsrum eller kontakt studiet.",
+    changeError: "Ændringen kunne ikke bekræftes. Åbn siden igen for at se den aktuelle booking, eller kontakt studiet.",
     backToChoices: "Tilbage til muligheder",
     cancel: "Afbestil din booking",
     contact: "Kontakt studiet",
@@ -51,7 +53,7 @@ const copy = {
     amount: "Beløb til refusion",
     back: "Behold bookingen",
     working: "Afbestiller…",
-    error: "Afbestillingen kunne ikke gennemføres. Bookingen er ikke ændret. Prøv igen eller kontakt studiet.",
+    error: "Afbestillingen kunne ikke bekræftes. Åbn siden igen for at se booking- og refusionsstatus, eller kontakt studiet.",
     refundNote: "Bookingen er afbestilt. Refusionens status vises særskilt.",
   },
   en: {
@@ -70,6 +72,8 @@ const copy = {
     done: "Completed",
     failed: "Studio follow-up needed",
     late: "There are 24 hours or less until the first booked hour. You can no longer change or cancel here. Contact the studio if you need help.",
+    unavailable: "Online changes and cancellation are temporarily unavailable. Contact the studio for help.",
+    refundInProgress: "A refund is recorded for this booking. Contact the studio if the booking status looks incorrect.",
     choose: "What would you like to do?",
     change: "Change date or time",
     changeDescription: "Move your booking to another available interval of the same length.",
@@ -79,7 +83,7 @@ const copy = {
     confirmChange: "Confirm new time",
     changing: "Changing…",
     changed: "Your booking has moved to the new interval.",
-    changeError: "The time could not be changed. Your current booking remains in place. Choose another interval or contact the studio.",
+    changeError: "The change could not be confirmed. Reopen this page to check your booking, or contact the studio.",
     backToChoices: "Back to options",
     cancel: "Cancel your booking",
     contact: "Contact the studio",
@@ -88,7 +92,7 @@ const copy = {
     amount: "Amount to refund",
     back: "Keep booking",
     working: "Cancelling…",
-    error: "Cancellation could not be completed. Your booking has not changed. Try again or contact the studio.",
+    error: "Cancellation could not be confirmed. Reopen this page to check the booking and refund status, or contact the studio.",
     refundNote: "The booking is cancelled. Refund progress is shown separately.",
   },
 } as const;
@@ -127,7 +131,7 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, pre
   const dialogRef = useRef<HTMLDivElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const deadline = cancellationDeadline(booking.firstHourIso);
-  const eligible = booking.status === "paid" && canManageBooking(booking.firstHourIso, nowIso);
+  const eligible = booking.status === "paid" && booking.refund === "none" && canManageBooking(booking.firstHourIso, nowIso);
   const currentServerTime = () => new Date(Date.parse(serverNowIso) + (clockStart.current === null ? 0 : performance.now() - clockStart.current)).toISOString();
 
   useEffect(() => {
@@ -229,7 +233,7 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, pre
     </div>}
     {booking.status === "cancelled" ? <p className="manage-explanation">{t.refundNote}</p> : <>
       {changed && <p className="manage-success" role="status">{t.changed}</p>}
-      {!eligible ? <p className="manage-explanation">{t.late}</p> : flow === null ? <>
+      {!eligible ? <p className="manage-explanation">{booking.refund === "none" ? t.late : t.refundInProgress}</p> : !onChangeBooking && !onCancel ? <p className="manage-explanation">{t.unavailable} <a className="text-link" href={`/contact?lang=${language}`}>{t.contact}</a></p> : flow === null ? <>
         <h3 className="manage-choice-heading">{t.choose}</h3>
         <div className="manage-choice-grid">
           {onChangeBooking && <button type="button" onClick={() => { const now = currentServerTime(); if (!canManageBooking(booking.firstHourIso, now)) { setNowIso(now); return; } setFlow("change"); setChanged(false); }}><strong>{t.change}</strong><span>{t.changeDescription}</span></button>}

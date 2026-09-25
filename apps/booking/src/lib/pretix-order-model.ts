@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import { z } from "zod";
+import { MAX_HOURS } from "./booking";
 
 export const rentalPositionSchema = z.object({
   item: z.number().int(),
@@ -25,7 +26,7 @@ export type RentalOrder = z.infer<typeof rentalOrderSchema>;
 export type RentalDate = z.infer<typeof rentalDateSchema>;
 
 export function firstBookedHour(order: RentalOrder, dates: RentalDate[], itemId: number): string | null {
-  if (order.status !== "p" || order.positions.length === 0 || order.positions.length > 8) return null;
+  if (order.status !== "p" || order.positions.length === 0 || order.positions.length > MAX_HOURS) return null;
   const byId = new Map(dates.map((date) => [date.id, date]));
   const starts: number[] = [];
   const unique = new Set<number>();

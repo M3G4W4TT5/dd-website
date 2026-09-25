@@ -406,6 +406,17 @@ body:has(.contact-main) .site-footer { color: #dc3e16; }
 .manage-help-grid section > span { font-size: 12px; font-weight: 700; }
 .manage-help-grid h2 { margin: 22px 0 14px; font-size: clamp(28px, 3vw, 42px); text-transform: uppercase; }
 .manage-help-grid p, .manage-policy { max-width: 440px; font-size: 14px; line-height: 1.6; }
+.manage-link-form { display: grid; gap: 10px; max-width: 440px; margin-top: 22px; }
+.manage-link-form label { font-size: 13px; font-weight: 700; }
+.manage-link-form input { width: 100%; min-height: 50px; border: 1px solid var(--line); padding: 10px 13px; background: var(--mellow-white); color: var(--deep); font: inherit; }
+.manage-link-form input:focus-visible { outline: 2px solid var(--deep); outline-offset: 2px; }
+.manage-link-form .button { width: fit-content; min-height: 48px; border: 0; border-radius: 0; margin-top: 4px; }
+.manage-link-form .button:disabled { opacity: .65; cursor: wait; }
+.manage-link-form p { margin: 5px 0 0; }
+.manage-honeypot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.manage-access-links { display: grid; gap: 10px; max-width: 690px; margin: 30px 0; padding: 0; list-style: none; }
+.manage-access-links a { display: block; border: 1px solid var(--line); padding: 18px; font-weight: 700; }
+.manage-access-links a:hover { background: #eff3eb; }
 .manage-policy { max-width: 750px; margin: 50px 0 0; border-top: 1px solid var(--line); padding-top: 25px; }
 .manage-policy a, .manage-demo-link a { text-decoration: underline; text-underline-offset: 3px; }
 .manage-demo-link { margin-top: 25px; font-size: 13px; }

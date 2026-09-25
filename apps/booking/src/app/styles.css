@@ -117,7 +117,6 @@ h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
 .summary-row { display: flex; justify-content: space-between; gap: 16px; align-items: start; padding: 20px 0; border-bottom: 1px solid #e7e9e0; font-size: 12px; }
 .summary-row > span { color: #819183; }
 .summary-row strong { max-width: 65%; text-align: right; font-weight: 700; }
-.time-selection-hint { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .summary-total { display: flex; justify-content: space-between; gap: 10px; align-items: center; margin: 23px 0 21px; }
 .summary-total span { display: block; font-size: 13px; font-weight: 800; }
 .summary-total small { display: block; margin-top: 4px; color: #8b978a; font-size: 10px; }

@@ -22,3 +22,34 @@ CREATE TABLE IF NOT EXISTS marketing_action_tokens (
 );
 
 CREATE INDEX IF NOT EXISTS marketing_action_tokens_expires_at_idx ON marketing_action_tokens (expires_at);
+
+CREATE TABLE IF NOT EXISTS manage_link_requests (
+  email_hash text PRIMARY KEY,
+  window_start timestamptz NOT NULL,
+  request_count integer NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS manage_link_requests_window_start_idx ON manage_link_requests (window_start);
+
+CREATE TABLE IF NOT EXISTS manage_link_tokens (
+  token_hash text PRIMARY KEY,
+  email text NOT NULL,
+  expires_at timestamptz NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS manage_link_tokens_expires_at_idx ON manage_link_tokens (expires_at);
+
+CREATE TABLE IF NOT EXISTS manage_sessions (
+  session_hash text PRIMARY KEY,
+  email text NOT NULL,
+  order_codes text[] NOT NULL,
+  expires_at timestamptz NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS manage_sessions_expires_at_idx ON manage_sessions (expires_at);
+
+CREATE TABLE IF NOT EXISTS manage_paid_emails (
+  order_code text PRIMARY KEY,
+  claimed_until timestamptz,
+  sent_at timestamptz
+);

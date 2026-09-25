@@ -9,11 +9,13 @@ export function HeaderBookingActions({
   language,
   onLanguageChange,
   languagePath,
+  hideLanguageSwitch = false,
   hideManageLink = false,
 }: {
   language: Language;
   onLanguageChange?: (language: Language) => void;
   languagePath?: string;
+  hideLanguageSwitch?: boolean;
   hideManageLink?: boolean;
 }) {
   useEffect(() => {
@@ -32,7 +34,7 @@ export function HeaderBookingActions({
   }
 
   return <div className="header-actions booking-header-actions">
-    {onLanguageChange ? <div className="lang-switch" aria-label="Language">
+    {hideLanguageSwitch ? null : onLanguageChange ? <div className="lang-switch" aria-label="Language">
       <button type="button" className={language === "da" ? "active" : ""} onClick={() => changeLanguage("da")} aria-pressed={language === "da"}>DA</button>
       <span>/</span>
       <button type="button" className={language === "en" ? "active" : ""} onClick={() => changeLanguage("en")} aria-pressed={language === "en"}>EN</button>

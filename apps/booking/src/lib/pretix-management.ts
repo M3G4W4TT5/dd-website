@@ -3,6 +3,7 @@ import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { cancellationDeadline, canManageBooking } from "./cancellation";
 import { firstBookedHour, rentalDateSchema, rentalOrderSchema } from "./pretix-order-model";
+import { MAX_HOURS } from "./booking";
 
 export class ManagementUnavailable extends Error {}
 export class BookingNotFound extends Error {}
@@ -49,7 +50,7 @@ export async function getPretixManagementEligibility(code: string, secret: strin
   if (order.code !== code || order.event !== cfg.event || !secureEqual(order.secret, secret)) throw new BookingNotFound();
 
   const ids = [...new Set(order.positions.map((position) => position.subevent))];
-  if (ids.some((id) => id === null) || ids.length === 0 || ids.length > 8) throw new ManagementUnavailable();
+  if (ids.some((id) => id === null) || ids.length === 0 || ids.length > MAX_HOURS) throw new ManagementUnavailable();
   const dates = await Promise.all(ids.map(async (id) => {
     const url = new URL(`${prefix}subevents/${id}/`, cfg.base);
     return rentalDateSchema.parse(await pretixJson(url, cfg.token));
