@@ -121,6 +121,6 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
         <div className="contact-visual-placeholder" aria-hidden="true" />
       </section>
     </main>
-    <SiteFooter language={language} links={[{ href: "/", label: "Booking" }, { href: `/events?lang=${language}`, label: t.events }]} />
+    <SiteFooter language={language} />
   </>;
 }

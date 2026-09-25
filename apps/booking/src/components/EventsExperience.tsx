@@ -96,6 +96,6 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
         </section>}
       </>}
     </main>
-    <SiteFooter language={language} links={[{ href: "/", label: "Booking" }, { href: `/contact?lang=${language}`, label: t.contact }]} />
+    <SiteFooter language={language} />
   </>;
 }

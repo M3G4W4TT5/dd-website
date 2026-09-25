@@ -381,7 +381,7 @@ export function BookingExperience({
         </section>
       </main>
 
-      <SiteFooter language={language} links={[{ href: `/contact?lang=${language}`, label: t.navContact }, { href: `/events?lang=${language}`, label: t.navEvents }]} />
+      <SiteFooter language={language} />
     </>
   );
 }
