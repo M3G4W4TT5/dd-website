@@ -1,9 +1,47 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 
 export function SiteFooter({ language = "en" }: { language?: "da" | "en" }) {
+  const footerRef = useRef<HTMLElement>(null);
+  const revealSpaceRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const footer = footerRef.current;
+    const revealSpace = revealSpaceRef.current;
+    if (!footer || !revealSpace) return;
+
+    let frame = 0;
+    const updateGradient = () => {
+      frame = 0;
+      const bounds = revealSpace.getBoundingClientRect();
+      const progress = Math.min(Math.max((window.innerHeight - bounds.top) / bounds.height, 0), 1);
+      footer.style.setProperty("--footer-progress", progress.toFixed(3));
+    };
+    const scheduleUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateGradient);
+    };
+    const measureFooter = () => {
+      revealSpace.style.height = `${footer.offsetHeight}px`;
+      scheduleUpdate();
+    };
+    const resizeObserver = new ResizeObserver(measureFooter);
+    resizeObserver.observe(footer);
+    measureFooter();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", measureFooter);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", measureFooter);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
   return <>
-    <div className="footer-reveal-space" aria-hidden="true" />
-    <footer className="site-footer">
+    <div ref={revealSpaceRef} className="footer-reveal-space" aria-hidden="true" />
+    <footer ref={footerRef} className="site-footer">
       <div className="footer-main">
         <div className="footer-identity"><span className="footer-mark">TTD</span></div>
         <div className="footer-details">

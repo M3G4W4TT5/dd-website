@@ -168,8 +168,7 @@ h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
 .legal-main { max-width: 1160px; margin: 0 auto; padding: 82px max(7vw, 24px) 120px; }
 body:has(.legal-main) { background: var(--paper); }
 body:has(.legal-main) .legal-main { background: var(--paper); }
-body:has(.legal-main) .footer-reveal-space { display: none; }
-body:has(.legal-main) .site-footer { position: relative; --footer-progress: 1; }
+.static-page-surface { position: relative; z-index: 1; min-height: 100vh; background: var(--paper); }
 .legal-intro { padding-bottom: 44px; border-bottom: 1px solid var(--line); }
 .legal-intro h1 { margin: 20px 0 12px; font-size: clamp(56px, 8vw, 112px); letter-spacing: -.055em; line-height: 1; }
 .legal-intro p { margin: 0; color: var(--muted); font-size: 12px; }

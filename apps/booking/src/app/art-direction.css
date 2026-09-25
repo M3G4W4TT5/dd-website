@@ -481,8 +481,6 @@ body:has(.contact-main) .site-footer { color: #dc3e16; }
 .manage-dialog .manage-cancel-confirm:hover:not(:disabled) { background: #b72f0d; }
 .manage-dialog .manage-cancel-confirm:focus-visible { outline: 2px solid #dc3e16; outline-offset: 3px; }
 .manage-dialog button:disabled { opacity: .55; cursor: wait; }
-body:has(.manage-main) .footer-reveal-space { display: none; }
-body:has(.manage-main) .site-footer { position: relative; --footer-progress: 1 !important; }
 @media (max-width: 650px) {
   .manage-main { padding: 62px 20px 80px; }
   .legal-header { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 16px; padding: 14px 20px; }

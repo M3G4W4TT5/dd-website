@@ -18,8 +18,10 @@ export default async function ManagedBookingPage({ searchParams }: { searchParam
   try { booking = await getManagedBooking(code, email); }
   catch { redirect(`/manage?lang=${language}`); }
   return <>
-    <StaticSiteHeader language={language} languagePath={`/manage/booking?code=${encodeURIComponent(code)}`} hideManageLink />
-    <main className="manage-main"><ManageBookingLive language={language} initialBooking={booking} serverNowIso={new Date().toISOString()} enabled={selfServiceEnabled()} /></main>
+    <div className="static-page-surface">
+      <StaticSiteHeader language={language} languagePath={`/manage/booking?code=${encodeURIComponent(code)}`} hideManageLink />
+      <main className="manage-main"><ManageBookingLive language={language} initialBooking={booking} serverNowIso={new Date().toISOString()} enabled={selfServiceEnabled()} /></main>
+    </div>
     <SiteFooter language={language} />
   </>;
 }

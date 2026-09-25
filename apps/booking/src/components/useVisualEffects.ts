@@ -63,37 +63,4 @@ export function useVisualEffects() {
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, []);
-
-  useEffect(() => {
-    const footer = document.querySelector<HTMLElement>(".site-footer");
-    const revealSpace = document.querySelector<HTMLElement>(".footer-reveal-space");
-    if (!footer || !revealSpace) return;
-
-    let frame = 0;
-    const updateGradient = () => {
-      frame = 0;
-      const bounds = revealSpace.getBoundingClientRect();
-      const progress = Math.min(Math.max((window.innerHeight - bounds.top) / bounds.height, 0), 1);
-      footer.style.setProperty("--footer-progress", progress.toFixed(3));
-    };
-    const scheduleUpdate = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateGradient);
-    };
-    const measureFooter = () => {
-      revealSpace.style.height = `${footer.offsetHeight}px`;
-      scheduleUpdate();
-    };
-    const resizeObserver = new ResizeObserver(measureFooter);
-    resizeObserver.observe(footer);
-    measureFooter();
-    window.addEventListener("scroll", scheduleUpdate, { passive: true });
-    window.addEventListener("resize", measureFooter);
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("scroll", scheduleUpdate);
-      window.removeEventListener("resize", measureFooter);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, []);
-
 }
