@@ -85,6 +85,11 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 .booking-heading > p { max-width: 400px; color: var(--green-ink); font-size: 16px; line-height: 1.5; }
 .booking-notice { border-color: var(--line); background: var(--green-bg); color: var(--green-ink); }
 .booking-layout { gap: 0; border: 1px solid var(--line); }
+.booking-layout.booking-layout--details { grid-template-columns: minmax(0, 1fr); }
+.booking-stage--leaving { animation: booking-step-out .22s ease-in both; pointer-events: none; }
+.booking-stage--entering { animation: booking-step-in .36s ease-out both; }
+@keyframes booking-step-out { to { opacity: 0; filter: blur(9px); transform: translateY(-5px); } }
+@keyframes booking-step-in { from { opacity: 0; filter: blur(9px); transform: translateY(7px); } to { opacity: 1; filter: blur(0); transform: translateY(0); } }
 @media (min-width: 1200px) { .booking-layout { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
 .picker-panel, .summary-panel { border: 0; box-shadow: none; }
 .picker-panel { background: var(--mellow-white); }
@@ -113,7 +118,15 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 .summary-total strong { font-family: Anton, Impact, sans-serif; font-size: 34px; }
 .button-check, .details-actions button { border-radius: 0; background: var(--green-ink); }
 .summary-footer { background: var(--green-bg); border-color: var(--line); }
-.details-preview { border-color: var(--line); background: var(--green-bg); }
+.details-preview { grid-column: 1 / -1; margin-top: 0; border: 0; background: var(--green-bg); }
+.details-back { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 28px; padding: 0; border: 0; background: none; color: var(--green-ink); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.details-back:hover { text-decoration: underline; text-underline-offset: 3px; }
+.details-intro .section-kicker { display: block; }
+.terms-acceptance { display: flex; align-items: flex-start; gap: 10px; margin-top: 22px; color: var(--green-ink); font-size: 12px; line-height: 1.5; }
+.terms-acceptance input { flex: 0 0 auto; width: 17px; height: 17px; margin: 1px 0 0; accent-color: var(--green-ink); cursor: pointer; }
+.terms-acceptance label { cursor: pointer; }
+.terms-acceptance a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.terms-error { margin: 8px 0 0 27px; color: #b23b32; font-size: 12px; font-weight: 700; line-height: 1.4; }
 .details-intro h3 { font-size: clamp(40px, 5vw, 65px); line-height: 1; text-transform: uppercase; }
 .details-fields input, .details-fields select, .details-fields textarea { border-radius: 0; }
 .date-navigation button, .date-input-label input, .details-fields input, .details-fields select, .details-fields textarea { border-color: var(--line); color: var(--green-ink); }
@@ -199,6 +212,7 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .booking-stage--leaving, .booking-stage--entering { animation: none; }
   [data-reveal], [data-reveal] img { opacity: 1; filter: none; transform: none; transition: none; }
   .image-frame { box-shadow: 0 14px 36px 0 var(--shadow-color); }
   .footer-reveal-space { display: none; }

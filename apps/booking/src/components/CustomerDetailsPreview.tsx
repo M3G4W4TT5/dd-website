@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 type Language = "da" | "en";
@@ -23,8 +23,14 @@ const copy = {
     comment: "Kommentar / særlige ønsker",
     optional: "Valgfrit",
     placeholderType: "Vælg type",
-    review: "Gennemgå oplysninger",
+    back: "Tilbage til valg af tid",
+    review: "Fortsæt til betaling",
     reviewing: "Tjekker oplysninger…",
+    accept: "Acceptér",
+    and: "og",
+    terms: "bookingvilkår",
+    privacy: "privatlivspolitik",
+    termsRequired: "Du skal acceptere bookingvilkår og privatlivspolitik for at fortsætte.",
     success: "Dine oplysninger er kontrolleret, og tiden var ledig ved seneste tjek.",
     invalid: "Kontrollér oplysningerne og prøv igen.",
     changed: "Tiderne er ikke længere ledige. Vælg et nyt interval.",
@@ -48,8 +54,14 @@ const copy = {
     comment: "Comment / special requests",
     optional: "Optional",
     placeholderType: "Choose type",
-    review: "Review details",
+    back: "Back to time selection",
+    review: "Continue to payment",
     reviewing: "Checking details…",
+    accept: "Accept",
+    and: "&",
+    terms: "booking terms",
+    privacy: "privacy policy",
+    termsRequired: "You must accept the booking terms and privacy policy to continue.",
     success: "Your details have been checked, and the time was available at the last check.",
     invalid: "Check the details and try again.",
     changed: "These hours are no longer free. Choose another interval.",
@@ -63,20 +75,28 @@ export function CustomerDetailsPreview({
   date,
   startId,
   hours,
+  onBack,
   onConflict,
 }: {
   language: Language;
   date: string;
   startId: string;
   hours: number;
+  onBack: () => void;
   onConflict: () => Promise<void>;
 }) {
   const t = copy[language];
   const [customerType, setCustomerType] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsError, setShowTermsError] = useState(false);
   const [status, setStatus] = useState<"idle" | "working" | "success" | "invalid" | "changed" | "error">("idle");
 
   async function review(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!termsAccepted) {
+      setShowTermsError(true);
+      return;
+    }
     const values = new FormData(event.currentTarget);
     setStatus("working");
     try {
@@ -87,6 +107,7 @@ export function CustomerDetailsPreview({
           date,
           startId,
           hours,
+          termsAccepted,
           details: {
             name: values.get("name"),
             email: values.get("email"),
@@ -121,7 +142,7 @@ export function CustomerDetailsPreview({
 
   return (
     <section className="details-preview" id="booking-details" aria-labelledby="details-title">
-      <div className="details-intro"><span className="section-kicker">{t.eyebrow}</span><h3 id="details-title">{t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
+      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{t.back}</button><span className="section-kicker">{t.eyebrow}</span><h3 id="details-title" tabIndex={-1}>{t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
       <form className="details-form" onSubmit={(event) => void review(event)}>
         <div className="details-fields">
           <label>{t.name}<input name="name" type="text" autoComplete="name" minLength={2} maxLength={100} required /></label>
@@ -133,8 +154,12 @@ export function CustomerDetailsPreview({
           {customerType === "business" && <label className="details-wide">{t.company}<input name="company" type="text" maxLength={150} required /></label>}
           <label className="details-wide">{t.comment} <span>({t.optional})</span><textarea name="comment" rows={3} maxLength={2000} /></label>
         </div>
-        <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}</div>
-        <p className="form-privacy">{language === "da" ? "Læs vores" : "Read our"} <a href={`/privacy?lang=${language}`}>{language === "da" ? "privatlivspolitik" : "privacy policy"}</a> {language === "da" ? "og" : "and"} <a href={`/terms?lang=${language}`}>{language === "da" ? "bookingvilkår" : "booking terms"}</a>.</p>
+        <div className="terms-acceptance">
+          <input id="accept-booking-terms" type="checkbox" required checked={termsAccepted} onInvalid={() => setShowTermsError(true)} onChange={(event) => { setTermsAccepted(event.target.checked); if (event.target.checked) setShowTermsError(false); }} aria-describedby={showTermsError ? "terms-acceptance-error" : undefined} aria-invalid={showTermsError} />
+          <label htmlFor="accept-booking-terms">{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</label>
+        </div>
+        {showTermsError && <p id="terms-acceptance-error" className="terms-error" role="alert">{t.termsRequired}</p>}
+        <div className="details-actions"><button type="submit" disabled={status === "working"} onClick={() => { if (!termsAccepted) setShowTermsError(true); }}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}</div>
       </form>
     </section>
   );

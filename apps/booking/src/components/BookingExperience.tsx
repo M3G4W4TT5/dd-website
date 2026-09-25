@@ -64,9 +64,8 @@ const copy = {
     chooseStart: "Vælg en ledig starttid",
     price: "Samlet pris",
     noQuote: "Valgte timer skal være sammenhængende og ledige.",
-    check: "Tjek tilgængelighed",
-    checking: "Tjekker…",
-    checked: "Tiderne er ledige. Udfyld dine oplysninger nedenfor.",
+    check: "Bekræft",
+    checking: "Bekræfter…",
     changed: "Tiderne er ændret. Vælg et nyt interval.",
     policy: "Gratis afbestilling indtil 24 timer før første bookede time.",
   },
@@ -110,9 +109,8 @@ const copy = {
     chooseStart: "Choose an available start time",
     price: "Total price",
     noQuote: "The selected hours must be consecutive and available.",
-    check: "Check availability",
-    checking: "Checking…",
-    checked: "These hours are available. Enter your details below.",
+    check: "Confirm",
+    checking: "Confirming…",
     changed: "Availability has changed. Choose another interval.",
     policy: "Free cancellation until 24 hours before the first booked hour.",
   },
@@ -153,6 +151,8 @@ export function BookingExperience({
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<"idle" | "checked" | "changed" | "error">("idle");
+  const [phase, setPhase] = useState<"selection" | "selection-out" | "details" | "details-out">("selection");
+  const [hasVisitedDetails, setHasVisitedDetails] = useState(false);
   const [error, setError] = useState(!initialAvailability);
   const t = copy[language];
   const today = initialDate;
@@ -168,24 +168,32 @@ export function BookingExperience({
   }, [language]);
 
   useEffect(() => {
-    if (status !== "checked") return;
+    if (phase !== "selection-out" && phase !== "details-out") return;
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 220;
+    const timeout = window.setTimeout(() => {
+      if (phase === "selection-out") {
+        setHasVisitedDetails(true);
+        setPhase("details");
+      } else {
+        setPhase("selection");
+      }
+    }, delay);
+    return () => window.clearTimeout(timeout);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "details" && !(phase === "selection" && hasVisitedDetails)) return;
     const frame = window.requestAnimationFrame(() => {
-      const details = document.getElementById("booking-details");
-      if (!details) return;
+      const flow = document.getElementById("booking-flow");
+      const focusTarget = document.getElementById(phase === "details" ? "details-title" : "booking-flow");
+      if (!flow || !focusTarget) return;
       const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height ?? 0;
-      const contentTop = headerHeight + 16;
-      const availableHeight = window.innerHeight - contentTop - 16;
-      const bounds = details.getBoundingClientRect();
-      const targetTop = bounds.height <= availableHeight
-        ? contentTop + (availableHeight - bounds.height) / 2
-        : contentTop;
-      window.scrollTo({
-        top: window.scrollY + bounds.top - targetTop,
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      });
+      const bounds = flow.getBoundingClientRect();
+      window.scrollTo({ top: window.scrollY + bounds.top - headerHeight - 16, behavior: "auto" });
+      focusTarget.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [status]);
+  }, [phase, hasVisitedDetails]);
 
   useVisualEffects();
 
@@ -269,7 +277,11 @@ export function BookingExperience({
         setStatus("error");
       } else {
         const result = (await response.json()) as { quote: Quote; reservationCreated: boolean };
-        setStatus(result.reservationCreated ? "error" : "checked");
+        if (result.reservationCreated) setStatus("error");
+        else {
+          setStatus("checked");
+          setPhase("selection-out");
+        }
       }
     } catch {
       setStatus("error");
@@ -300,7 +312,10 @@ export function BookingExperience({
             <div><span className="section-kicker">{t.bookingEyebrow}</span><h1 id="booking-title">{t.bookingTitle}</h1></div>
             <div className="booking-heading-side"><p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p></div>
           </div>
-          <div className="booking-layout">
+          <div id="booking-flow" className={`booking-layout booking-stage ${phase.endsWith("-out") ? "booking-stage--leaving" : phase === "details" || hasVisitedDetails ? "booking-stage--entering" : ""} ${phase === "details" || phase === "details-out" ? "booking-layout--details" : ""}`} tabIndex={-1} inert={phase.endsWith("-out")}>
+            {phase === "details" || phase === "details-out" ? (
+              <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId!} hours={hours} onBack={() => setPhase("details-out")} onConflict={async () => { await selectDate(date); setStatus("changed"); setPhase("selection"); }} />
+            ) : <>
             <div className="picker-panel">
               <div className="picker-head"><span>{t.pickDate}</span><CalendarDays size={19} /></div>
               <div className="date-controls">
@@ -349,12 +364,12 @@ export function BookingExperience({
                 <div className="summary-total"><span>{t.price}</span><strong>{quote ? money(quote.totalOre, language) : "—"}</strong></div>
                 <button className="button button-check" type="button" onClick={() => void checkSelection()} disabled={!quote || checking}>{checking ? t.checking : t.check}<MoveUpRight size={18} /></button>
                 <p className="multi-day-note"><a href={`/contact?lang=${language}`}>{t.multiDayLink}</a>{t.multiDayText}</p>
-                {status !== "idle" && <p className={`check-result ${status}`} role="status">{status === "checked" ? t.checked : status === "changed" ? t.changed : t.unavailable}</p>}
+                {(status === "changed" || status === "error") && <p className={`check-result ${status}`} role="status">{status === "changed" ? t.changed : t.unavailable}</p>}
               </div>
               <div className="summary-footer"><ShieldCheck size={18} /><span>{t.policy} <a href={`/terms?lang=${language}`}>{language === "da" ? "Bookingvilkår" : "Booking terms"}</a></span></div>
             </aside>
+            </>}
           </div>
-          {status === "checked" && quote && selectedId && <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId} hours={hours} onConflict={async () => { await selectDate(date); setStatus("changed"); }} />}
         </section>
 
         <section className="studio-gallery-section" aria-label={language === "da" ? "Billeder af studiet" : "Studio photos"}>

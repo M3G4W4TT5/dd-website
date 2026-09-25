@@ -20,5 +20,6 @@ export const preflightSchema = z.object({
   date: z.iso.date(),
   startId: z.string().min(1).max(100),
   hours: z.number().int().min(1).max(MAX_HOURS),
+  termsAccepted: z.literal(true),
   details: customerDetailsSchema,
 });
