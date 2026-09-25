@@ -36,8 +36,8 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .desktop-nav a:hover, .footer-links a:hover { color: var(--clay); }
 .header-actions { display: flex; align-items: center; gap: 26px; }
 .lang-switch { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .06em; color: #a2aaa0; }
-.lang-switch button { padding: 5px 1px; border: 0; background: transparent; color: inherit; }
-.lang-switch button.active { color: var(--ink); }
+.lang-switch button { padding: 5px 1px; border: 0; border-bottom: 1px solid transparent; background: transparent; color: inherit; }
+.lang-switch button.active { border-bottom-color: currentColor; color: var(--ink); }
 .button-dark:hover { background: #40654d; transform: translateY(-2px); }
 
 .hero { display: grid; grid-template-columns: minmax(0, 51%) minmax(0, 49%); min-height: 600px; overflow: hidden; }

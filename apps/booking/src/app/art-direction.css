@@ -347,6 +347,8 @@ body:has(.contact-main) .site-footer { color: #dc3e16; }
 .mobile-nav { display: none; }
 .footer-details { display: flex; align-items: flex-start; gap: 36px; }
 .footer-details address { min-width: 215px; margin: 0; border-right: 1px solid currentColor; padding: 0 36px 0 0; font-size: 13px; font-style: normal; line-height: 1.55; }
+.footer-map-link { display: flex; align-items: center; width: fit-content; gap: 8px; margin-top: 18px; font-size: 12px; }
+.footer-map-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .footer-bottom { align-items: center; }
 .footer-credit { display: inline-flex; align-items: center; gap: 9px; flex: none; white-space: nowrap; letter-spacing: .04em; }
 .footer-credit-logo { display: block; width: 101px; height: 21px; flex: none; background: currentColor; -webkit-mask: url('/branding/memory-one-one-colour-dark-cropped.png') center / contain no-repeat; mask: url('/branding/memory-one-one-colour-dark-cropped.png') center / contain no-repeat; }
