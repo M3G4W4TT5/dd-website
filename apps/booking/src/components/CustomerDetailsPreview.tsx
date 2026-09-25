@@ -31,6 +31,7 @@ const copy = {
     terms: "bookingvilkår",
     privacy: "privatlivspolitik",
     termsRequired: "Du skal acceptere bookingvilkår og privatlivspolitik for at fortsætte.",
+    fieldsRequired: "Udfyld eller ret de markerede felter for at fortsætte.",
     success: "Dine oplysninger er kontrolleret, og tiden var ledig ved seneste tjek.",
     invalid: "Kontrollér oplysningerne og prøv igen.",
     changed: "Tiderne er ikke længere ledige. Vælg et nyt interval.",
@@ -62,6 +63,7 @@ const copy = {
     terms: "booking terms",
     privacy: "privacy policy",
     termsRequired: "You must accept the booking terms and privacy policy to continue.",
+    fieldsRequired: "Complete or correct the highlighted fields to continue.",
     success: "Your details have been checked, and the time was available at the last check.",
     invalid: "Check the details and try again.",
     changed: "These hours are no longer free. Choose another interval.",
@@ -69,6 +71,11 @@ const copy = {
     checkout: "Payment takes place in the next step.",
   },
 } as const;
+
+function invalidDetailFields(form: HTMLFormElement): string[] {
+  return Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(".details-fields input, .details-fields select, .details-fields textarea"))
+    .filter((field) => !field.checkValidity()).map((field) => field.name);
+}
 
 export function CustomerDetailsPreview({
   language,
@@ -89,15 +96,20 @@ export function CustomerDetailsPreview({
   const [customerType, setCustomerType] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTermsError, setShowTermsError] = useState(false);
+  const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "working" | "success" | "invalid" | "changed" | "error">("idle");
 
   async function review(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!termsAccepted) {
-      setShowTermsError(true);
+    const form = event.currentTarget;
+    const invalid = invalidDetailFields(form);
+    setInvalidFields(invalid);
+    setShowTermsError(!termsAccepted);
+    if (invalid.length || !termsAccepted) {
+      if (invalid.length) form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${invalid[0]}"]`)?.focus();
       return;
     }
-    const values = new FormData(event.currentTarget);
+    const values = new FormData(form);
     setStatus("working");
     try {
       const response = await fetch("/api/preflight", {
@@ -143,23 +155,24 @@ export function CustomerDetailsPreview({
   return (
     <section className="details-preview" id="booking-details" aria-labelledby="details-title">
       <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{t.back}</button><span className="section-kicker">{t.eyebrow}</span><h3 id="details-title" tabIndex={-1}>{t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
-      <form className="details-form" onSubmit={(event) => void review(event)}>
+      <form className="details-form" noValidate onInput={(event) => { if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
         <div className="details-fields">
-          <label>{t.name}<input name="name" type="text" autoComplete="name" minLength={2} maxLength={100} required /></label>
-          <label>{t.email}<input name="email" type="email" autoComplete="email" maxLength={254} required /></label>
-          <label>{t.phone}<input name="phone" type="tel" autoComplete="tel" minLength={6} maxLength={30} required /></label>
-          <label>{t.type}<select name="customerType" value={customerType} onChange={(event) => setCustomerType(event.target.value)} required><option value="" disabled>{t.placeholderType}</option><option value="private">{t.private}</option><option value="instructor">{t.instructor}</option><option value="business">{t.business}</option></select></label>
-          <label>{t.attendeeCount}<input name="attendeeCount" type="number" inputMode="numeric" min={1} max={100} step={1} required /></label>
-          <label>{t.purpose}<input name="purpose" type="text" maxLength={150} minLength={2} required /></label>
-          {customerType === "business" && <label className="details-wide">{t.company}<input name="company" type="text" maxLength={150} required /></label>}
+          <label>{t.name}<input name="name" type="text" autoComplete="name" minLength={2} maxLength={100} required aria-invalid={invalidFields.includes("name")} /></label>
+          <label>{t.email}<input name="email" type="email" autoComplete="email" maxLength={254} required aria-invalid={invalidFields.includes("email")} /></label>
+          <label>{t.phone}<input name="phone" type="tel" autoComplete="tel" minLength={6} maxLength={30} required aria-invalid={invalidFields.includes("phone")} /></label>
+          <label>{t.type}<select name="customerType" value={customerType} onChange={(event) => setCustomerType(event.target.value)} required aria-invalid={invalidFields.includes("customerType")}><option value="" disabled>{t.placeholderType}</option><option value="private">{t.private}</option><option value="instructor">{t.instructor}</option><option value="business">{t.business}</option></select></label>
+          <label>{t.attendeeCount}<input name="attendeeCount" type="number" inputMode="numeric" min={1} max={100} step={1} required aria-invalid={invalidFields.includes("attendeeCount")} /></label>
+          <label>{t.purpose}<input name="purpose" type="text" maxLength={150} minLength={2} required aria-invalid={invalidFields.includes("purpose")} /></label>
+          {customerType === "business" && <label className="details-wide">{t.company}<input name="company" type="text" maxLength={150} required aria-invalid={invalidFields.includes("company")} /></label>}
           <label className="details-wide">{t.comment} <span>({t.optional})</span><textarea name="comment" rows={3} maxLength={2000} /></label>
         </div>
+        {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
         <div className="terms-acceptance">
-          <input id="accept-booking-terms" type="checkbox" required checked={termsAccepted} onInvalid={() => setShowTermsError(true)} onChange={(event) => { setTermsAccepted(event.target.checked); if (event.target.checked) setShowTermsError(false); }} aria-describedby={showTermsError ? "terms-acceptance-error" : undefined} aria-invalid={showTermsError} />
+          <input id="accept-booking-terms" type="checkbox" required checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); if (event.target.checked) setShowTermsError(false); }} aria-describedby={showTermsError ? "terms-acceptance-error" : undefined} aria-invalid={showTermsError} />
           <label htmlFor="accept-booking-terms">{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</label>
         </div>
         {showTermsError && <p id="terms-acceptance-error" className="terms-error" role="alert">{t.termsRequired}</p>}
-        <div className="details-actions"><button type="submit" disabled={status === "working"} onClick={() => { if (!termsAccepted) setShowTermsError(true); }}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}</div>
+        <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}</div>
       </form>
     </section>
   );
