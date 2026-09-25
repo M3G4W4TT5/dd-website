@@ -30,17 +30,17 @@ const copy = {
   da: {
     preview: "LOKAL FORHÅNDSVISNING · INGEN BOOKINGER OPRETTES",
     spaceCaption: "Rummet",
+    angleCaption: "ANDEN VINKEL",
     navEvents: "Events",
     navContact: "Kontakt",
     navAdmin: "Administration",
     displayLeft: "TTD",
     displayRight: "STUDIO",
-    imageOne: "Illustrativt urbant dansestudie med mursten, spejle og trægulv",
-    imageTwo: "Illustrativ detalje med spejl og murstensvæg i et urbant dansestudie",
-    heroText:
-      "TTD Studio er et kreativt træningsrum for dansere hos København Danser på Østerbro. Skabt af Didde-Mie Lykke From og Toniah Pedersen.",
+    imageOne: "TTD Studio med skrå hvid væg, trægulv og vinduer",
+    imageTwo: "TTD Studio fra den modsatte vinkel med skrå væg og trægulv",
+    heroTextBeforeVenue: "TTD Studio er et kreativt træningsrum for dansere hos ",
+    heroTextAfterVenue: " på Østerbro. Skabt af Didde-Mie Lykke From og Toniah Pedersen.",
     heroBook: "Se ledige tider",
-    heroNote: "Designudkast · Studiebillede afventer",
     metricOne: "68 m²",
     metricTwo: "Alle dage · 08–22",
     metricThree: "350 kr./time",
@@ -92,17 +92,17 @@ const copy = {
   en: {
     preview: "LOCAL PREVIEW · NO BOOKINGS ARE CREATED",
     spaceCaption: "The space",
+    angleCaption: "ANOTHER ANGLE",
     navEvents: "Events",
     navContact: "Contact",
     navAdmin: "Administration",
     displayLeft: "TTD",
     displayRight: "STUDIO",
-    imageOne: "Illustrative urban dance studio with brick, mirrors and wooden floor",
-    imageTwo: "Illustrative urban dance studio detail with mirror and brick wall",
-    heroText:
-      "TTD Studio is a creative training room for dancers at København Danser in Østerbro, created by Didde-Mie Lykke From and Toniah Pedersen.",
+    imageOne: "TTD Studio with a sloping white wall, wooden floor and windows",
+    imageTwo: "TTD Studio from the opposite angle, with a sloping wall and wooden floor",
+    heroTextBeforeVenue: "TTD Studio is a creative training room for dancers at ",
+    heroTextAfterVenue: " in Østerbro, created by Didde-Mie and Toniah Pedersen.",
     heroBook: "Explore availability",
-    heroNote: "Design preview · Studio photo pending",
     metricOne: "68 m²",
     metricTwo: "Every day · 08–22",
     metricThree: "DKK 350/hour",
@@ -310,20 +310,23 @@ export function BookingExperience({
 
       <main id="top">
         <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-gallery">
-            <figure className="hero-photo hero-photo-wide">
-              <div className="image-frame" data-image-shadow data-reveal><img src="/concepts/studio-room.png" alt={t.imageOne} /></div>
-              <figcaption><span>01 / {t.spaceCaption}</span><span>{t.heroNote}</span></figcaption>
-            </figure>
-            <figure className="hero-photo hero-photo-detail">
-              <div className="image-frame" data-image-shadow data-reveal><img src="/concepts/studio-detail.png" loading="lazy" alt={t.imageTwo} /></div>
-              <figcaption><span>02 / STUDIO DETAIL</span><span>{t.heroNote}</span></figcaption>
-            </figure>
-          </div>
           <div className="hero-title-row">
             <h1 id="hero-title"><span>{t.displayLeft}</span><span>{t.displayRight}</span></h1>
           </div>
-          <div className="hero-after"><p>{t.heroText}</p><a href="#booking">{t.heroBook}<ArrowDownRight size={21} /></a></div>
+          <div className="hero-after">
+            <p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p>
+            <a href="#booking">{t.heroBook}<ArrowDownRight size={21} /></a>
+          </div>
+          <div className="hero-gallery">
+            <figure className="hero-photo hero-photo-wide">
+              <div className="image-frame" data-image-shadow data-reveal><img src="/studio/ttd-studio-01-booking-wide.webp" alt={t.imageOne} /></div>
+              <figcaption><span>01 / {t.spaceCaption}</span></figcaption>
+            </figure>
+            <figure className="hero-photo hero-photo-detail">
+              <div className="image-frame" data-image-shadow data-reveal><img src="/studio/ttd-studio-03-booking-angle.webp" loading="lazy" alt={t.imageTwo} /></div>
+              <figcaption><span>02 / {t.angleCaption}</span></figcaption>
+            </figure>
+          </div>
         </section>
 
         <div className="metric-strip" aria-label={language === "da" ? "Om studiet" : "About the studio"}>
