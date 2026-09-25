@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { SpringCheckbox } from "./SpringCheckbox";
 
 type Language = "da" | "en";
 
@@ -181,11 +182,11 @@ export function CustomerDetailsPreview({
         </div>
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
         <div className="terms-acceptance marketing-acceptance">
-          <input id="accept-marketing" type="checkbox" checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} />
+          <SpringCheckbox id="accept-marketing" checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} />
           <label htmlFor="accept-marketing">{t.marketing}</label>
         </div>
         <div className="terms-acceptance">
-          <input id="accept-booking-terms" type="checkbox" required checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); if (event.target.checked) setShowTermsError(false); }} aria-describedby={showTermsError ? "terms-acceptance-error" : undefined} aria-invalid={showTermsError} />
+          <SpringCheckbox id="accept-booking-terms" required checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); if (event.target.checked) setShowTermsError(false); }} aria-describedby={showTermsError ? "terms-acceptance-error" : undefined} aria-invalid={showTermsError} />
           <label htmlFor="accept-booking-terms">{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</label>
         </div>
         {showTermsError && <p id="terms-acceptance-error" className="terms-error" role="alert">{t.termsRequired}</p>}

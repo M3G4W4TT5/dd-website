@@ -6,6 +6,7 @@ import { SiteFooter } from "./SiteFooter";
 import { MobileNavigation } from "./MobileNavigation";
 import { useVisualEffects } from "./useVisualEffects";
 import { HeaderBookingActions } from "./HeaderBookingActions";
+import { SpringCheckbox } from "./SpringCheckbox";
 
 type Language = "da" | "en";
 const copy = {
@@ -112,7 +113,7 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
           </div>
           {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
           <div className="contact-privacy-acceptance terms-acceptance">
-            <input id="accept-contact-privacy" type="checkbox" required checked={privacyAccepted} onChange={(event) => { setPrivacyAccepted(event.target.checked); if (event.target.checked) setShowPrivacyError(false); }} aria-describedby={showPrivacyError ? "contact-privacy-error" : undefined} aria-invalid={showPrivacyError} />
+            <SpringCheckbox id="accept-contact-privacy" required checked={privacyAccepted} onChange={(event) => { setPrivacyAccepted(event.target.checked); if (event.target.checked) setShowPrivacyError(false); }} aria-describedby={showPrivacyError ? "contact-privacy-error" : undefined} aria-invalid={showPrivacyError} />
             <label htmlFor="accept-contact-privacy">{t.acceptPrivacy} <a href={`/privacy?lang=${language}`}>{t.privacyPolicy}</a>.</label>
           </div>
           {showPrivacyError && <p id="contact-privacy-error" className="contact-privacy-error terms-error" role="alert">{t.privacyRequired}</p>}
