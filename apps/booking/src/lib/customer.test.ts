@@ -30,3 +30,10 @@ test("booking preflight requires explicit acceptance of the terms", () => {
   assert.equal(preflightSchema.safeParse({ ...request, termsAccepted: false }).success, false);
   assert.equal(preflightSchema.safeParse({ ...request, termsAccepted: true }).success, true);
 });
+
+test("booking marketing choice is optional and remains separate from terms", () => {
+  const request = { date: "2026-09-26", startId: "slot-08", hours: 1, details: base };
+  assert.equal(preflightSchema.safeParse({ ...request, termsAccepted: true, marketingOptIn: false }).success, true);
+  assert.equal(preflightSchema.safeParse({ ...request, termsAccepted: true, marketingOptIn: true, marketingLanguage: "en" }).success, true);
+  assert.equal(preflightSchema.safeParse({ ...request, termsAccepted: false, marketingOptIn: true }).success, false);
+});

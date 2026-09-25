@@ -22,6 +22,8 @@ x-pretix-environment: &pretix-environment
 services:
   postgres:
     image: postgres:17.6-alpine
+    ports:
+      - "127.0.0.1:5433:5432"
     environment:
       POSTGRES_DB: pretix
       POSTGRES_USER: pretix

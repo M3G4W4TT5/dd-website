@@ -157,6 +157,29 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .links-list span { font-size:20px; font-weight:700; letter-spacing:-.04em; }
 .links-list small { overflow-wrap:anywhere; font-size:9px; font-weight:700; letter-spacing:.08em; }
 .links-list>a:hover { color:#805176; }
+.links-intro { min-width:0; }
+.newsletter-signup { max-width:540px; margin-top:48px; }
+.newsletter-signup>p:first-child { max-width:430px; font-size:clamp(17px,1.8vw,24px); line-height:1.35; font-weight:700; letter-spacing:-.04em; }
+.newsletter-signup form { position:relative; margin-top:25px; }
+.newsletter-signup form>label { display:block; margin-bottom:9px; font-size:10px; font-weight:700; letter-spacing:.12em; }
+.newsletter-fields { display:flex; border:1px solid #4a3649; background:#ffd3f1; }
+.newsletter-fields input { min-width:0; flex:1; border:0; border-radius:0; padding:16px; background:transparent; color:#09090b; font-size:14px; }
+.newsletter-fields input::placeholder { color:#6b4c61; }
+.newsletter-fields button { display:flex; align-items:center; gap:8px; flex:none; border:0; border-left:1px solid #4a3649; padding:0 17px; background:#09090b; color:var(--pink); font-size:11px; font-weight:900; letter-spacing:.08em; }
+.newsletter-fields button:hover { background:#633c5b; }
+.newsletter-fields button:disabled { opacity:.65; cursor:wait; }
+.newsletter-signup small { display:block; margin-top:12px; font-size:11px; line-height:1.55; }
+.newsletter-signup small a { text-decoration:underline; text-underline-offset:2px; }
+.newsletter-status { min-height:1.4em; margin-top:10px; font-size:12px; line-height:1.4; font-weight:700; }
+.newsletter-honeypot { position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden; }
+.newsletter-unsubscribe-page { max-width:760px; min-height:100vh; margin:auto; padding:70px 24px; }
+.newsletter-unsubscribe-page h1 { margin:65px 0 25px; color:var(--pink); font-size:clamp(52px,10vw,100px); font-weight:900; line-height:.9; letter-spacing:-.08em; }
+.newsletter-unsubscribe-page>p { max-width:580px; font-size:17px; line-height:1.6; }
+.newsletter-unsubscribe-page>a:last-child { display:inline-block; margin-top:35px; text-decoration:underline; }
+.newsletter-unsubscribe-form { display:grid; gap:12px; max-width:500px; margin-top:35px; }
+.newsletter-unsubscribe-form label { font-size:11px; font-weight:700; letter-spacing:.1em; }
+.newsletter-unsubscribe-form input { border:1px solid var(--pink); padding:15px; background:#211b21; color:#fff; }
+.newsletter-unsubscribe-form button { justify-self:start; border:0; padding:15px 20px; background:var(--pink); color:#09090b; font-size:11px; font-weight:900; letter-spacing:.08em; }
 
 .contact-section { isolation:isolate; overflow:hidden; background-color:#17232d; background-image:linear-gradient(180deg,#17232d 0,#17232dcc 75px,transparent 220px),linear-gradient(90deg,#07090e66,#07090e99),linear-gradient(0deg,#07090eaa,transparent 42%),var(--contact-image); background-size:cover; background-position:center,center,center,88% 140px; background-repeat:no-repeat; }
 .contact-section .section-index { border-color:#ffffff85; color:#f1eaf2; }

@@ -1,0 +1,20 @@
+---
+import { NewsletterUnsubscribe } from "../components/NewsletterUnsubscribe";
+import "@fontsource/montserrat/500.css";
+import "@fontsource/montserrat/700.css";
+import "@fontsource/montserrat/900.css";
+import "../styles/site.css";
+---
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Unsubscribe | DD</title></head>
+  <body>
+    <main class="newsletter-unsubscribe-page">
+      <a href="/" class="wordmark">DD<span>.</span></a>
+      <h1>UNSUBSCRIBE.</h1>
+      <p>Enter your email to stop DD Production newsletter updates on my work and dance videos. You can also reply to any newsletter and ask to unsubscribe.</p>
+      <NewsletterUnsubscribe client:load />
+      <a href="/privacy">Privacy policy</a>
+    </main>
+  </body>
+</html>

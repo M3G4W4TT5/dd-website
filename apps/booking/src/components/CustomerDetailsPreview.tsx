@@ -31,6 +31,9 @@ const copy = {
     terms: "bookingvilkår",
     privacy: "privatlivspolitik",
     termsRequired: "Du skal acceptere bookingvilkår og privatlivspolitik for at fortsætte.",
+    marketing: "Send mig e-mails fra TOTAL ENTERTAINMENT om TTD Studio-tilbud, nye events og rabatter. Jeg kan altid afmelde mig.",
+    marketingSent: "Hvis du ikke allerede er tilmeldt, skal du tjekke din e-mail for et bekræftelseslink til TTD Studio-mails.",
+    marketingFailed: "Tilmeldingen til TTD Studio-mails kunne ikke gennemføres. Din booking kan fortsætte uden den.",
     fieldsRequired: "Udfyld eller ret de markerede felter for at fortsætte.",
     success: "Dine oplysninger er kontrolleret, og tiden var ledig ved seneste tjek.",
     invalid: "Kontrollér oplysningerne og prøv igen.",
@@ -63,6 +66,9 @@ const copy = {
     terms: "booking terms",
     privacy: "privacy policy",
     termsRequired: "You must accept the booking terms and privacy policy to continue.",
+    marketing: "Email me TTD Studio offers, new events and discounts from TOTAL ENTERTAINMENT. I can unsubscribe at any time.",
+    marketingSent: "If you are not already subscribed, check your email for a TTD Studio confirmation link.",
+    marketingFailed: "We could not start your TTD Studio email signup. You can continue your booking without it.",
     fieldsRequired: "Complete or correct the highlighted fields to continue.",
     success: "Your details have been checked, and the time was available at the last check.",
     invalid: "Check the details and try again.",
@@ -95,6 +101,8 @@ export function CustomerDetailsPreview({
   const t = copy[language];
   const [customerType, setCustomerType] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [marketingResult, setMarketingResult] = useState<boolean | null>(null);
   const [showTermsError, setShowTermsError] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "working" | "success" | "invalid" | "changed" | "error">("idle");
@@ -111,6 +119,7 @@ export function CustomerDetailsPreview({
     }
     const values = new FormData(form);
     setStatus("working");
+    setMarketingResult(null);
     try {
       const response = await fetch("/api/preflight", {
         method: "POST",
@@ -120,6 +129,8 @@ export function CustomerDetailsPreview({
           startId,
           hours,
           termsAccepted,
+          marketingOptIn,
+          marketingLanguage: language,
           details: {
             name: values.get("name"),
             email: values.get("email"),
@@ -144,7 +155,9 @@ export function CustomerDetailsPreview({
           detailsAccepted: boolean;
           reservationCreated: boolean;
           paymentStarted: boolean;
+          marketingRequested: boolean | null;
         };
+        setMarketingResult(result.marketingRequested);
         setStatus(result.detailsAccepted && !result.reservationCreated && !result.paymentStarted ? "success" : "error");
       }
     } catch {
@@ -167,12 +180,16 @@ export function CustomerDetailsPreview({
           <label className="details-wide">{t.comment} <span>({t.optional})</span><textarea name="comment" rows={3} maxLength={2000} /></label>
         </div>
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
+        <div className="terms-acceptance marketing-acceptance">
+          <input id="accept-marketing" type="checkbox" checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} />
+          <label htmlFor="accept-marketing">{t.marketing} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</label>
+        </div>
         <div className="terms-acceptance">
           <input id="accept-booking-terms" type="checkbox" required checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); if (event.target.checked) setShowTermsError(false); }} aria-describedby={showTermsError ? "terms-acceptance-error" : undefined} aria-invalid={showTermsError} />
           <label htmlFor="accept-booking-terms">{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</label>
         </div>
         {showTermsError && <p id="terms-acceptance-error" className="terms-error" role="alert">{t.termsRequired}</p>}
-        <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}</div>
+        <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}{marketingResult !== null && <p className="marketing-result" role="status">{marketingResult ? t.marketingSent : t.marketingFailed}</p>}</div>
       </form>
     </section>
   );

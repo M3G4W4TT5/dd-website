@@ -126,6 +126,17 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 .terms-acceptance input { flex: 0 0 auto; width: 17px; height: 17px; margin: 1px 0 0; accent-color: var(--green-ink); cursor: pointer; }
 .terms-acceptance label { cursor: pointer; }
 .terms-acceptance a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.marketing-acceptance { margin-top: 22px; }
+.marketing-acceptance + .terms-acceptance { margin-top: 12px; }
+.marketing-result { max-width: 42rem; font-size: 12px; line-height: 1.5; }
+.marketing-page { min-height:100vh; max-width:720px; margin:auto; padding:12vh 24px 80px; color:#194b35; }
+.marketing-page>span { font-size:11px; font-weight:700; letter-spacing:.16em; }
+.marketing-page h1 { margin:22px 0; font-size:clamp(42px,8vw,82px); line-height:1; }
+.marketing-page p { max-width:540px; margin:16px 0; line-height:1.6; }
+.marketing-page button,.marketing-unsubscribe-form button { border:0; padding:14px 20px; background:#194b35; color:#fff; font-weight:700; }
+.marketing-page>a { display:inline-block; margin-top:35px; text-decoration:underline; }
+.marketing-unsubscribe-form { display:grid; gap:12px; max-width:440px; margin-top:30px; }
+.marketing-unsubscribe-form input { width:100%; border:1px solid #194b35; padding:13px; background:#fff; color:#111; }
 .terms-error { margin: 8px 0 0 27px; color: #b23b32; font-size: 12px; font-weight: 700; line-height: 1.4; }
 .form-field-error { margin: 12px 0 0; color: #b23b32; font-size: 12px; font-weight: 700; line-height: 1.4; }
 .details-fields :is(input, select, textarea)[aria-invalid="true"] { border-color: #b23b32; box-shadow: inset 0 0 0 1px #b23b32; }

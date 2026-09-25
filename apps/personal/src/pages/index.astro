@@ -4,6 +4,7 @@ import { ContactPreview } from "../components/ContactPreview";
 import { EditorialMotion } from "../components/EditorialMotion";
 import { FilmCarousel } from "../components/FilmCarousel";
 import { WorkSwitcher } from "../components/WorkSwitcher";
+import { NewsletterSignup } from "../components/NewsletterSignup";
 import { films, media, work } from "../content";
 import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
@@ -68,7 +69,7 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
       <section class="links-section" aria-labelledby="links-title">
         <div class="section-index"><span>04 / LINKS</span><span>DD / ONLINE</span></div>
         <div class="links-layout">
-          <h2 id="links-title">FOLLOW<br />THE <span>WORK.</span></h2>
+          <div class="links-intro"><h2 id="links-title">FOLLOW<br />THE <span>WORK.</span></h2><NewsletterSignup client:load /></div>
           <div class="links-list">
             <a href={bookingUrl}><span>Studio booking</span><small>TTD STUDIO</small><ArrowUpRight size={23} /></a>
             <a href="https://www.instagram.com/diddemie_from/" target="_blank" rel="noopener noreferrer"><span>Instagram</span><small>@diddemie_from</small><ArrowUpRight size={23} /></a>

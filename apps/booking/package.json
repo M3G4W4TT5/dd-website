@@ -16,6 +16,7 @@
     "luxon": "3.7.2",
     "next": "16.3.6",
     "nodemailer": "^10.0.10",
+    "pg": "^8.23.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "4.1.11"
@@ -24,6 +25,7 @@
     "@types/luxon": "3.7.1",
     "@types/node": "24.5.2",
     "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "tsx": "4.20.6",
