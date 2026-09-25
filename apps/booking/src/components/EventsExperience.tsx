@@ -6,6 +6,7 @@ import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useVisualEffects } from "./useVisualEffects";
 import { SiteFooter } from "./SiteFooter";
 import { MobileNavigation } from "./MobileNavigation";
+import { HeaderBookingActions } from "./HeaderBookingActions";
 import { ZONE, checkoutPath, type Language, type Occurrence } from "@/lib/events-model";
 import type { Catalog } from "@/lib/events";
 
@@ -68,7 +69,7 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
         <a href="/#booking">Booking</a><a href={`/events?lang=${language}`} aria-current={selected ? undefined : "page"}>{t.events}</a><a href={`/contact?lang=${language}`}>{t.contact}</a>
       </nav>
       <a className="brand" href="/" aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
-      <div className="header-actions"><div className="lang-switch" aria-label="Language"><button type="button" className={language === "da" ? "active" : ""} onClick={() => setLanguage("da")} aria-pressed={language === "da"}>DA</button><span>/</span><button type="button" className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")} aria-pressed={language === "en"}>EN</button></div></div>
+      <HeaderBookingActions language={language} onLanguageChange={setLanguage} />
     </header>
     <main className="events-main">
       {selected ? <>

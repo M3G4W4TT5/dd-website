@@ -75,7 +75,7 @@ h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
 
 .booking-section { padding: 110px max(7vw, 34px) 125px; scroll-margin-top: 25px; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 60px; margin-bottom: 38px; }
-.section-heading h2 { margin: 16px 0 0; font-size: clamp(42px, 4.4vw, 68px); line-height: 1.08; letter-spacing: -.047em; }
+.section-heading h1 { margin: 16px 0 0; font-size: clamp(42px, 4.4vw, 68px); line-height: 1.08; letter-spacing: -.047em; }
 .booking-heading > p { max-width: 385px; margin: 0 0 2px; color: var(--muted); font-size: 14px; line-height: 1.75; }
 .booking-notice { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 12px 16px; border: 1px solid #dce2d5; background: #f0f1e8; color: #526b55; font-size: 12px; }
 .booking-layout { display: grid; grid-template-columns: minmax(0, 1.47fr) minmax(320px, .83fr); align-items: stretch; gap: 18px; }
@@ -237,7 +237,7 @@ body:has(.legal-main) .site-footer { position: relative; --footer-progress: 1; }
   .booking-section { padding-left: 19px; padding-right: 19px; }
   .booking-section { padding-top: 75px; padding-bottom: 78px; }
   .section-heading { display: block; margin-bottom: 26px; }
-  .section-heading h2 { font-size: 44px; }
+  .section-heading h1 { font-size: 44px; }
   .booking-heading > p { margin: 20px 0 0; font-size: 13px; }
   .booking-notice { font-size: 11px; line-height: 1.4; }
   .picker-panel { padding: 23px 16px; }

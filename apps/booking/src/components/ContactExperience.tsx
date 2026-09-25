@@ -5,6 +5,7 @@ import { ArrowUpRight } from "lucide-react";
 import { SiteFooter } from "./SiteFooter";
 import { MobileNavigation } from "./MobileNavigation";
 import { useVisualEffects } from "./useVisualEffects";
+import { HeaderBookingActions } from "./HeaderBookingActions";
 
 type Language = "da" | "en";
 const copy = {
@@ -67,9 +68,7 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
         <a href="/#booking">Booking</a><a href={`/events?lang=${language}`}>{t.events}</a><a href={`/contact?lang=${language}`} aria-current="page">{t.contact}</a>
       </nav>
       <a className="brand" href="/" aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
-      <div className="header-actions">
-        <div className="lang-switch" aria-label="Language"><button type="button" className={language === "da" ? "active" : ""} onClick={() => setLanguage("da")} aria-pressed={language === "da"}>DA</button><span>/</span><button type="button" className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")} aria-pressed={language === "en"}>EN</button></div>
-      </div>
+      <HeaderBookingActions language={language} onLanguageChange={setLanguage} />
     </header>
     <main className="contact-main">
       <div className="events-heading"><h1>{t.title}</h1><p>{t.intro}</p></div>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ManageBookingPanel, type ManagedBooking } from "./ManageBookingPanel";
 import type { AvailableInterval } from "./ReschedulePicker";
 import { SiteFooter } from "./SiteFooter";
-import { ManageLanguageSwitch } from "./ManageLanguageSwitch";
+import { HeaderBookingActions } from "./HeaderBookingActions";
 
 export function ManageBookingPreview({ language, initialBooking, initialToken, serverNowIso }: {
   language: "da" | "en";
@@ -24,7 +24,7 @@ export function ManageBookingPreview({ language, initialBooking, initialToken, s
     return { ...current, firstHourIso: result.firstHourIso, endIso: result.endIso };
   }
   return <>
-    <header className="legal-header"><a className="brand" href="/" aria-label="TTD Studio"><span className="brand-mark">TTD<br />STUDIO</span></a><ManageLanguageSwitch language={language} preview /></header>
+    <header className="legal-header"><a className="brand" href="/" aria-label="TTD Studio"><span className="brand-mark">TTD<br />STUDIO</span></a><HeaderBookingActions language={language} languagePath="/manage/preview" hideManageLink /></header>
     <main className="manage-main"><ManageBookingPanel language={language} initialBooking={initialBooking} serverNowIso={serverNowIso} preview onChangeBooking={previewChange} onCancel={async (current) => {
       const response = await fetch("/api/manage/preview", {
         method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store",

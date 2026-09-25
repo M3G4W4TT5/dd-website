@@ -20,6 +20,7 @@ import { CustomerDetailsPreview } from "@/components/CustomerDetailsPreview";
 import { useVisualEffects } from "@/components/useVisualEffects";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MobileNavigation } from "@/components/MobileNavigation";
+import { HeaderBookingActions } from "@/components/HeaderBookingActions";
 
 type Language = "da" | "en";
 
@@ -30,8 +31,6 @@ const copy = {
     angleCaption: "ANDEN VINKEL",
     navEvents: "Events",
     navContact: "Kontakt",
-    displayLeft: "TTD",
-    displayRight: "STUDIO",
     imageOne: "TTD Studio med skrå hvid væg, trægulv og vinduer",
     imageTwo: "TTD Studio fra den modsatte vinkel med skrå væg og trægulv",
     heroTextBeforeVenue: "TTD Studio er et kreativt træningsrum for dansere hos ",
@@ -41,9 +40,6 @@ const copy = {
     metricThree: "350 kr./time",
     bookingEyebrow: "FIND DIN TID",
     bookingTitle: "Giv din idé tid og rum.",
-    bookingIntro:
-      "Vælg en starttid og det antal sammenhængende timer, du har brug for. Denne forhåndsvisning opretter ikke en booking.",
-    manageBooking: "Administrer din booking",
     unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
@@ -77,8 +73,6 @@ const copy = {
     angleCaption: "ANOTHER ANGLE",
     navEvents: "Events",
     navContact: "Contact",
-    displayLeft: "TTD",
-    displayRight: "STUDIO",
     imageOne: "TTD Studio with a sloping white wall, wooden floor and windows",
     imageTwo: "TTD Studio from the opposite angle, with a sloping wall and wooden floor",
     heroTextBeforeVenue: "TTD Studio is a creative training room for dancers at ",
@@ -88,9 +82,6 @@ const copy = {
     metricThree: "DKK 350/hour",
     bookingEyebrow: "FIND YOUR TIME",
     bookingTitle: "Give your idea room to move.",
-    bookingIntro:
-      "Choose a start time and the number of consecutive hours you need. This preview does not create a booking.",
-    manageBooking: "Manage your booking",
     unavailable: "Availability could not be loaded. Check the local pretix connection.",
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
@@ -266,35 +257,19 @@ export function BookingExperience({
         <a className="brand" href="#top" aria-label="TTD Studio — top">
           <span className="brand-mark">TTD<br />STUDIO</span>
         </a>
-        <div className="header-actions">
-          <div className="lang-switch" aria-label="Language">
-            <button type="button" className={language === "da" ? "active" : ""} onClick={() => { setLanguage("da"); localStorage.setItem("ttd-language", "da"); }} aria-pressed={language === "da"}>DA</button>
-            <span>/</span>
-            <button type="button" className={language === "en" ? "active" : ""} onClick={() => { setLanguage("en"); localStorage.setItem("ttd-language", "en"); }} aria-pressed={language === "en"}>EN</button>
-          </div>
-        </div>
+        <HeaderBookingActions language={language} onLanguageChange={(next) => { setLanguage(next); localStorage.setItem("ttd-language", next); }} />
       </header>
 
       <main id="top">
-        <section className="hero" aria-labelledby="hero-title">
-          <div className="hero-title-row">
-            <h1 id="hero-title"><span>{t.displayLeft}</span><span>{t.displayRight}</span></h1>
-          </div>
-          <div className="hero-after">
-            <p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p>
-          </div>
-        </section>
-
-        <div className="metric-strip" aria-label={language === "da" ? "Om studiet" : "About the studio"}>
-          <div><span className="metric-icon"><Clock3 size={24} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
-          <div><span className="metric-icon"><Coins size={24} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
-          <div><span className="metric-icon"><Maximize2 size={24} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
-        </div>
-
         <section className="booking-section" id="booking" aria-labelledby="booking-title">
           <div className="section-heading booking-heading">
-            <div><span className="section-kicker">{t.bookingEyebrow}</span><h2 id="booking-title">{t.bookingTitle}</h2></div>
-            <div className="booking-heading-side"><p>{t.bookingIntro}</p><a className="manage-booking-link" href={`/manage?lang=${language}`}>{t.manageBooking}<ArrowUpRight size={18} /></a></div>
+            <div><span className="section-kicker">{t.bookingEyebrow}</span><h1 id="booking-title">{t.bookingTitle}</h1></div>
+            <div className="booking-heading-side"><p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p></div>
+          </div>
+          <div className="metric-strip" aria-label={language === "da" ? "Om studiet" : "About the studio"}>
+            <div><span className="metric-icon"><Clock3 size={24} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
+            <div><span className="metric-icon"><Coins size={24} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
+            <div><span className="metric-icon"><Maximize2 size={24} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
           </div>
           <div className="booking-layout">
             <div className="picker-panel">
