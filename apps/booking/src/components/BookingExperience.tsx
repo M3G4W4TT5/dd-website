@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  ArrowDownRight,
   ArrowUpRight,
   CalendarDays,
   Check,
@@ -9,10 +8,8 @@ import {
   ChevronRight,
   Clock3,
   Coins,
-  Flower2,
-  MapPin,
+  Maximize2,
   MoveUpRight,
-  Phone,
   ShieldCheck,
 } from "lucide-react";
 import { DateTime } from "luxon";
@@ -33,14 +30,12 @@ const copy = {
     angleCaption: "ANDEN VINKEL",
     navEvents: "Events",
     navContact: "Kontakt",
-    navAdmin: "Administration",
     displayLeft: "TTD",
     displayRight: "STUDIO",
     imageOne: "TTD Studio med skrå hvid væg, trægulv og vinduer",
     imageTwo: "TTD Studio fra den modsatte vinkel med skrå væg og trægulv",
     heroTextBeforeVenue: "TTD Studio er et kreativt træningsrum for dansere hos ",
     heroTextAfterVenue: " på Østerbro. Skabt af Didde-Mie Lykke From og Toniah Pedersen.",
-    heroBook: "Se ledige tider",
     metricOne: "68 m²",
     metricTwo: "Alle dage · 08–22",
     metricThree: "350 kr./time",
@@ -74,20 +69,7 @@ const copy = {
     checking: "Tjekker…",
     checked: "Tiderne er ledige. Udfyld dine oplysninger nedenfor.",
     changed: "Tiderne er ændret. Vælg et nyt interval.",
-    policy: "Gratis afbestilling mere end 24 timer før første bookede time.",
-    infoEyebrow: "DET PRAKTISKE",
-    infoTitle: "Før du booker.",
-    infoLocation: "Placering",
-    infoLocationBody: "Hos København Danser · Nygaardsvej 5a, 2. sal · 2100 København Ø.",
-    infoTime: "Åbningstider",
-    infoTimeBody: "Alle dage kl. 08.00–22.00. Vælg én eller flere sammenhængende timer.",
-    infoContact: "Kontakt",
-    infoContactBody: "Telefon: +45 XX XX XX XX · E-mail: email@example.com",
-    infoTerms: "Bookingregler",
-    infoTermsBody: "Gratis afbestilling mere end 24 timer før start. Læs de fulde bookingvilkår nedenfor.",
-    footerText: "Time to Dance!",
-    toniahPersonal: "Toniahs personlige side",
-    personal: "DD's personlige side",
+    policy: "Gratis afbestilling indtil 24 timer før første bookede time.",
   },
   en: {
     preview: "LOCAL PREVIEW · NO BOOKINGS ARE CREATED",
@@ -95,14 +77,12 @@ const copy = {
     angleCaption: "ANOTHER ANGLE",
     navEvents: "Events",
     navContact: "Contact",
-    navAdmin: "Administration",
     displayLeft: "TTD",
     displayRight: "STUDIO",
     imageOne: "TTD Studio with a sloping white wall, wooden floor and windows",
     imageTwo: "TTD Studio from the opposite angle, with a sloping wall and wooden floor",
     heroTextBeforeVenue: "TTD Studio is a creative training room for dancers at ",
     heroTextAfterVenue: " in Østerbro, created by Didde-Mie and Toniah Pedersen.",
-    heroBook: "Explore availability",
     metricOne: "68 m²",
     metricTwo: "Every day · 08–22",
     metricThree: "DKK 350/hour",
@@ -136,20 +116,7 @@ const copy = {
     checking: "Checking…",
     checked: "These hours are available. Enter your details below.",
     changed: "Availability has changed. Choose another interval.",
-    policy: "Free cancellation more than 24 hours before the first booked hour.",
-    infoEyebrow: "GOOD TO KNOW",
-    infoTitle: "Before you book.",
-    infoLocation: "Location",
-    infoLocationBody: "At København Danser · Nygaardsvej 5a, 2nd floor · 2100 Copenhagen Ø.",
-    infoTime: "Opening hours",
-    infoTimeBody: "Every day, 08:00–22:00. Choose one or more consecutive hours.",
-    infoContact: "Contact",
-    infoContactBody: "Phone: +45 XX XX XX XX · Email: email@example.com",
-    infoTerms: "Booking rules",
-    infoTermsBody: "Free cancellation more than 24 hours before the start. Read the full booking terms below.",
-    footerText: "Time to Dance!",
-    toniahPersonal: "Toniah's personal site",
-    personal: "DD's personal site",
+    policy: "Free cancellation until 24 hours before the first booked hour.",
   },
 } as const;
 
@@ -315,24 +282,13 @@ export function BookingExperience({
           </div>
           <div className="hero-after">
             <p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p>
-            <a href="#booking">{t.heroBook}<ArrowDownRight size={21} /></a>
-          </div>
-          <div className="hero-gallery">
-            <figure className="hero-photo hero-photo-wide">
-              <div className="image-frame" data-image-shadow data-reveal><img src="/studio/ttd-studio-01-booking-wide.webp" alt={t.imageOne} /></div>
-              <figcaption><span>01 / {t.spaceCaption}</span></figcaption>
-            </figure>
-            <figure className="hero-photo hero-photo-detail">
-              <div className="image-frame" data-image-shadow data-reveal><img src="/studio/ttd-studio-03-booking-angle.webp" loading="lazy" alt={t.imageTwo} /></div>
-              <figcaption><span>02 / {t.angleCaption}</span></figcaption>
-            </figure>
           </div>
         </section>
 
         <div className="metric-strip" aria-label={language === "da" ? "Om studiet" : "About the studio"}>
           <div><span className="metric-icon"><Clock3 size={24} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
           <div><span className="metric-icon"><Coins size={24} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
-          <div><span className="metric-icon"><Flower2 size={24} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
+          <div><span className="metric-icon"><Maximize2 size={24} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
         </div>
 
         <section className="booking-section" id="booking" aria-labelledby="booking-title">
@@ -390,15 +346,21 @@ export function BookingExperience({
           {status === "checked" && quote && selectedId && <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId} hours={hours} onConflict={async () => { await selectDate(date); setStatus("changed"); }} />}
         </section>
 
-        <section className="info-section" id="info" aria-labelledby="info-title">
-          <div className="info-title"><span className="section-kicker">{t.infoEyebrow}</span><h2 id="info-title">{t.infoTitle}</h2></div>
-          <div className="info-list">
-            {[{ icon: MapPin, title: t.infoLocation, body: t.infoLocationBody }, { icon: Clock3, title: t.infoTime, body: t.infoTimeBody }, { icon: Phone, title: t.infoContact, body: t.infoContactBody }, { icon: ShieldCheck, title: t.infoTerms, body: t.infoTermsBody }].map(({ icon: Icon, title, body }) => <div className="info-row" key={title}><Icon size={23} strokeWidth={1.5} /><h3>{title}</h3><p>{body}</p><ArrowUpRight size={18} /></div>)}
+        <section className="studio-gallery-section" aria-label={language === "da" ? "Billeder af studiet" : "Studio photos"}>
+          <div className="hero-gallery">
+            <figure className="hero-photo hero-photo-wide">
+              <div className="image-frame" data-image-shadow data-reveal><img src="/studio/ttd-studio-01-booking-wide.webp" loading="lazy" alt={t.imageOne} /></div>
+              <figcaption><span>01 / {t.spaceCaption}</span></figcaption>
+            </figure>
+            <figure className="hero-photo hero-photo-detail">
+              <div className="image-frame" data-image-shadow data-reveal><img src="/studio/ttd-studio-03-booking-angle.webp" loading="lazy" alt={t.imageTwo} /></div>
+              <figcaption><span>02 / {t.angleCaption}</span></figcaption>
+            </figure>
           </div>
         </section>
       </main>
 
-      <SiteFooter language={language} links={[{ href: `/contact?lang=${language}`, label: t.navContact }, { href: `/events?lang=${language}`, label: t.navEvents }, { href: "https://toniah.com/en/", label: t.toniahPersonal }, { href: process.env.NEXT_PUBLIC_PERSONAL_URL || "http://127.0.0.1:4321", label: t.personal }, { href: "http://127.0.0.1:8345/control/", label: t.navAdmin }]} />
+      <SiteFooter language={language} links={[{ href: `/contact?lang=${language}`, label: t.navContact }, { href: `/events?lang=${language}`, label: t.navEvents }]} />
     </>
   );
 }

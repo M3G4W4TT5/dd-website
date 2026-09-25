@@ -33,6 +33,6 @@ export function ManageBookingPreview({ language, initialBooking, initialToken, s
       if (!response.ok) throw new Error("Deadline reached");
       return { ...current, status: "cancelled", refund: "pending" };
     }} /></main>
-    <SiteFooter language={language} links={[{ href: "/", label: "Booking" }]} />
+    <SiteFooter language={language} links={[{ href: "/", label: "Booking" }, { href: `/contact?lang=${language}`, label: language === "da" ? "Kontakt" : "Contact" }]} />
   </>;
 }
