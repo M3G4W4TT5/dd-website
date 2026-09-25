@@ -20,6 +20,7 @@ import { useVisualEffects } from "@/components/useVisualEffects";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HeaderBookingActions } from "@/components/HeaderBookingActions";
+import { WarpText } from "@/components/WarpText";
 
 type Language = "da" | "en";
 
@@ -36,7 +37,7 @@ const copy = {
     metricOne: "68 m²",
     metricTwo: "Alle dage · 08–22",
     perHour: "/time",
-    bookingTitle: ["Tid og rum", "til bevægelse."],
+    bookingTitle: { firstLine: "Tid og rum", secondLinePrefix: "til ", lastWord: "bevægelse." },
     unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
@@ -78,7 +79,7 @@ const copy = {
     metricOne: "68 m²",
     metricTwo: "Every day · 08–22",
     perHour: "/hour",
-    bookingTitle: ["Give your idea room to move.", ""],
+    bookingTitle: { firstLine: "Give your idea room to ", secondLinePrefix: "", lastWord: "move." },
     unavailable: "Availability could not be loaded. Check the local pretix connection.",
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
@@ -296,7 +297,7 @@ export function BookingExperience({
       <main id="top">
         <section className="booking-section" id="booking" aria-labelledby="booking-title">
           <div className="section-heading booking-heading">
-            <div><h1 id="booking-title">{t.bookingTitle[0]}{t.bookingTitle[1] && <><br />{t.bookingTitle[1]}</>}</h1></div>
+            <div><h1 id="booking-title">{t.bookingTitle.firstLine}{t.bookingTitle.secondLinePrefix && <br />}{t.bookingTitle.secondLinePrefix}<WarpText text={t.bookingTitle.lastWord} /></h1></div>
             <div className="booking-heading-side"><p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p></div>
           </div>
           <div id="booking-flow" className={`booking-layout booking-stage ${phase.endsWith("-out") ? "booking-stage--leaving" : phase === "details" || hasVisitedDetails ? "booking-stage--entering" : ""} ${phase === "details" || phase === "details-out" ? "booking-layout--details" : ""}`} tabIndex={-1} inert={phase.endsWith("-out")}>

@@ -1,0 +1,32 @@
+.warp-text {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.warp-text__baseline {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: baseline;
+}
+
+.warp-text canvas {
+  position: absolute;
+  display: block;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.warp-text[data-warp-ready="true"][data-warp-active="true"] canvas {
+  visibility: visible;
+}
+
+.warp-text[data-warp-ready="true"][data-warp-active="true"]:not([data-reduced-motion="true"]) .warp-text__label {
+  color: transparent;
+}
+
+.warp-text[data-reduced-motion="true"] canvas {
+  display: none;
+}
