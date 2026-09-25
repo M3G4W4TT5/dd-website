@@ -31,7 +31,7 @@ const copy = {
     terms: "bookingvilkår",
     privacy: "privatlivspolitik",
     termsRequired: "Du skal acceptere bookingvilkår og privatlivspolitik for at fortsætte.",
-    marketing: "Send mig e-mails fra TOTAL ENTERTAINMENT om TTD Studio-tilbud, nye events og rabatter. Jeg kan altid afmelde mig.",
+    marketing: "Send mig e-mails fra TOTAL ENTERTAINMENT om TTD Studio-tilbud, nye events og rabatter.",
     marketingSent: "Hvis du ikke allerede er tilmeldt, skal du tjekke din e-mail for et bekræftelseslink til TTD Studio-mails.",
     marketingFailed: "Tilmeldingen til TTD Studio-mails kunne ikke gennemføres. Din booking kan fortsætte uden den.",
     fieldsRequired: "Udfyld eller ret de markerede felter for at fortsætte.",
@@ -66,7 +66,7 @@ const copy = {
     terms: "booking terms",
     privacy: "privacy policy",
     termsRequired: "You must accept the booking terms and privacy policy to continue.",
-    marketing: "Email me TTD Studio offers, new events and discounts from TOTAL ENTERTAINMENT. I can unsubscribe at any time.",
+    marketing: "Email me TTD Studio offers, new events and discounts from TOTAL ENTERTAINMENT.",
     marketingSent: "If you are not already subscribed, check your email for a TTD Studio confirmation link.",
     marketingFailed: "We could not start your TTD Studio email signup. You can continue your booking without it.",
     fieldsRequired: "Complete or correct the highlighted fields to continue.",
@@ -182,7 +182,7 @@ export function CustomerDetailsPreview({
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
         <div className="terms-acceptance marketing-acceptance">
           <input id="accept-marketing" type="checkbox" checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} />
-          <label htmlFor="accept-marketing">{t.marketing} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</label>
+          <label htmlFor="accept-marketing">{t.marketing}</label>
         </div>
         <div className="terms-acceptance">
           <input id="accept-booking-terms" type="checkbox" required checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); if (event.target.checked) setShowTermsError(false); }} aria-describedby={showTermsError ? "terms-acceptance-error" : undefined} aria-invalid={showTermsError} />
