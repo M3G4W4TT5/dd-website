@@ -266,11 +266,6 @@ export function BookingExperience({
             <div><span className="section-kicker">{t.bookingEyebrow}</span><h1 id="booking-title">{t.bookingTitle}</h1></div>
             <div className="booking-heading-side"><p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p></div>
           </div>
-          <div className="metric-strip" aria-label={language === "da" ? "Om studiet" : "About the studio"}>
-            <div><span className="metric-icon"><Clock3 size={24} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
-            <div><span className="metric-icon"><Coins size={24} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
-            <div><span className="metric-icon"><Maximize2 size={24} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
-          </div>
           <div className="booking-layout">
             <div className="picker-panel">
               <div className="picker-head"><span>{t.pickDate}</span><CalendarDays size={19} /></div>
@@ -306,7 +301,12 @@ export function BookingExperience({
             </div>
 
             <aside className="summary-panel" aria-labelledby="summary-title">
-              <div className="summary-header"><span className="section-kicker">{t.summaryEyebrow}</span><h3 id="summary-title">{t.summaryTitle}</h3></div>
+              <div className="summary-header">
+                <div className="summary-heading"><span className="section-kicker">{t.summaryEyebrow}</span><h3 id="summary-title">{t.summaryTitle}</h3></div>
+                <div className="summary-fact"><span className="metric-icon"><Clock3 size={17} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
+                <div className="summary-fact"><span className="metric-icon"><Coins size={17} strokeWidth={1.4} /></span><span>{t.metricThree}</span></div>
+                <div className="summary-fact"><span className="metric-icon"><Maximize2 size={17} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
+              </div>
               <div className="summary-content">
                 <div className="summary-row"><span>{t.selectedDay}</span><strong>{dateLabel(date, language)}</strong></div>
                 <div className="duration-block"><div className="picker-head"><span>{t.pickDuration}</span><span>{hours} {hours === 1 ? t.hour : t.hours}</span></div><div className="duration-options">{Array.from({ length: MAX_HOURS }, (_, index) => index + 1).map((amount) => <button key={amount} type="button" className={hours === amount ? "active" : ""} onClick={() => { setHours(amount); setStatus("idle"); }} aria-pressed={hours === amount}>{amount}</button>)}</div></div>

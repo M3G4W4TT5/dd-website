@@ -68,10 +68,6 @@ h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
 .visual-side { position: absolute; top: 50%; right: 20px; z-index: 6; writing-mode: vertical-rl; font-size: 9px; letter-spacing: .31em; opacity: .8; }
 .visual-bottom { position: absolute; display: flex; justify-content: space-between; align-items: end; bottom: 37px; left: 38px; right: 38px; z-index: 6; font-size: 9px; font-weight: 700; letter-spacing: .18em; }
 
-.metric-strip { display: grid; grid-template-columns: repeat(3, 1fr); min-height: 101px; background: #e8eadf; border-bottom: 1px solid #d9dfd1; padding: 0 max(7vw, 34px); }
-.metric-strip > div { display: flex; align-items: center; justify-content: center; gap: 17px; border-right: 1px solid #d4dacd; color: #3b5845; font-size: 13px; font-weight: 700; }
-.metric-strip > div:last-child { border-right: 0; }
-.metric-icon { color: #78977b; }
 
 .booking-section { padding: 110px max(7vw, 34px) 125px; scroll-margin-top: 25px; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 60px; margin-bottom: 38px; }
@@ -231,9 +227,6 @@ body:has(.legal-main) .site-footer { position: relative; --footer-progress: 1; }
   .visual-topline, .visual-bottom { left: 22px; right: 22px; }
   .visual-topline { top: 22px; font-size: 7px; }
   .visual-bottom { bottom: 25px; font-size: 8px; }
-  .metric-strip { min-height: 88px; padding: 0 10px; }
-  .metric-strip > div { flex-direction: column; gap: 4px; font-size: 10px; text-align: center; }
-  .metric-icon svg { width: 19px; height: 19px; }
   .booking-section { padding-left: 19px; padding-right: 19px; }
   .booking-section { padding-top: 75px; padding-bottom: 78px; }
   .section-heading { display: block; margin-bottom: 26px; }
