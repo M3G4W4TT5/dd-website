@@ -48,6 +48,7 @@ const copy = {
     bookingTitle: "Giv din idé tid og rum.",
     bookingIntro:
       "Vælg en starttid og det antal sammenhængende timer, du har brug for. Denne forhåndsvisning opretter ikke en booking.",
+    manageBooking: "Administrer din booking",
     unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
@@ -73,7 +74,7 @@ const copy = {
     checking: "Tjekker…",
     checked: "Tiderne er ledige. Udfyld dine oplysninger nedenfor.",
     changed: "Tiderne er ændret. Vælg et nyt interval.",
-    policy: "Gratis afbestilling indtil 24 timer før start.",
+    policy: "Gratis afbestilling mere end 24 timer før første bookede time.",
     infoEyebrow: "DET PRAKTISKE",
     infoTitle: "Før du booker.",
     infoLocation: "Placering",
@@ -83,7 +84,7 @@ const copy = {
     infoContact: "Kontakt",
     infoContactBody: "Telefon: +45 XX XX XX XX · E-mail: email@example.com",
     infoTerms: "Bookingregler",
-    infoTermsBody: "Gratis afbestilling senest 24 timer før start. Læs de fulde bookingvilkår nedenfor.",
+    infoTermsBody: "Gratis afbestilling mere end 24 timer før start. Læs de fulde bookingvilkår nedenfor.",
     footerText: "Time to Dance!",
     toniahPersonal: "Toniahs personlige side",
     personal: "DD's personlige side",
@@ -109,6 +110,7 @@ const copy = {
     bookingTitle: "Give your idea room to move.",
     bookingIntro:
       "Choose a start time and the number of consecutive hours you need. This preview does not create a booking.",
+    manageBooking: "Manage your booking",
     unavailable: "Availability could not be loaded. Check the local pretix connection.",
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
@@ -134,7 +136,7 @@ const copy = {
     checking: "Checking…",
     checked: "These hours are available. Enter your details below.",
     changed: "Availability has changed. Choose another interval.",
-    policy: "Free cancellation until 24 hours before the start time.",
+    policy: "Free cancellation more than 24 hours before the first booked hour.",
     infoEyebrow: "GOOD TO KNOW",
     infoTitle: "Before you book.",
     infoLocation: "Location",
@@ -144,7 +146,7 @@ const copy = {
     infoContact: "Contact",
     infoContactBody: "Phone: +45 XX XX XX XX · Email: email@example.com",
     infoTerms: "Booking rules",
-    infoTermsBody: "Free cancellation up to 24 hours before the start. Read the full booking terms below.",
+    infoTermsBody: "Free cancellation more than 24 hours before the start. Read the full booking terms below.",
     footerText: "Time to Dance!",
     toniahPersonal: "Toniah's personal site",
     personal: "DD's personal site",
@@ -333,7 +335,7 @@ export function BookingExperience({
         <section className="booking-section" id="booking" aria-labelledby="booking-title">
           <div className="section-heading booking-heading">
             <div><span className="section-kicker">{t.bookingEyebrow}</span><h2 id="booking-title">{t.bookingTitle}</h2></div>
-            <p>{t.bookingIntro}</p>
+            <div className="booking-heading-side"><p>{t.bookingIntro}</p><a className="manage-booking-link" href={`/manage?lang=${language}`}>{t.manageBooking}<ArrowUpRight size={18} /></a></div>
           </div>
           <div className="booking-layout">
             <div className="picker-panel">
@@ -379,7 +381,7 @@ export function BookingExperience({
                 <button className="button button-check" type="button" onClick={() => void checkSelection()} disabled={!quote || checking}>{checking ? t.checking : t.check}<MoveUpRight size={18} /></button>
                 {status !== "idle" && <p className={`check-result ${status}`} role="status">{status === "checked" ? t.checked : status === "changed" ? t.changed : t.unavailable}</p>}
               </div>
-              <div className="summary-footer"><ShieldCheck size={18} /><span>{t.policy}</span></div>
+              <div className="summary-footer"><ShieldCheck size={18} /><span>{t.policy} <a href={`/terms?lang=${language}`}>{language === "da" ? "Bookingvilkår" : "Booking terms"}</a></span></div>
             </aside>
           </div>
           {status === "checked" && quote && selectedId && <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId} hours={hours} onConflict={async () => { await selectDate(date); setStatus("changed"); }} />}
