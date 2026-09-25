@@ -104,8 +104,9 @@ function money(ore: number, language: Language) {
   }).format(ore / 100);
 }
 
-export function ManageBookingPanel({ initialBooking, language, preview = false, onChangeBooking, onCancel }: {
+export function ManageBookingPanel({ initialBooking, serverNowIso, language, preview = false, onChangeBooking, onCancel }: {
   initialBooking: ManagedBooking;
+  serverNowIso: string;
   language: Language;
   preview?: boolean;
   onChangeBooking?: (booking: ManagedBooking, interval: AvailableInterval) => Promise<ManagedBooking>;
@@ -121,24 +122,28 @@ export function ManageBookingPanel({ initialBooking, language, preview = false, 
   const [flow, setFlow] = useState<"change" | null>(null);
   const [selectedInterval, setSelectedInterval] = useState<AvailableInterval | null>(null);
   const [changing, setChanging] = useState(false);
-  const [nowIso, setNowIso] = useState(() => new Date().toISOString());
+  const [nowIso, setNowIso] = useState(serverNowIso);
+  const clockStart = useRef<number | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
   const deadline = cancellationDeadline(booking.firstHourIso);
   const eligible = booking.status === "paid" && canManageBooking(booking.firstHourIso, nowIso);
+  const currentServerTime = () => new Date(Date.parse(serverNowIso) + (clockStart.current === null ? 0 : performance.now() - clockStart.current)).toISOString();
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNowIso(new Date().toISOString()), 30_000);
+    clockStart.current = performance.now();
+    const update = () => setNowIso(new Date(Date.parse(serverNowIso) + performance.now() - clockStart.current!).toISOString());
+    const timer = window.setInterval(update, 30_000);
     const cutoff = cancellationDeadline(booking.firstHourIso)?.toMillis();
-    const remaining = cutoff === undefined ? 0 : cutoff - Date.now();
+    const remaining = cutoff === undefined ? 0 : cutoff - Date.parse(serverNowIso);
     const cutoffTimer = remaining > 0 && remaining <= 2_147_483_647
-      ? window.setTimeout(() => setNowIso(new Date().toISOString()), remaining)
+      ? window.setTimeout(update, remaining)
       : null;
     return () => {
       window.clearInterval(timer);
       if (cutoffTimer !== null) window.clearTimeout(cutoffTimer);
     };
-  }, [booking.firstHourIso]);
+  }, [booking.firstHourIso, serverNowIso]);
 
   useEffect(() => {
     if (!confirming) return;
@@ -170,8 +175,8 @@ export function ManageBookingPanel({ initialBooking, language, preview = false, 
   }
 
   async function confirmCancellation() {
-    if (!eligible || !canManageBooking(booking.firstHourIso, new Date().toISOString()) || !onCancel || working) {
-      setNowIso(new Date().toISOString());
+    if (!eligible || !canManageBooking(booking.firstHourIso, currentServerTime()) || !onCancel || working) {
+      setNowIso(currentServerTime());
       setConfirming(false);
       return;
     }
@@ -190,8 +195,8 @@ export function ManageBookingPanel({ initialBooking, language, preview = false, 
   }
 
   async function confirmChange() {
-    if (!eligible || !canManageBooking(booking.firstHourIso, new Date().toISOString()) || !selectedInterval || !onChangeBooking || changing) {
-      setNowIso(new Date().toISOString());
+    if (!eligible || !canManageBooking(booking.firstHourIso, currentServerTime()) || !selectedInterval || !onChangeBooking || changing) {
+      setNowIso(currentServerTime());
       return;
     }
     setChanging(true);
@@ -227,8 +232,8 @@ export function ManageBookingPanel({ initialBooking, language, preview = false, 
       {!eligible ? <p className="manage-explanation">{t.late}</p> : flow === null ? <>
         <h3 className="manage-choice-heading">{t.choose}</h3>
         <div className="manage-choice-grid">
-          {onChangeBooking && <button type="button" onClick={() => { const now = new Date().toISOString(); if (!canManageBooking(booking.firstHourIso, now)) { setNowIso(now); return; } setFlow("change"); setChanged(false); }}><strong>{t.change}</strong><span>{t.changeDescription}</span></button>}
-          {onCancel && <button ref={cancelButtonRef} type="button" onClick={() => { const now = new Date().toISOString(); if (!canManageBooking(booking.firstHourIso, now)) { setNowIso(now); return; } setConfirming(true); setChanged(false); }}><strong>{t.cancel}</strong><span>{t.cancelDescription}</span></button>}
+          {onChangeBooking && <button type="button" onClick={() => { const now = currentServerTime(); if (!canManageBooking(booking.firstHourIso, now)) { setNowIso(now); return; } setFlow("change"); setChanged(false); }}><strong>{t.change}</strong><span>{t.changeDescription}</span></button>}
+          {onCancel && <button ref={cancelButtonRef} type="button" onClick={() => { const now = currentServerTime(); if (!canManageBooking(booking.firstHourIso, now)) { setNowIso(now); return; } setConfirming(true); setChanged(false); }}><strong>{t.cancel}</strong><span>{t.cancelDescription}</span></button>}
         </div>
       </> : <section className="manage-flow" aria-labelledby="change-booking-title">
         <h3 id="change-booking-title">{t.changeTitle}</h3>
