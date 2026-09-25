@@ -1,10 +1,11 @@
 import { MarketingUnsubscribe } from "@/components/MarketingUnsubscribe";
+import { pageLanguage } from "@/lib/language";
 
 export const metadata = { robots: { index: false, follow: false } };
 
 export default async function UnsubscribePage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
   const { lang } = await searchParams;
-  const language = lang === "en" ? "en" : "da";
+  const language = await pageLanguage(lang);
   return <main className="marketing-page">
     <span>TTD STUDIO</span>
     <h1>{language === "da" ? "Afmeld e-mails" : "Unsubscribe"}</h1>

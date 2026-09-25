@@ -33,15 +33,17 @@ export function HeaderBookingActions({
     onLanguageChange?.(next);
   }
 
+  const languageSeparator = languagePath?.includes("?") ? "&" : "?";
+
   return <div className="header-actions booking-header-actions">
     {hideLanguageSwitch ? null : onLanguageChange ? <div className="lang-switch" aria-label="Language">
-      <button type="button" className={language === "da" ? "active" : ""} onClick={() => changeLanguage("da")} aria-pressed={language === "da"}>DA</button>
-      <span>/</span>
       <button type="button" className={language === "en" ? "active" : ""} onClick={() => changeLanguage("en")} aria-pressed={language === "en"}>EN</button>
+      <span>/</span>
+      <button type="button" className={language === "da" ? "active" : ""} onClick={() => changeLanguage("da")} aria-pressed={language === "da"}>DA</button>
     </div> : <nav className="manage-language-switch" aria-label={language === "da" ? "Sprog" : "Language"}>
-      <a href={`${languagePath}?lang=da`} lang="da" aria-current={language === "da" ? "page" : undefined}>DA</a>
+      <a href={`${languagePath}${languageSeparator}lang=en`} lang="en" aria-current={language === "en" ? "page" : undefined}>EN</a>
       <span aria-hidden="true">/</span>
-      <a href={`${languagePath}?lang=en`} lang="en" aria-current={language === "en" ? "page" : undefined}>EN</a>
+      <a href={`${languagePath}${languageSeparator}lang=da`} lang="da" aria-current={language === "da" ? "page" : undefined}>DA</a>
     </nav>}
     {!hideManageLink && <a className="header-manage-link" href={`/manage?lang=${language}`} aria-label={language === "da" ? "Administrer din booking" : "Manage your booking"}>
       <span className="desktop-label">{language === "da" ? "Administrer din booking" : "Manage your booking"}</span>

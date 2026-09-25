@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 
-export function SiteFooter({ language = "da" }: { language?: "da" | "en" }) {
+export function SiteFooter({ language = "en" }: { language?: "da" | "en" }) {
   return <>
     <div className="footer-reveal-space" aria-hidden="true" />
     <footer className="site-footer">

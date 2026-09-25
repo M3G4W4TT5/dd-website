@@ -68,7 +68,7 @@ export async function getManagedBooking(code: string, email: string) {
 export async function getPaidOrderContact(code: string) {
   const { order } = await orderState(code);
   if (order.status !== "p" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(order.email)) throw new ManageConflict("Not a paid rental order");
-  return { email: order.email.trim().toLowerCase(), language: order.locale?.toLowerCase().startsWith("en") ? "en" as const : "da" as const };
+  return { email: order.email.trim().toLowerCase(), language: order.locale?.toLowerCase().startsWith("da") ? "da" as const : "en" as const };
 }
 
 async function withOrderLock<T>(code: string, operation: () => Promise<T>): Promise<T> {
