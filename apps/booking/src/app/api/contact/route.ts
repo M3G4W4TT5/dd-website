@@ -20,6 +20,7 @@ const contactSchema = z.discriminatedUnion("site", [
     email: z.email().max(254),
     topic: z.enum(["booking", "event", "other"]),
     message: z.string().trim().min(10).max(5000),
+    privacyAccepted: z.literal(true),
     website: z.string().max(200).optional(),
   }),
 ]);

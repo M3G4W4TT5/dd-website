@@ -15,6 +15,9 @@ const copy = {
     form: "SEND EN BESKED", name: "Navn", email: "Din e-mail", topic: "Emne", choose: "Vælg emne", bookingTopic: "Booking", eventTopic: "Event", otherTopic: "Andet", message: "Besked", send: "Send besked",
     sending: "Sender…", sent: "Din besked er sendt. Tak!", failed: "Beskeden kunne ikke sendes. Prøv igen senere.",
     fieldsRequired: "Udfyld eller ret de markerede felter for at sende beskeden.",
+    acceptPrivacy: "Acceptér",
+    privacyPolicy: "privatlivspolitikken",
+    privacyRequired: "Du skal acceptere privatlivspolitikken for at sende beskeden.",
   },
   en: {
     preview: "TTD STUDIO · CONTACT", events: "Events", contact: "Contact",
@@ -22,6 +25,9 @@ const copy = {
     form: "SEND A MESSAGE", name: "Name", email: "Your email", topic: "Topic", choose: "Choose a topic", bookingTopic: "Booking", eventTopic: "Event", otherTopic: "Other", message: "Message", send: "Send message",
     sending: "Sending…", sent: "Your message has been sent. Thank you!", failed: "Your message could not be sent. Please try again later.",
     fieldsRequired: "Complete or correct the highlighted fields to send your message.",
+    acceptPrivacy: "Accept",
+    privacyPolicy: "privacy policy",
+    privacyRequired: "You must accept the privacy policy to send your message.",
   },
 } as const;
 
@@ -35,6 +41,8 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState<"sent" | "failed" | null>(null);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const [showPrivacyError, setShowPrivacyError] = useState(false);
   useVisualEffects();
   useEffect(() => { document.documentElement.lang = language; localStorage.setItem("ttd-language", language); }, [language]);
   const t = copy[language];
@@ -44,8 +52,10 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
     const form = event.currentTarget;
     const invalid = invalidContactFields(form);
     setInvalidFields(invalid);
-    if (invalid.length) {
-      form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${invalid[0]}"]`)?.focus();
+    setShowPrivacyError(!privacyAccepted);
+    if (invalid.length || !privacyAccepted) {
+      if (invalid.length) form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`[name="${invalid[0]}"]`)?.focus();
+      else form.querySelector<HTMLInputElement>("#accept-contact-privacy")?.focus();
       return;
     }
     const fields = new FormData(form);
@@ -61,12 +71,15 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
           email: fields.get("email"),
           topic: fields.get("topic"),
           message: fields.get("message"),
+          privacyAccepted,
           website: fields.get("website"),
         }),
       });
       if (!response.ok) throw new Error("Delivery failed");
       form.reset();
       setInvalidFields([]);
+      setPrivacyAccepted(false);
+      setShowPrivacyError(false);
       setStatus("sent");
     } catch {
       setStatus("failed");
@@ -98,8 +111,12 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
             <label className="contact-honeypot" aria-hidden="true">Website<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
           </div>
           {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
+          <div className="contact-privacy-acceptance terms-acceptance">
+            <input id="accept-contact-privacy" type="checkbox" required checked={privacyAccepted} onChange={(event) => { setPrivacyAccepted(event.target.checked); if (event.target.checked) setShowPrivacyError(false); }} aria-describedby={showPrivacyError ? "contact-privacy-error" : undefined} aria-invalid={showPrivacyError} />
+            <label htmlFor="accept-contact-privacy">{t.acceptPrivacy} <a href={`/privacy?lang=${language}`}>{t.privacyPolicy}</a>.</label>
+          </div>
+          {showPrivacyError && <p id="contact-privacy-error" className="contact-privacy-error terms-error" role="alert">{t.privacyRequired}</p>}
           <div className="contact-form-bottom"><button type="submit" disabled={sending}>{sending ? t.sending : t.send}<ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status ? t[status] : ""}</p></div>
-          <p className="form-privacy">{language === "da" ? "Vi bruger dine oplysninger til at svare dig." : "We use your details to reply."} <a href={`/privacy?lang=${language}`}>{language === "da" ? "Læs privatlivspolitikken" : "Read the privacy policy"}</a>.</p>
         </form>
         <div className="contact-visual-placeholder" aria-hidden="true" />
       </section>

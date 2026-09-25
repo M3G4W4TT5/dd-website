@@ -13,6 +13,10 @@ const validPersonal = {
   site: "personal", name: "Example Person", email: "person@example.com",
   subject: "dance", message: "A project inquiry",
 };
+const validBooking = {
+  site: "booking", name: "Example Visitor", email: "visitor@example.com",
+  topic: "booking", message: "I would like to ask about the studio.",
+};
 
 function request(origin: string, body: unknown) {
   return new Request("https://booking.didde-mie.com/api/contact", {
@@ -39,6 +43,12 @@ test("invalid details are rejected before delivery", async () => {
   assert.equal((await POST(request("https://didde-mie.com", { ...validPersonal, subject: "arbitrary" }))).status, 400);
   assert.equal((await POST(request("https://didde-mie.com", validPersonal))).status, 503);
   assert.equal((await POST(request("https://didde-mie.com", { ...validPersonal, subject: "brand_partnerships" }))).status, 503);
+});
+
+test("studio contact requires explicit privacy acceptance", async () => {
+  assert.equal((await POST(request("https://booking.didde-mie.com", validBooking))).status, 400);
+  assert.equal((await POST(request("https://booking.didde-mie.com", { ...validBooking, privacyAccepted: false }))).status, 400);
+  assert.equal((await POST(request("https://booking.didde-mie.com", { ...validBooking, privacyAccepted: true }))).status, 503);
 });
 
 test("personal auto-reply has a text fallback and escapes the greeting in HTML", () => {
