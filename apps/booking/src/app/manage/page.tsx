@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/SiteFooter";
-import { HeaderBookingActions } from "@/components/HeaderBookingActions";
+import { StaticSiteHeader } from "@/components/StaticSiteHeader";
+import { pageLanguage } from "@/lib/language";
 
 export const metadata: Metadata = { title: "Manage booking | TTD Studio", robots: { index: false, follow: false } };
 
 export default async function ManagePage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
-  const language = (await searchParams).lang === "en" ? "en" : "da";
+  const language = await pageLanguage((await searchParams).lang);
   const da = language === "da";
   return <>
-    <header className="legal-header"><a className="brand" href="/" aria-label="TTD Studio"><span className="brand-mark">TTD<br />STUDIO</span></a><nav className="legal-nav" aria-label="Navigation"><a href="/">Booking</a><a href={`/contact?lang=${language}`}>{da ? "Kontakt" : "Contact"}</a></nav><HeaderBookingActions language={language} languagePath="/manage" hideManageLink /></header>
+    <StaticSiteHeader language={language} languagePath="/manage" hideManageLink />
     <main className="manage-main">
       <span className="section-kicker">TTD STUDIO / {da ? "DIN BOOKING" : "YOUR BOOKING"}</span>
       <h1>{da ? "Administrer din booking." : "Manage your booking."}</h1>

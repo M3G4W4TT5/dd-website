@@ -2,12 +2,13 @@ import { notFound } from "next/navigation";
 import { DateTime } from "luxon";
 import { ManageBookingPreview } from "@/components/ManageBookingPreview";
 import { signPreviewBooking } from "@/lib/manage-preview-token";
+import { pageLanguage } from "@/lib/language";
 
 export default async function ManageBookingPreviewPage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
   if (process.env.NODE_ENV !== "development") notFound();
   const key = process.env.MANAGE_PREVIEW_SIGNING_KEY;
   if (!key || key.length < 32) throw new Error("MANAGE_PREVIEW_SIGNING_KEY is required for the local preview");
-  const language = (await searchParams).lang === "en" ? "en" : "da";
+  const language = await pageLanguage((await searchParams).lang);
   const first = DateTime.now().setZone("Europe/Copenhagen").plus({ days: 7 }).startOf("day").plus({ hours: 10 });
   const booking = {
     reference: "DEMO-BOOKING", firstHourIso: first.toISO()!, endIso: first.plus({ hours: 2 }).toISO()!,

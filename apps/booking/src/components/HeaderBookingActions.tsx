@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpRight } from "lucide-react";
+import { useEffect } from "react";
 
 type Language = "da" | "en";
 
@@ -15,11 +16,26 @@ export function HeaderBookingActions({
   languagePath?: string;
   hideManageLink?: boolean;
 }) {
+  useEffect(() => {
+    document.documentElement.lang = language;
+    document.cookie = `ttd-language=${language}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    localStorage.setItem("ttd-language", language);
+  }, [language]);
+
+  function changeLanguage(next: Language) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("lang", next);
+    window.history.replaceState(null, "", url);
+    document.cookie = `ttd-language=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    localStorage.setItem("ttd-language", next);
+    onLanguageChange?.(next);
+  }
+
   return <div className="header-actions booking-header-actions">
     {onLanguageChange ? <div className="lang-switch" aria-label="Language">
-      <button type="button" className={language === "da" ? "active" : ""} onClick={() => onLanguageChange("da")} aria-pressed={language === "da"}>DA</button>
+      <button type="button" className={language === "da" ? "active" : ""} onClick={() => changeLanguage("da")} aria-pressed={language === "da"}>DA</button>
       <span>/</span>
-      <button type="button" className={language === "en" ? "active" : ""} onClick={() => onLanguageChange("en")} aria-pressed={language === "en"}>EN</button>
+      <button type="button" className={language === "en" ? "active" : ""} onClick={() => changeLanguage("en")} aria-pressed={language === "en"}>EN</button>
     </div> : <nav className="manage-language-switch" aria-label={language === "da" ? "Sprog" : "Language"}>
       <a href={`${languagePath}?lang=da`} lang="da" aria-current={language === "da" ? "page" : undefined}>DA</a>
       <span aria-hidden="true">/</span>

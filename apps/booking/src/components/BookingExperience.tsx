@@ -133,11 +133,13 @@ function money(ore: number, language: Language): string {
 export function BookingExperience({
   initialDate,
   initialAvailability,
+  initialLanguage,
 }: {
   initialDate: string;
   initialAvailability: Availability | null;
+  initialLanguage: Language;
 }) {
-  const [language, setLanguage] = useState<Language>("da");
+  const [language, setLanguage] = useState<Language>(initialLanguage);
   const [weekStart, setWeekStart] = useState(initialDate);
   const [date, setDate] = useState(initialDate);
   const [availability, setAvailability] = useState(initialAvailability);
@@ -153,15 +155,6 @@ export function BookingExperience({
   const t = copy[language];
   const today = initialDate;
   const maxDay = DateTime.fromISO(initialDate).plus({ days: 45 }).toISODate()!;
-
-  useEffect(() => {
-    const saved = localStorage.getItem("ttd-language");
-    if (saved === "en") setLanguage("en");
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = language;
-  }, [language]);
 
   useEffect(() => {
     if (phase !== "selection-out" && phase !== "details-out") return;
@@ -299,7 +292,7 @@ export function BookingExperience({
         <a className="brand" href="#top" aria-label="TTD Studio — top">
           <span className="brand-mark">TTD<br />STUDIO</span>
         </a>
-        <HeaderBookingActions language={language} onLanguageChange={(next) => { setLanguage(next); localStorage.setItem("ttd-language", next); }} />
+        <HeaderBookingActions language={language} onLanguageChange={setLanguage} />
       </header>
 
       <main id="top">

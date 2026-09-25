@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
+import { pageLanguage } from "@/lib/language";
 
 export const metadata: Metadata = { title: "Booking terms | TTD Studio", robots: { index: false, follow: false } };
 
 export default async function TermsPage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
-  const language = (await searchParams).lang === "en" ? "en" : "da";
+  const language = await pageLanguage((await searchParams).lang);
   return <LegalPage language={language} kind="terms">{language === "da" ? <Danish /> : <English />}</LegalPage>;
 }
 

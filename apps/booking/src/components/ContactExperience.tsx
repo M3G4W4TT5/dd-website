@@ -93,9 +93,9 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
     <header className="site-header event-header">
       <MobileNavigation language={language} currentPage="contact" />
       <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
-        <a href="/#booking">Booking</a><a href={`/events?lang=${language}`}>{t.events}</a><a href={`/contact?lang=${language}`} aria-current="page">{t.contact}</a>
+        <a href={`/?lang=${language}#booking`}>Booking</a><a href={`/events?lang=${language}`}>{t.events}</a><a href={`/contact?lang=${language}`} aria-current="page">{t.contact}</a>
       </nav>
-      <a className="brand" href="/" aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
+      <a className="brand" href={`/?lang=${language}`} aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
       <HeaderBookingActions language={language} onLanguageChange={setLanguage} />
     </header>
     <main className="contact-main">
