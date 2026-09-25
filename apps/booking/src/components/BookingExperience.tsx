@@ -26,8 +26,7 @@ type Language = "da" | "en";
 const copy = {
   da: {
     preview: "LOKAL FORHÅNDSVISNING · INGEN BOOKINGER OPRETTES",
-    spaceCaption: "Rummet",
-    angleCaption: "ANDEN VINKEL",
+    galleryTitle: "STUDIET",
     navEvents: "Events",
     navContact: "Kontakt",
     imageOne: "TTD Studio med skrå hvid væg, trægulv og vinduer",
@@ -37,7 +36,6 @@ const copy = {
     metricOne: "68 m²",
     metricTwo: "Alle dage · 08–22",
     perHour: "/time",
-    bookingEyebrow: "FIND DIN TID",
     bookingTitle: "Giv din idé tid og rum.",
     unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
     pickDate: "01 / VÆLG DATO",
@@ -71,8 +69,7 @@ const copy = {
   },
   en: {
     preview: "LOCAL PREVIEW · NO BOOKINGS ARE CREATED",
-    spaceCaption: "The space",
-    angleCaption: "ANOTHER ANGLE",
+    galleryTitle: "THE STUDIO",
     navEvents: "Events",
     navContact: "Contact",
     imageOne: "TTD Studio with a sloping white wall, wooden floor and windows",
@@ -82,7 +79,6 @@ const copy = {
     metricOne: "68 m²",
     metricTwo: "Every day · 08–22",
     perHour: "/hour",
-    bookingEyebrow: "FIND YOUR TIME",
     bookingTitle: "Give your idea room to move.",
     unavailable: "Availability could not be loaded. Check the local pretix connection.",
     pickDate: "01 / CHOOSE A DATE",
@@ -309,7 +305,7 @@ export function BookingExperience({
       <main id="top">
         <section className="booking-section" id="booking" aria-labelledby="booking-title">
           <div className="section-heading booking-heading">
-            <div><span className="section-kicker">{t.bookingEyebrow}</span><h1 id="booking-title">{t.bookingTitle}</h1></div>
+            <div><h1 id="booking-title">{t.bookingTitle}</h1></div>
             <div className="booking-heading-side"><p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p></div>
           </div>
           <div id="booking-flow" className={`booking-layout booking-stage ${phase.endsWith("-out") ? "booking-stage--leaving" : phase === "details" || hasVisitedDetails ? "booking-stage--entering" : ""} ${phase === "details" || phase === "details-out" ? "booking-layout--details" : ""}`} tabIndex={-1} inert={phase.endsWith("-out")}>
@@ -372,15 +368,14 @@ export function BookingExperience({
           </div>
         </section>
 
-        <section className="studio-gallery-section" aria-label={language === "da" ? "Billeder af studiet" : "Studio photos"}>
+        <section className="studio-gallery-section" aria-labelledby="studio-gallery-title">
+          <h2 className="studio-gallery-title" id="studio-gallery-title">{t.galleryTitle}</h2>
           <div className="hero-gallery">
             <figure className="hero-photo hero-photo-wide">
               <div className="image-frame" data-image-shadow data-reveal><img src="/studio/ttd-studio-01-booking-wide.webp" loading="lazy" alt={t.imageOne} /></div>
-              <figcaption><span>01 / {t.spaceCaption}</span></figcaption>
             </figure>
             <figure className="hero-photo hero-photo-detail">
               <div className="image-frame" data-image-shadow data-reveal><img src="/studio/ttd-studio-03-booking-angle.webp" loading="lazy" alt={t.imageTwo} /></div>
-              <figcaption><span>02 / {t.angleCaption}</span></figcaption>
             </figure>
           </div>
         </section>
