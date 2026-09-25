@@ -372,6 +372,7 @@ body:has(.contact-main) .site-footer { color: #dc3e16; }
 .summary-footer a { text-decoration: underline; text-underline-offset: 3px; }
 .booking-heading-side { width: min(100%, 400px); }
 .booking-heading-side p { margin: 0; color: var(--green-ink); font-size: 18px; font-weight: 700; line-height: 1.25; }
+@media (min-width: 1350px) { .booking-heading-side p { font-size: 20px; line-height: clamp(24px, 1.77vw, 29px); } }
 @media (max-width: 600px) { .booking-heading-side { margin-top: 20px; } .booking-heading-side p { font-size: 16px; line-height: 1.35; } }
 .manage-main { max-width: 1120px; min-height: 65vh; margin: 0 auto; padding: 90px max(3vw, 24px) 120px; }
 .legal-header .booking-header-actions { margin-left: auto; gap: 20px; }
