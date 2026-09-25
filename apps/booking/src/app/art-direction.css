@@ -78,7 +78,7 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 }
 .image-frame img { position: relative; }
 
-.booking-section { padding: 78px 2.3vw 130px; background: var(--cream); }
+.booking-section { padding: 30px 2.3vw 130px; background: var(--cream); }
 .booking-heading { align-items: end; }
 .section-kicker { color: var(--green-ink); font-size: 10px; letter-spacing: .15em; }
 .booking-heading h1 { max-width: 900px; margin-top: 20px; color: var(--green-ink); font-size: clamp(58px, 7.5vw, 123px); line-height: .94; text-transform: uppercase; letter-spacing: -.01em; }
@@ -184,7 +184,8 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
   .hero-photo-detail { width: 77%; margin: 0 0 0 auto; }
   .hero-photo-detail img { height: 93vw; }
   .hero-photo figcaption { font-size: 9px; }
-  .booking-section, .studio-gallery-section { padding: 78px 20px 90px; }
+  .booking-section { padding: 30px 20px 90px; }
+  .studio-gallery-section { padding: 78px 20px 90px; }
   .booking-heading h1 { font-size: clamp(61px, 14vw, 88px); }
   .booking-heading > p { font-size: 14px; }
   .booking-layout { border: 1px solid var(--line); }
@@ -356,8 +357,8 @@ body:has(.contact-main) .site-footer { color: #dc3e16; }
 
 .summary-footer a { text-decoration: underline; text-underline-offset: 3px; }
 .booking-heading-side { width: min(100%, 400px); }
-.booking-heading-side p { margin: 0; color: var(--green-ink); font-size: 16px; line-height: 1.5; }
-@media (max-width: 600px) { .booking-heading-side { margin-top: 20px; } .booking-heading-side p { font-size: 13px; } }
+.booking-heading-side p { margin: 0; color: var(--green-ink); font-size: 18px; font-weight: 700; line-height: 1.25; }
+@media (max-width: 600px) { .booking-heading-side { margin-top: 20px; } .booking-heading-side p { font-size: 16px; line-height: 1.35; } }
 .manage-main { max-width: 1120px; min-height: 65vh; margin: 0 auto; padding: 90px max(3vw, 24px) 120px; }
 .legal-header .booking-header-actions { margin-left: auto; gap: 20px; }
 .legal-header .manage-language-switch { gap: 7px; font-size: 12px; }

@@ -43,7 +43,7 @@ const copy = {
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
     pickEnd: "02 / VÆLG SLUTTID (VALGFRIT)",
-    endHint: "Vælg den sidste time i tidsrummet, eller behold én time.",
+    endHint: "Vælg sidste time, eller vælg en tidligere time for at starte forfra. Én time er valgt som standard.",
     fullDay: "Hele dagen",
     multiDayLink: "Kontakt os",
     multiDayText: ", hvis du vil booke mere end én dag.",
@@ -89,7 +89,7 @@ const copy = {
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
     pickEnd: "02 / CHOOSE AN END TIME (OPTIONAL)",
-    endHint: "Choose the last hour of your booking, or keep one hour.",
+    endHint: "Choose the last hour, or choose an earlier hour to start again. One hour is selected by default.",
     fullDay: "Full day",
     multiDayLink: "Contact us",
     multiDayText: " if you want to book more than one day.",
@@ -196,10 +196,6 @@ export function BookingExperience({
   const current = availability?.date === date ? availability : null;
   const selectedSlot = current?.slots.find((slot) => slot.id === selectedId) || null;
   const quote = current && selectedId ? quoteInterval(current, selectedId, hours) : null;
-  const validEndIds = current && selectedId && !endSelected
-    ? new Set(Array.from({ length: MAX_HOURS }, (_, index) => quoteInterval(current, selectedId, index + 1)?.slotIds.at(-1)).filter((id): id is string => !!id))
-    : null;
-
   function selectTime(slot: Slot) {
     if (!current || !slot.available) return;
     if (!selectedId || endSelected) {
@@ -213,7 +209,13 @@ export function BookingExperience({
     const startIndex = ordered.findIndex((entry) => entry.id === selectedId);
     const endIndex = ordered.findIndex((entry) => entry.id === slot.id);
     const nextHours = endIndex - startIndex + 1;
-    if (!quoteInterval(current, selectedId, nextHours)) return;
+    if (!quoteInterval(current, selectedId, nextHours)) {
+      setSelectedId(slot.id);
+      setHours(1);
+      setEndSelected(false);
+      setStatus("idle");
+      return;
+    }
     setHours(nextHours);
     setEndSelected(true);
     setStatus("idle");
@@ -322,7 +324,7 @@ export function BookingExperience({
               {loading ? <div className="slot-message">{t.loading}</div> : error ? <div className="slot-message error-message">{t.unavailable}</div> : !current?.slots.length ? <div className="slot-message">{t.noTimes}</div> : (
                 <div className="time-grid">
                   {current.slots.map((slot: Slot) => (
-                    <button type="button" key={slot.id} className={`time-slot ${quote?.slotIds.includes(slot.id) ? "selected" : ""}`} disabled={!slot.available || (validEndIds !== null && !validEndIds.has(slot.id))} onClick={() => selectTime(slot)} aria-pressed={quote?.slotIds.includes(slot.id) ?? false}>
+                    <button type="button" key={slot.id} className={`time-slot ${quote?.slotIds.includes(slot.id) ? "selected" : ""}`} disabled={!slot.available} onClick={() => selectTime(slot)} aria-pressed={quote?.slotIds.includes(slot.id) ?? false}>
                       <span className="time-value">{timeLabel(slot.start)}</span>
                       {!quote?.slotIds.includes(slot.id) && <span className="slot-state">{slot.available ? t.available : t.taken}</span>}
                     </button>
