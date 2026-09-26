@@ -6,7 +6,6 @@ import "@fontsource/dm-sans/500.css";
 import "@fontsource/dm-sans/700.css";
 import "./palette.css";
 import "./styles.css";
-import "./art-direction.css";
 
 export const metadata: Metadata = {
   title: "TTD Studio | Booking preview",
