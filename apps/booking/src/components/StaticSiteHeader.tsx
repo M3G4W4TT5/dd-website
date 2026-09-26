@@ -1,4 +1,5 @@
 import { HeaderBookingActions } from "./HeaderBookingActions";
+import { HeaderBlur } from "./HeaderBlur";
 import { MobileNavigation } from "./MobileNavigation";
 import type { Language } from "@/lib/language";
 
@@ -8,6 +9,7 @@ export function StaticSiteHeader({ language, languagePath, hideLanguageSwitch = 
   hideLanguageSwitch?: boolean;
 }) {
   return <header className="site-header">
+    <HeaderBlur />
     <MobileNavigation language={language} />
     <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
       <a href={`/?lang=${language}`}>Booking</a>

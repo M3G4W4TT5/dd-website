@@ -7,6 +7,7 @@ import { useVisualEffects } from "./useVisualEffects";
 import { SiteFooter } from "./SiteFooter";
 import { MobileNavigation } from "./MobileNavigation";
 import { HeaderBookingActions } from "./HeaderBookingActions";
+import { HeaderBlur } from "./HeaderBlur";
 import { ZONE, type Language, type Occurrence } from "@/lib/events-model";
 import type { Catalog } from "@/lib/events";
 import { EventSignupForm } from "./EventSignupForm";
@@ -64,6 +65,7 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
   }
   return <>
     <header className="site-header event-header">
+      <HeaderBlur />
       <MobileNavigation language={language} currentPage="events" />
       <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
         <a href={`/?lang=${language}`}>Booking</a><a href={`/events?lang=${language}`} aria-current={selected ? undefined : "page"}>{t.events}</a><a href={`/contact?lang=${language}`}>{t.contact}</a>

@@ -6,6 +6,7 @@ import { SiteFooter } from "./SiteFooter";
 import { MobileNavigation } from "./MobileNavigation";
 import { useVisualEffects } from "./useVisualEffects";
 import { HeaderBookingActions } from "./HeaderBookingActions";
+import { HeaderBlur } from "./HeaderBlur";
 import { SpringCheckbox } from "./SpringCheckbox";
 
 type Language = "da" | "en";
@@ -91,6 +92,7 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
 
   return <>
     <header className="site-header event-header">
+      <HeaderBlur />
       <MobileNavigation language={language} currentPage="contact" />
       <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
         <a href={`/?lang=${language}`}>Booking</a><a href={`/events?lang=${language}`}>{t.events}</a><a href={`/contact?lang=${language}`} aria-current="page">{t.contact}</a>

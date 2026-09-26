@@ -20,6 +20,7 @@ import { useVisualEffects } from "@/components/useVisualEffects";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HeaderBookingActions } from "@/components/HeaderBookingActions";
+import { HeaderBlur } from "@/components/HeaderBlur";
 import { WarpText } from "@/components/WarpText";
 
 type Language = "da" | "en";
@@ -338,6 +339,7 @@ export function BookingExperience({
   return (
     <>
       <header className="site-header">
+        <HeaderBlur />
         <MobileNavigation language={language} />
         <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
           <a href={`/?lang=${language}`}>Booking</a>
