@@ -1958,6 +1958,17 @@ body:has(.legal-main) .legal-main {
 
 .marketing-page>a { display: inline-block; margin-top: 35px; text-decoration: underline; }
 
+.unsubscribe-main { position: relative; min-height: 100svh; }
+
+.unsubscribe-main .marketing-page { min-height: 100svh; padding-bottom: 80px; }
+
+.unsubscribe-flower { position: absolute; right: max(3vw, 24px); bottom: 4vh; width: min(36vw, 540px); height: auto; transform: scaleX(-1); pointer-events: none; }
+
+@media (max-width: 820px) {
+  .unsubscribe-main .marketing-page { min-height: auto; padding-bottom: 0; }
+  .unsubscribe-flower { position: relative; display: block; right: auto; bottom: auto; width: min(calc(100% - 40px), 520px); margin: 36px auto 0; }
+}
+
 .marketing-unsubscribe-form { display: grid; gap: 12px; max-width: 440px; margin-top: 30px; }
 
 .marketing-unsubscribe-form input {
