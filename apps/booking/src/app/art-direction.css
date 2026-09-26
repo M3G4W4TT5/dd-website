@@ -97,7 +97,27 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 .date-navigation { font-family: "DM Sans", sans-serif; font-size: 22px; font-weight: 500; }
 .date-tile { background: var(--green-bg); border-color: var(--line); color: var(--green-ink); border-radius: 0; }
 .date-tile.selected { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); box-shadow: none; }
+.date-tile--departing { animation: date-fill-leave .12s ease-out both; }
+.date-tile--arriving { animation: date-fill-arrive .035s ease both; }
+.date-tile--passing { animation: date-fill-pass .155s both; }
+@keyframes date-fill-leave {
+  from { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); }
+  to { background: var(--green-bg); border-color: var(--line); color: var(--green-ink); }
+}
+@keyframes date-fill-arrive {
+  from { background: var(--green-bg); border-color: var(--line); color: var(--green-ink); }
+  to { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); }
+}
+@keyframes date-fill-pass {
+  0% { background: var(--green-bg); border-color: var(--line); color: var(--green-ink); animation-timing-function: ease; }
+  22.580645% { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); animation-timing-function: ease-out; }
+  100% { background: var(--green-bg); border-color: var(--line); color: var(--green-ink); }
+}
 .date-tile strong { font-family: Anton, Impact, sans-serif; font-size: 30px; }
+.date-label--out { animation: date-label-out .25s ease both; }
+.date-label--in { animation: date-label-in .25s ease both; }
+@keyframes date-label-out { from { filter: blur(0); opacity: 1; } to { filter: blur(9px); opacity: 0; } }
+@keyframes date-label-in { from { filter: blur(9px); opacity: 0; } to { filter: blur(0); opacity: 1; } }
 .time-slot { border-radius: 0; background: var(--mellow-white); }
 .time-slot-area { position: relative; margin-top: 20px; }
 .time-slot-area .time-grid { margin-top: 0; }
@@ -111,6 +131,16 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 @keyframes time-loader-pulse { 0% { transform: scale(0); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
 .time-loading-status { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .time-slot.selected { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); }
+.time-slot--spreading { animation: time-slot-fill .035s ease both; }
+@keyframes time-slot-fill {
+  from { background: var(--mellow-white); border-color: var(--line); color: var(--green-ink); }
+  to { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); }
+}
+.time-slot--clearing { animation: time-slot-clear .12s ease-out both; }
+@keyframes time-slot-clear {
+  from { background: var(--green-ink); border-color: var(--green-ink); color: var(--green-bg); }
+  to { background: var(--mellow-white); border-color: var(--line); color: var(--green-ink); }
+}
 .time-slot:disabled { background: color-mix(in srgb, var(--mellow-white) 75%, var(--green-bg)); }
 .time-value { font-family: "DM Sans", sans-serif; font-size: 17px; font-weight: 700; }
 .summary-panel { border-left: 1px solid var(--line); background: var(--green-bg); }
@@ -153,8 +183,10 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 .details-fields :is(input, select, textarea)[aria-invalid="true"] { border-color: #b23b32; box-shadow: inset 0 0 0 1px #b23b32; }
 .details-intro h3 { font-size: clamp(40px, 5vw, 65px); line-height: 1; text-transform: uppercase; }
 .details-fields input, .details-fields select, .details-fields textarea { border-radius: 0; }
-.date-navigation button, .date-input-label input, .details-fields input, .details-fields select, .details-fields textarea { border-color: var(--line); color: var(--green-ink); }
-.date-input-label input, .details-fields input, .details-fields select, .details-fields textarea { background: var(--mellow-white); }
+.date-navigation button, .details-fields input, .details-fields select, .details-fields textarea { border-color: var(--line); color: var(--green-ink); }
+.date-navigation button:hover:not(:disabled) { border-color: var(--green-ink); }
+.date-navigation button:active:not(:disabled) { border-color: var(--green-ink); background-color: var(--green-ink); color: var(--mellow-white); }
+.details-fields input, .details-fields select, .details-fields textarea { background: var(--mellow-white); }
 .date-tile:hover:not(:disabled), .time-slot:hover:not(:disabled) { border-color: var(--green-ink); }
 .time-slot, .slot-message, .picker-legend, .summary-row > span, .summary-total small,
 .check-result, .summary-footer, .details-reminder, .details-fields label, .details-fields label > span,
@@ -235,6 +267,9 @@ h1, h2, h3, .brand-mark, .footer-mark { font-family: Anton, Impact, sans-serif; 
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .date-label--out, .date-label--in { animation: none; }
+  .date-tile--departing, .date-tile--arriving, .date-tile--passing { animation: none; }
+  .time-slot--spreading, .time-slot--clearing { animation: none; }
   .booking-stage--leaving, .booking-stage--entering { animation: none; }
   .time-loader-ping::before { animation: none; transform: scale(.7); opacity: 1; }
   .time-loader-ping::after { animation: none; transform: scale(1); opacity: .4; }

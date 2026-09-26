@@ -79,12 +79,10 @@ h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
 .picker-panel { padding: 32px clamp(24px, 3.2vw, 46px) 30px; }
 .picker-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #3f6349; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
 .picker-head svg { color: #849c82; }
-.date-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 29px; }
-.date-navigation { display: flex; align-items: center; gap: 13px; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; }
-.date-navigation button { display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid #d9dfd4; border-radius: 50%; background: transparent; color: var(--ink); }
+.date-navigation { display: grid; grid-template-columns: 31px minmax(0, 1fr) 31px; align-items: center; gap: 13px; margin-top: 29px; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; }
+.date-navigation span { text-align: center; }
+.date-navigation button { display: grid; place-items: center; width: 31px; height: 31px; padding: 0; border: 1px solid #d9dfd4; border-radius: 0; background: var(--white); color: var(--ink); transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
 .date-navigation button:disabled { cursor: not-allowed; opacity: .3; }
-.date-input-label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
-.date-input-label input { width: 130px; padding: 8px 7px; border: 1px solid #dce1d6; border-radius: 2px; background: #fafaf5; color: var(--ink); font-size: 12px; }
 .date-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 22px; }
 .date-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 89px; border: 1px solid #e1e4db; border-radius: 2px; background: #fafaf6; color: #758579; transition: background .2s, border-color .2s, transform .2s; }
 .date-tile:hover:not(:disabled) { transform: translateY(-3px); border-color: #a8bba5; }
@@ -228,11 +226,8 @@ body:has(.legal-main) .legal-main { background: var(--paper); }
   .booking-heading > p { margin: 20px 0 0; font-size: 13px; }
   .booking-notice { font-size: 11px; line-height: 1.4; }
   .picker-panel { padding: 23px 16px; }
-  .date-controls { align-items: start; margin-top: 22px; }
-  .date-navigation { gap: 7px; font-size: 18px; }
-  .date-navigation button { width: 24px; height: 27px; }
-  .date-input-label { flex-direction: column; gap: 3px; align-items: start; }
-  .date-input-label input { width: 116px; padding: 6px 3px; font-size: 11px; }
+  .date-navigation { grid-template-columns: 24px minmax(0, 1fr) 24px; gap: 7px; margin-top: 22px; font-size: 18px; }
+  .date-navigation button { width: 24px; height: 24px; }
   .date-strip { gap: 3px; margin-top: 17px; }
   .date-tile { height: 72px; }
   .date-tile span, .date-tile small { font-size: 8px; }

@@ -47,7 +47,6 @@ const copy = {
     multiDayText: ", hvis du vil booke mere end én dag.",
     previousWeek: "Forrige uge",
     nextWeek: "Næste uge",
-    chooseDate: "Vælg dato",
     available: "Ledig",
     taken: "Optaget",
     noTimes: "Ingen tider denne dag. Prøv en anden dato.",
@@ -89,7 +88,6 @@ const copy = {
     multiDayText: " if you want to book more than one day.",
     previousWeek: "Previous week",
     nextWeek: "Next week",
-    chooseDate: "Choose date",
     available: "Available",
     taken: "Unavailable",
     noTimes: "No times on this day. Try another date.",
@@ -140,11 +138,15 @@ export function BookingExperience({
 }) {
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [weekStart, setWeekStart] = useState(initialDate);
+  const [weekTransition, setWeekTransition] = useState<{ phase: "out" | "in"; months: boolean[]; heading: boolean } | null>(null);
+  const weekAnimationTimer = useRef<number | null>(null);
   const [date, setDate] = useState(initialDate);
+  const [datePath, setDatePath] = useState<string[]>([]);
   const [availability, setAvailability] = useState(initialAvailability);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hours, setHours] = useState(1);
   const [endSelected, setEndSelected] = useState(false);
+  const [clearingSlotIds, setClearingSlotIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<"idle" | "checked" | "changed" | "error">("idle");
@@ -155,6 +157,10 @@ export function BookingExperience({
   const t = copy[language];
   const today = initialDate;
   const maxDay = DateTime.fromISO(initialDate).plus({ days: 45 }).toISODate()!;
+
+  useEffect(() => () => {
+    if (weekAnimationTimer.current !== null) window.clearTimeout(weekAnimationTimer.current);
+  }, []);
 
   useEffect(() => {
     if (phase !== "selection-out" && phase !== "details-out") return;
@@ -169,6 +175,19 @@ export function BookingExperience({
     }, delay);
     return () => window.clearTimeout(timeout);
   }, [phase]);
+
+  useEffect(() => {
+    if (!clearingSlotIds.length) return;
+    const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 120;
+    const timeout = window.setTimeout(() => setClearingSlotIds([]), delay);
+    return () => window.clearTimeout(timeout);
+  }, [clearingSlotIds]);
+
+  useEffect(() => {
+    if (!datePath.length) return;
+    const timeout = window.setTimeout(() => setDatePath([]), (datePath.length - 1) * 35 + 120);
+    return () => window.clearTimeout(timeout);
+  }, [datePath]);
 
   useEffect(() => {
     if (phase !== "details" && !(phase === "selection" && hasVisitedDetails)) return;
@@ -197,6 +216,7 @@ export function BookingExperience({
   function selectTime(slot: Slot) {
     if (!current || !slot.available) return;
     if (!selectedId || endSelected) {
+      setClearingSlotIds(endSelected ? quote?.slotIds.filter((id) => id !== slot.id) ?? [] : []);
       setSelectedId(slot.id);
       setHours(1);
       setEndSelected(false);
@@ -208,24 +228,36 @@ export function BookingExperience({
     const endIndex = ordered.findIndex((entry) => entry.id === slot.id);
     const nextHours = endIndex - startIndex + 1;
     if (!quoteInterval(current, selectedId, nextHours)) {
+      setClearingSlotIds(quote?.slotIds.filter((id) => id !== slot.id) ?? []);
       setSelectedId(slot.id);
       setHours(1);
       setEndSelected(false);
       setStatus("idle");
       return;
     }
+    setClearingSlotIds([]);
     setHours(nextHours);
     setEndSelected(true);
     setStatus("idle");
   }
 
-  async function selectDate(nextDate: string) {
+  async function selectDate(nextDate: string, animate = false, nextWeekStart = weekStart) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(nextDate) || nextDate < today || nextDate > maxDay) return;
+    const fromIndex = week.indexOf(date);
+    const nextWeek = Array.from({ length: 7 }, (_, index) => DateTime.fromISO(nextWeekStart).plus({ days: index }).toISODate()!);
+    const toIndex = nextWeek.indexOf(nextDate);
+    if (animate && fromIndex >= 0 && toIndex >= 0 && fromIndex !== toIndex && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const direction = Math.sign(toIndex - fromIndex);
+      setDatePath(Array.from({ length: Math.abs(toIndex - fromIndex) + 1 }, (_, index) => nextWeek[fromIndex + index * direction]));
+    } else {
+      setDatePath([]);
+    }
     const request = ++availabilityRequest.current;
     setDate(nextDate);
     setSelectedId(null);
     setHours(1);
     setEndSelected(false);
+    setClearingSlotIds([]);
     setStatus("idle");
     setLoading(true);
     setError(false);
@@ -252,10 +284,26 @@ export function BookingExperience({
   }
 
   function shiftWeek(amount: number) {
+    if (weekAnimationTimer.current !== null) return;
     const next = DateTime.fromISO(weekStart).plus({ days: amount }).toISODate()!;
     if (next < today || next > maxDay) return;
-    setWeekStart(next);
-    void selectDate(next);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setWeekStart(next);
+      void selectDate(next, true, next);
+      return;
+    }
+    const months = week.map((day, index) => DateTime.fromISO(day).toFormat("yyyy-MM") !== DateTime.fromISO(next).plus({ days: index }).toFormat("yyyy-MM"));
+    const heading = DateTime.fromISO(weekStart).toFormat("yyyy-MM") !== DateTime.fromISO(next).toFormat("yyyy-MM");
+    setWeekTransition({ phase: "out", months, heading });
+    weekAnimationTimer.current = window.setTimeout(() => {
+      setWeekStart(next);
+      void selectDate(next, true, next);
+      setWeekTransition({ phase: "in", months, heading });
+      weekAnimationTimer.current = window.setTimeout(() => {
+        setWeekTransition(null);
+        weekAnimationTimer.current = null;
+      }, 250);
+    }, 250);
   }
 
   async function checkSelection() {
@@ -317,19 +365,18 @@ export function BookingExperience({
             ) : <>
             <div className="picker-panel">
               <div className="picker-head"><span>{t.pickDate}</span><CalendarDays size={19} /></div>
-              <div className="date-controls">
-                <div className="date-navigation">
-                  <button type="button" onClick={() => shiftWeek(-7)} disabled={weekStart <= today} aria-label={t.previousWeek}><ChevronLeft size={20} /></button>
-                  <span>{DateTime.fromISO(weekStart).setLocale(language).toFormat("LLLL yyyy")}</span>
-                  <button type="button" onClick={() => shiftWeek(7)} disabled={DateTime.fromISO(weekStart).plus({ days: 7 }).toISODate()! > maxDay} aria-label={t.nextWeek}><ChevronRight size={20} /></button>
-                </div>
-                <label className="date-input-label"><span>{t.chooseDate}</span><input type="date" min={today} max={maxDay} value={date} onChange={(event) => { const next = event.target.value; if (next >= today && next <= maxDay) { setWeekStart(next); void selectDate(next); } }} /></label>
+              <div className="date-navigation">
+                <button type="button" onClick={() => shiftWeek(-7)} disabled={weekStart <= today} aria-label={t.previousWeek}><ChevronLeft size={20} /></button>
+                <span className={weekTransition?.heading ? `date-label--${weekTransition.phase}` : undefined}>{DateTime.fromISO(weekStart).setLocale(language).toFormat("LLLL yyyy")}</span>
+                <button type="button" onClick={() => shiftWeek(7)} disabled={DateTime.fromISO(weekStart).plus({ days: 7 }).toISODate()! > maxDay} aria-label={t.nextWeek}><ChevronRight size={20} /></button>
               </div>
-              <div className="date-strip">
-                {week.map((day) => {
+              <div className="date-strip" inert={weekTransition !== null} aria-busy={weekTransition !== null}>
+                {week.map((day, index) => {
                   const value = DateTime.fromISO(day).setLocale(language);
-                  return <button key={day} type="button" className={date === day ? "date-tile selected" : "date-tile"} disabled={day > maxDay} onClick={() => void selectDate(day)} aria-pressed={date === day}>
-                    <span>{value.toFormat("ccc")}</span><strong>{value.day}</strong><small>{value.toFormat("LLL")}</small>
+                  const pathIndex = datePath.indexOf(day);
+                  const pathClass = pathIndex < 0 ? "" : pathIndex === 0 ? "date-tile--departing" : day === date ? "date-tile--arriving" : "date-tile--passing";
+                  return <button key={day} type="button" className={`date-tile ${date === day ? "selected" : ""} ${pathClass}`} style={pathIndex >= 0 ? { animationDelay: `${Math.max(0, pathIndex - 1) * 35}ms` } : undefined} disabled={day > maxDay} onClick={() => void selectDate(day, true)} aria-pressed={date === day}>
+                    <span>{value.toFormat("ccc")}</span><strong className={weekTransition ? `date-label--${weekTransition.phase}` : undefined}>{value.day}</strong><small className={weekTransition?.months[index] ? `date-label--${weekTransition.phase}` : undefined}>{value.toFormat("LLL")}</small>
                   </button>;
                 })}
               </div>
@@ -339,12 +386,15 @@ export function BookingExperience({
               {error && !loading ? <div className="slot-message error-message">{t.unavailable}</div> : !displayedSlots?.length ? <div className="slot-message">{loading ? t.loading : t.noTimes}</div> : (
                 <div className="time-slot-area">
                   <div className={`time-grid ${loading ? "time-grid--loading" : ""}`} aria-busy={loading} inert={loading}>
-                    {displayedSlots.map((slot: Slot) => (
-                      <button type="button" key={slot.id} className={`time-slot ${quote?.slotIds.includes(slot.id) ? "selected" : ""}`} disabled={loading || !slot.available} onClick={() => selectTime(slot)} aria-pressed={quote?.slotIds.includes(slot.id) ?? false}>
+                    {displayedSlots.map((slot: Slot) => {
+                      const selectedIndex = quote?.slotIds.indexOf(slot.id) ?? -1;
+                      const spread = endSelected && selectedIndex > 0;
+                      const clearing = selectedIndex < 0 && clearingSlotIds.includes(slot.id);
+                      return <button type="button" key={slot.id} className={`time-slot ${selectedIndex >= 0 ? "selected" : ""} ${spread ? "time-slot--spreading" : ""} ${clearing ? "time-slot--clearing" : ""}`} style={spread ? { animationDelay: `${(selectedIndex - 1) * 35}ms` } : undefined} disabled={loading || !slot.available} onClick={() => selectTime(slot)} aria-pressed={selectedIndex >= 0}>
                         <span className="time-value">{timeLabel(slot.start)}</span>
-                        {!quote?.slotIds.includes(slot.id) && <span className="slot-state">{slot.available ? t.available : t.taken}</span>}
-                      </button>
-                    ))}
+                        {selectedIndex < 0 && !clearing && <span className="slot-state">{slot.available ? t.available : t.taken}</span>}
+                      </button>;
+                    })}
                   </div>
                   <div className={`time-loader ${loading ? "time-loader--visible" : ""}`} aria-hidden="true">
                     <div className="time-loader-ping" />
