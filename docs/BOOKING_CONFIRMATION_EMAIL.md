@@ -35,7 +35,7 @@ Linket er personligt og giver adgang til dine bookingoplysninger. Del det ikke m
 
 Når der er mere end 24 timer til den første bookede time, kan du ændre til et andet ledigt tidsrum. Du kan også afbestille din booking gratis. Ved rettidig afbestilling refunderer vi det fulde betalte beløb til den oprindelige betalingsmetode. Refusionen kan tage tid at blive gennemført. Hvis fristen er passeret, skal du kontakte studiet om eventuelle særlige forhold.
 
-Læs bookingvilkårene: https://ttd.didde-mie.com/terms?lang=da
+Læs bookingvilkårene: https://studio.didde-mie.com/terms?lang=da
 Spørgsmål? Skriv til booking@didde-mie.com.
 
 Venlig hilsen
@@ -62,7 +62,7 @@ This personal link gives access to your booking details. Do not share it with ot
 
 When more than 24 hours remain before the first booked hour, you can move to another available interval. You can also cancel your booking free of charge. If you cancel in time, we refund the full amount to the original payment method. The refund may take time to complete. If the deadline has passed, contact the studio about exceptional circumstances.
 
-Booking terms: https://ttd.didde-mie.com/terms?lang=en
+Booking terms: https://studio.didde-mie.com/terms?lang=en
 Questions? Email booking@didde-mie.com.
 
 Kind regards,

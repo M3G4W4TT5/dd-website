@@ -46,7 +46,7 @@ node --env-file=apps/booking/.env.local --import tsx apps/booking/scripts/market
 Use the correct sender and list; do not copy addresses between the two businesses. In Webmail, put recipients in **BCC**, never To or CC. Each marketing message must identify the sender, state how to unsubscribe, and include the relevant public page:
 
 - DD: `https://didde-mie.com/unsubscribe`
-- TTD Studio: `https://ttd.didde-mie.com/unsubscribe`
+- TTD Studio: `https://studio.didde-mie.com/unsubscribe`
 
 Also accept unsubscribe requests sent by reply. Apply such a request promptly before the next export:
 
