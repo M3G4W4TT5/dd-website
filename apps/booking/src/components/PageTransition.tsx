@@ -8,6 +8,15 @@ type Phase = "idle" | "blur" | "colour" | "waiting" | "reveal";
 function pageColour(pathname: string) {
   if (pathname === "/events" || pathname.startsWith("/events/")) return "var(--purple-bg)";
   if (pathname === "/contact") return "var(--red-bg)";
+  if (["/", "/privacy", "/terms", "/unsubscribe", "/manage", "/manage/access", "/manage/booking", "/manage/preview"].includes(pathname) || pathname.startsWith("/marketing/")) return "var(--green-bg)";
+  return "var(--yellow-bg)";
+}
+
+function renderedPageColour(surface: HTMLDivElement | null) {
+  // Route patterns cannot predict notFound() from an otherwise valid route.
+  if (surface?.querySelector(".not-found-main")) return "var(--yellow-bg)";
+  if (surface?.querySelector(".events-main")) return "var(--purple-bg)";
+  if (surface?.querySelector(".contact-main")) return "var(--red-bg)";
   return "var(--green-bg)";
 }
 
@@ -50,20 +59,26 @@ export function PageTransition({ children }: { children: ReactNode }) {
     if (phase !== "waiting" || pending || !destination.current) return;
     if (pathname !== destination.current.pathname) return;
     clearTimers();
+    // Keep the loader up while correcting a server-resolved 404's colour.
+    const committedColour = renderedPageColour(surface.current);
+    const needsColourChange = committedColour !== pageColour(destination.current.pathname);
+    if (needsColourChange) setColour(committedColour);
     // Reveal only after the destination's server content has committed.
     const frame = requestAnimationFrame(() => {
-      setPhase("reveal");
       timers.current.push(setTimeout(() => {
-        destination.current = null;
-        setPhase("idle");
-        // Restore interactivity before moving focus; the React update commits next.
-        if (surface.current) surface.current.inert = false;
-        const heading = surface.current?.querySelector<HTMLElement>("h1");
-        if (heading) {
-          heading.setAttribute("tabindex", "-1");
-          heading.focus({ preventScroll: true });
-        }
-      }, DURATION));
+        setPhase("reveal");
+        timers.current.push(setTimeout(() => {
+          destination.current = null;
+          setPhase("idle");
+          // Restore interactivity before moving focus; the React update commits next.
+          if (surface.current) surface.current.inert = false;
+          const heading = surface.current?.querySelector<HTMLElement>("h1");
+          if (heading) {
+            heading.setAttribute("tabindex", "-1");
+            heading.focus({ preventScroll: true });
+          }
+        }, DURATION));
+      }, needsColourChange ? DURATION : 0));
     });
     return () => cancelAnimationFrame(frame);
   }, [phase, pending, pathname]);
@@ -78,7 +93,7 @@ export function PageTransition({ children }: { children: ReactNode }) {
     event.preventDefault();
     if (destination.current) return;
     destination.current = target;
-    setColour(pageColour(pathname));
+    setColour(renderedPageColour(surface.current));
     setPhase("blur");
     router.prefetch(target.pathname + target.search);
     timers.current.push(setTimeout(() => {

@@ -72,3 +72,13 @@ body:has(.contact-main) {
   --line: color-mix(in srgb, var(--theme-ink) 25%, transparent);
 }
 
+body:has(.not-found-main) {
+  --theme-ink: var(--yellow-ink);
+  --theme-bg: var(--yellow-bg);
+  --theme-shadow: var(--yellow-shadow);
+  --theme-footer-bg: var(--yellow-footer-bg);
+  --theme-footer-gradient-max: var(--yellow-footer-gradient-max);
+  --theme-hover: color-mix(in srgb, var(--yellow-ink) 85%, black);
+  --theme-preview-dot: var(--yellow-shadow);
+  --line: color-mix(in srgb, var(--theme-ink) 25%, transparent);
+}
