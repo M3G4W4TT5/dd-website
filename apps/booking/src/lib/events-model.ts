@@ -21,6 +21,8 @@ export const quotaSchema = z.object({
 });
 export const itemSchema = z.object({
   id: z.number(), name: translated, description: translated, active: z.boolean(), default_price: z.string(),
+  admission: z.boolean().optional(), min_per_order: z.number().nullable().optional(), max_per_order: z.number().nullable().optional(),
+  has_variations: z.boolean().optional(),
   available_from: z.string().nullable().optional(), available_until: z.string().nullable().optional(),
 });
 export type RawEvent = z.infer<typeof eventSchema>;
@@ -32,7 +34,8 @@ export type Occurrence = {
   key: string; slug: string; dateId: number | null; title: string; titleEn: string;
   description: string; descriptionEn: string; image: string | null; shopUrl: string | null; location: string;
   locationEn: string; start: string; end: string; status: "available" | "sold-out" | "not-on-sale" | "test" | "room-conflict";
-  remaining: number | null; roomVerified: boolean; tickets: { name: string; nameEn: string; price: string; remaining: number | null }[];
+  remaining: number | null; roomVerified: boolean; signupAvailable: boolean;
+  tickets: { id: number; name: string; nameEn: string; price: string; remaining: number | null; minPerOrder: number; maxPerOrder: number | null; hasVariations: boolean }[];
 };
 export function localized(value: z.infer<typeof translated>, language: Language): string {
   if (!value) return "";
@@ -96,7 +99,7 @@ export function normalizeEvent(event: RawEvent, date: RawDate | null, items: Raw
   const start = date?.date_from ?? event.date_from;
   const end = date?.date_to ?? event.date_to;
   if (!end || !DateTime.fromISO(start).isValid || !DateTime.fromISO(end).isValid || Date.parse(end) <= now.toMillis() || Date.parse(end) <= Date.parse(start)) return null;
-  const eligible = items.filter(item => item.active && !date?.item_price_overrides?.some(override => override.item === item.id && override.disabled) &&
+  const eligible = items.filter(item => item.active && item.admission !== false && !date?.item_price_overrides?.some(override => override.item === item.id && override.disabled) &&
     (!item.available_from || Date.parse(item.available_from) <= now.toMillis()) &&
     (!item.available_until || Date.parse(item.available_until) > now.toMillis()) &&
     quotas.some(q => (q.subevent === null || q.subevent === date?.id) && q.items.includes(item.id)));
@@ -122,12 +125,14 @@ export function normalizeEvent(event: RawEvent, date: RawDate | null, items: Raw
     location: localized(date?.location || event.location, "da"),
     locationEn: localized(date?.location || event.location, "en"), start, end,
     status: event.testmode ? "test" : !saleOpen || eligible.length === 0 ? "not-on-sale" : hasStock ? "available" : "sold-out",
+    signupAvailable: saleOpen && hasStock,
     remaining: remainingPlaces(eligible, quotas.filter(q => q.subevent === null || q.subevent === date?.id)),
     tickets: eligible.map(item => {
       const limits = quotas.filter(q => (q.subevent === null || q.subevent === date?.id) && q.items.includes(item.id))
-        .map(q => q.available_number).filter((value): value is number => typeof value === "number");
+        .map(q => q.closed || q.available !== true ? 0 : q.available_number).filter((value): value is number => typeof value === "number");
       return {
-        name: localized(item.name, "da"), nameEn: localized(item.name, "en"),
+        id: item.id, name: localized(item.name, "da"), nameEn: localized(item.name, "en"),
+        minPerOrder: Math.max(1, item.min_per_order ?? 1), maxPerOrder: item.max_per_order ?? null, hasVariations: item.has_variations ?? false,
         price: date?.item_price_overrides?.find(override => override.item === item.id)?.price || item.default_price,
         remaining: limits.length ? Math.min(...limits) : null,
       };

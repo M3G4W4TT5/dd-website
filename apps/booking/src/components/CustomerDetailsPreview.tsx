@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { SpringCheckbox } from "./SpringCheckbox";
+import { BuyerDetailsFields, DetailsConsent, invalidDetailFields } from "./BookingFormFields";
 
 type Language = "da" | "en";
 
@@ -78,11 +78,6 @@ const copy = {
     checkout: "Payment takes place in the next step.",
   },
 } as const;
-
-function invalidDetailFields(form: HTMLFormElement): string[] {
-  return Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(".details-fields input, .details-fields select, .details-fields textarea"))
-    .filter((field) => !field.checkValidity()).map((field) => field.name);
-}
 
 export function CustomerDetailsPreview({
   language,
@@ -171,9 +166,7 @@ export function CustomerDetailsPreview({
       <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{t.back}</button><span className="section-kicker">{t.eyebrow}</span><h3 id="details-title" tabIndex={-1}>{t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
       <form className="details-form" noValidate onInput={(event) => { if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
         <div className="details-fields">
-          <label>{t.name}<input name="name" type="text" autoComplete="name" minLength={2} maxLength={100} required aria-invalid={invalidFields.includes("name")} /></label>
-          <label>{t.email}<input name="email" type="email" autoComplete="email" maxLength={254} required aria-invalid={invalidFields.includes("email")} /></label>
-          <label>{t.phone}<input name="phone" type="tel" autoComplete="tel" minLength={6} maxLength={30} required aria-invalid={invalidFields.includes("phone")} /></label>
+          <BuyerDetailsFields labels={t} invalidFields={invalidFields} />
           <label>{t.type}<select name="customerType" value={customerType} onChange={(event) => setCustomerType(event.target.value)} required aria-invalid={invalidFields.includes("customerType")}><option value="" disabled>{t.placeholderType}</option><option value="private">{t.private}</option><option value="instructor">{t.instructor}</option><option value="business">{t.business}</option></select></label>
           <label>{t.attendeeCount}<input name="attendeeCount" type="number" inputMode="numeric" min={1} max={100} step={1} required aria-invalid={invalidFields.includes("attendeeCount")} /></label>
           <label>{t.purpose}<input name="purpose" type="text" maxLength={150} minLength={2} required aria-invalid={invalidFields.includes("purpose")} /></label>
@@ -181,15 +174,7 @@ export function CustomerDetailsPreview({
           <label className="details-wide">{t.comment} <span>({t.optional})</span><textarea name="comment" rows={3} maxLength={2000} /></label>
         </div>
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
-        <div className="terms-acceptance marketing-acceptance">
-          <SpringCheckbox id="accept-marketing" checked={marketingOptIn} onChange={(event) => setMarketingOptIn(event.target.checked)} />
-          <label htmlFor="accept-marketing">{t.marketing}</label>
-        </div>
-        <div className="terms-acceptance">
-          <SpringCheckbox id="accept-booking-terms" required checked={termsAccepted} onChange={(event) => { setTermsAccepted(event.target.checked); if (event.target.checked) setShowTermsError(false); }} aria-describedby={showTermsError ? "terms-acceptance-error" : undefined} aria-invalid={showTermsError} />
-          <label htmlFor="accept-booking-terms">{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</label>
-        </div>
-        {showTermsError && <p id="terms-acceptance-error" className="terms-error" role="alert">{t.termsRequired}</p>}
+        <DetailsConsent idPrefix="accept-booking" marketingId="accept-marketing" termsErrorId="terms-acceptance-error" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={setMarketingOptIn} onTermsChange={checked => { setTermsAccepted(checked); if (checked) setShowTermsError(false); }} />
         <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}{marketingResult !== null && <p className="marketing-result" role="status">{marketingResult ? t.marketingSent : t.marketingFailed}</p>}</div>
       </form>
     </section>

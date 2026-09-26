@@ -1274,9 +1274,46 @@ h3 {
   background: var(--purple-ink);
   color: var(--purple-bg);
   font-weight: 700;
+  width: 100%;
+  border: 0;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
 }
 
-.event-cta:hover { background: var(--purple-hover); }
+.event-cta:hover:not(:disabled) { background: var(--purple-hover); }
+
+.event-cta:disabled { opacity: .55; cursor: not-allowed; }
+
+.event-signup { padding-inline: 0; row-gap: 0; border-top: 1px solid var(--line); }
+
+@media (min-width: 821px) {
+  .event-signup-heading { grid-column: 1; grid-row: 1; }
+  .event-signup .details-intro:not(.event-signup-heading) { grid-column: 1; grid-row: 2; }
+  .event-signup .details-form { grid-column: 2; grid-row: 2; }
+  .event-signup .details-intro > p { margin-top: 0; }
+}
+
+.event-signup .details-intro > p { max-width: 38rem; font-size: 15px; line-height: 1.6; }
+
+.event-signup .details-fields :is(input, select) { background: var(--theme-soft-bg); }
+
+.event-signup :is(input, select, button, a):focus-visible { outline-color: var(--theme-ink); }
+
+.event-signup-fields { min-width: 0; padding: 0; margin: 0; border: 0; }
+
+.event-signup-summary { margin-top: 30px; max-width: 440px; }
+
+.event-signup-summary > strong { font-size: 20px; line-height: 1.4; }
+
+.event-signup-summary p { font-size: 13px; line-height: 1.6; }
+
+.event-signup-total { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding-top: 20px; border-top: 1px solid var(--line); }
+
+.event-signup-total > strong { font-family: Anton, Impact, sans-serif; font-size: 34px; font-weight: 400; white-space: nowrap; }
+
+.event-signup .details-actions button:disabled { cursor: not-allowed; }
 
 .event-gate { border: 1px solid var(--line); padding: 18px; line-height: 1.5; }
 

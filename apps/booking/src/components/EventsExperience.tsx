@@ -7,13 +7,15 @@ import { useVisualEffects } from "./useVisualEffects";
 import { SiteFooter } from "./SiteFooter";
 import { MobileNavigation } from "./MobileNavigation";
 import { HeaderBookingActions } from "./HeaderBookingActions";
-import { ZONE, checkoutPath, type Language, type Occurrence } from "@/lib/events-model";
+import { ZONE, type Language, type Occurrence } from "@/lib/events-model";
 import type { Catalog } from "@/lib/events";
+import { EventSignupForm } from "./EventSignupForm";
+import { ticketLimit } from "@/lib/event-registration";
 
 type Props = { catalog: Catalog; selected?: Occurrence; initialLanguage: Language };
 const words = {
-  da: { events: "Events", contact: "Kontakt", title: "Det sker i studiet.", intro: "Se kommende aktiviteter og vælg den dato, der passer dig.", upcoming: "KOMMENDE DATOER", calendar: "Kalender", list: "Liste", back: "Alle events", location: "Sted", time: "Tid", tickets: "Billetter", places: "ledige pladser", noSlots: "Ingen ledige pladser", signup: "Vælg billet hos pretix", sold: "Udsolgt", closed: "Billetsalget er ikke åbent", conflict: "Rummet er optaget af en eksisterende booking.", gate: "Tilmelding er ikke åben endnu.", empty: "Der er ingen offentlige kommende events endnu.", setup: "Der er ingen offentlige kommende events endnu.", error: "Events kan ikke indlæses lige nu. Prøv igen senere.", description: "Beskrivelse følger.", previous: "Forrige måned", next: "Næste måned", previousEvents: "Forrige events", nextEvents: "Næste events", of: "af" },
-  en: { events: "Events", contact: "Contact", title: "What's on at the studio.", intro: "Browse upcoming activities and choose the date that suits you.", upcoming: "UPCOMING DATES", calendar: "Calendar", list: "List", back: "All events", location: "Location", time: "Time", tickets: "Tickets", places: "slots left", noSlots: "No slots left", signup: "Choose tickets on pretix", sold: "Sold out", closed: "Ticket sales are not open", conflict: "The room is occupied by an existing booking.", gate: "Signup is not open yet.", empty: "There are no public upcoming events yet.", setup: "There are no public upcoming events yet.", error: "Events could not be loaded. Please try again later.", description: "Description to follow.", previous: "Previous month", next: "Next month", previousEvents: "Previous events", nextEvents: "Next events", of: "of" },
+  da: { events: "Events", contact: "Kontakt", title: "Det sker i studiet.", intro: "Se kommende aktiviteter og vælg den dato, der passer dig.", upcoming: "KOMMENDE DATOER", calendar: "Kalender", list: "Liste", back: "Alle events", location: "Sted", time: "Tid", tickets: "Billetter", places: "ledige pladser", noSlots: "Ingen ledige pladser", signup: "Tilmeld dig", sold: "Udsolgt", closed: "Billetsalget er ikke åbent", conflict: "Rummet er optaget af en eksisterende booking.", gate: "Billetter er ikke tilgængelige", empty: "Der er ingen offentlige kommende events endnu.", setup: "Der er ingen offentlige kommende events endnu.", error: "Events kan ikke indlæses lige nu. Prøv igen senere.", description: "Beskrivelse følger.", previous: "Forrige måned", next: "Næste måned", previousEvents: "Forrige events", nextEvents: "Næste events", of: "af" },
+  en: { events: "Events", contact: "Contact", title: "What's on at the studio.", intro: "Browse upcoming activities and choose the date that suits you.", upcoming: "UPCOMING DATES", calendar: "Calendar", list: "List", back: "All events", location: "Location", time: "Time", tickets: "Tickets", places: "slots left", noSlots: "No slots left", signup: "Sign up", sold: "Sold out", closed: "Ticket sales are not open", conflict: "The room is occupied by an existing booking.", gate: "Tickets are unavailable", empty: "There are no public upcoming events yet.", setup: "There are no public upcoming events yet.", error: "Events could not be loaded. Please try again later.", description: "Description to follow.", previous: "Previous month", next: "Next month", previousEvents: "Previous events", nextEvents: "Next events", of: "of" },
 };
 const EVENTS_PER_PAGE = 6;
 function localDay(iso: string) { return DateTime.fromISO(iso, { setZone: true }).setZone(ZONE); }
@@ -25,6 +27,8 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
   const [language, setLanguage] = useState<Language>(initialLanguage);
   const [month, setMonth] = useState(() => catalog.occurrences.length ? localDay(catalog.occurrences[0].start).startOf("month") : DateTime.now().setZone(ZONE).startOf("month"));
   const [listPage, setListPage] = useState(0);
+  const [showSignup, setShowSignup] = useState(false);
+  const signupRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   useVisualEffects();
   useEffect(() => { document.documentElement.lang = language; localStorage.setItem("ttd-language", language); }, [language]);
@@ -52,15 +56,12 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
     }
     return map;
   }, [catalog.occurrences]);
-  const shop = (() => {
-    if (!selected || !catalog.shopBase || !catalog.checkoutEnabled) return null;
-    const configured = new URL(catalog.shopBase);
-    const publicUrl = selected.shopUrl ? new URL(selected.shopUrl) : null;
-    const base = publicUrl?.origin === configured.origin ? publicUrl! : new URL(checkoutPath(catalog.organizer, selected).replace(/^\//, ""), configured.href.endsWith("/") ? configured.href : `${configured.href}/`);
-    if (publicUrl?.origin === configured.origin && selected.dateId !== null) base.searchParams.set("subevent", String(selected.dateId));
-    return base.href;
-  })();
-  const canBuy = selected?.status === "available" && selected.roomVerified && catalog.checkoutEnabled && shop;
+  const canSignUp = selected && selected.signupAvailable && selected.status !== "room-conflict" &&
+    selected.tickets.some(ticket => !ticket.hasVariations && ticketLimit(ticket, selected.remaining) >= ticket.minPerOrder);
+  function closeSignup() {
+    setShowSignup(false);
+    requestAnimationFrame(() => signupRef.current?.focus());
+  }
   return <>
     <header className="site-header event-header">
       <MobileNavigation language={language} currentPage="events" />
@@ -73,12 +74,12 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
     <main className="events-main">
       {selected ? <>
         <div className="events-heading"><a className="events-back" href={`/events?lang=${language}`}>← {t.back}</a><span className="section-kicker">{t.upcoming}</span><h1>{language === "da" ? selected.title : selected.titleEn}</h1><p>{dateText(selected.start, language)} · {timeText(selected.start)}–{timeText(selected.end)}</p></div>
-        <div className="event-detail-grid">
+        {showSignup && canSignUp ? <EventSignupForm key={selected.key} occurrence={selected} language={language} onBack={closeSignup} /> : <div className="event-detail-grid">
           <div>{selected.image && <div className="image-frame event-image" data-image-shadow data-reveal><img src={selected.image} alt={`${language === "da" ? "Foto til" : "Photo for"} ${language === "da" ? selected.title : selected.titleEn}`} /></div>}</div><section className="event-description"><p>{(language === "da" ? selected.description : selected.descriptionEn) || t.description}</p></section>
           <aside className="event-facts"><div><span>{t.time}</span><strong>{dateText(selected.start, language)}<br />{timeText(selected.start)}–{timeText(selected.end)} · Copenhagen</strong></div><div><span>{t.location}</span><strong>{(language === "da" ? selected.location : selected.locationEn) || "TTD Studio"}</strong></div><div><span>{t.tickets}</span>{selected.tickets.length ? selected.tickets.map((ticket, index) => <strong key={index}>{language === "da" ? ticket.name : ticket.nameEn} · {priceText(ticket.price, language)}{ticket.remaining !== null && <> · {ticket.remaining === 0 ? t.noSlots : `${ticket.remaining} ${t.places}`}</>}</strong>) : <strong>—</strong>}</div>
-            {canBuy ? <a className="event-cta" href={shop}>{t.signup}<ArrowUpRight size={20} /></a> : <p className="event-gate" role="status">{selected.status === "sold-out" ? t.sold : selected.status === "not-on-sale" ? t.closed : selected.status === "room-conflict" ? t.conflict : t.gate}</p>}
+            <button ref={signupRef} className="event-cta" type="button" disabled={!canSignUp} onClick={() => setShowSignup(true)}>{canSignUp ? t.signup : selected.status === "sold-out" || selected.remaining === 0 ? t.sold : selected.status === "not-on-sale" ? t.closed : selected.status === "room-conflict" ? t.conflict : t.gate}{canSignUp && <ArrowUpRight size={20} aria-hidden="true" />}</button>
           </aside>
-        </div>
+        </div>}
       </> : <>
         <div className="events-heading"><h1>{t.title}</h1><p>{t.intro}</p></div>
         {catalog.state !== "ready" ? <p className="events-message" role="status">{catalog.state === "setup" ? t.setup : t.error}</p> : catalog.occurrences.length === 0 ? <p className="events-message" role="status">{t.empty}</p> : <section className="events-section" aria-label={t.events}>
