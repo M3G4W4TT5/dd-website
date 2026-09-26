@@ -14,7 +14,7 @@ export function StaticSiteHeader({ language, languagePath, hideLanguageSwitch = 
       <a href={`/events?lang=${language}`}>Events</a>
       <a href={`/contact?lang=${language}`}>{language === "da" ? "Kontakt" : "Contact"}</a>
     </nav>
-    <a className="brand" href={`/?lang=${language}`} aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
+    <a className="brand" href={`/?lang=${language}`} aria-label="TTD Studio — home"><span className="brand-mark" aria-hidden="true" /></a>
     <HeaderBookingActions language={language} languagePath={languagePath} hideLanguageSwitch={hideLanguageSwitch} />
   </header>;
 }

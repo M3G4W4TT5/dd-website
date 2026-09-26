@@ -95,7 +95,7 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
       <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
         <a href={`/?lang=${language}`}>Booking</a><a href={`/events?lang=${language}`}>{t.events}</a><a href={`/contact?lang=${language}`} aria-current="page">{t.contact}</a>
       </nav>
-      <a className="brand" href={`/?lang=${language}`} aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
+      <a className="brand" href={`/?lang=${language}`} aria-label="TTD Studio — home"><span className="brand-mark" aria-hidden="true" /></a>
       <HeaderBookingActions language={language} onLanguageChange={setLanguage} />
     </header>
     <main className="contact-main">

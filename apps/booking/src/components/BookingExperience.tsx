@@ -345,7 +345,7 @@ export function BookingExperience({
           <a href={`/contact?lang=${language}`}>{t.navContact}</a>
         </nav>
         <a className="brand" href="#top" aria-label="TTD Studio — top">
-          <span className="brand-mark">TTD<br />STUDIO</span>
+          <span className="brand-mark" aria-hidden="true" />
         </a>
         <HeaderBookingActions language={language} onLanguageChange={setLanguage} />
       </header>

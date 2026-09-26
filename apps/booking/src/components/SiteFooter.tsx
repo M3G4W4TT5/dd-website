@@ -43,7 +43,7 @@ export function SiteFooter({ language = "en" }: { language?: "da" | "en" }) {
     <div ref={revealSpaceRef} className="footer-reveal-space" aria-hidden="true" />
     <footer ref={footerRef} className="site-footer">
       <div className="footer-main">
-        <div className="footer-identity"><span className="footer-mark">TTD</span></div>
+        <div className="footer-identity"><span className="footer-mark" role="img" aria-label="TTD" /></div>
         <div className="footer-details">
           <address>
             København Danser<br />Nygaardsvej 5a, 2. sal<br />2100 København Ø

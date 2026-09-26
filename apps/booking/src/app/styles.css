@@ -16,8 +16,6 @@ a { color: inherit; text-decoration: none; }
 
 a:hover { color: var(--theme-link-hover); }
 
-.brand:hover .brand-mark { color: var(--theme-link-hover); }
-
 button:focus-visible,
 a:focus-visible,
 input:focus-visible {
@@ -192,16 +190,13 @@ h3 {
 
 .desktop-nav a:hover { color: var(--theme-link-hover); }
 
-.brand { align-items: center; gap: 17px; display: block; text-align: center; transform: rotate(-5deg); }
+.brand { display: block; text-align: center; }
 
 .brand-mark {
-  font-family: Anton, Impact, sans-serif;
-  font-weight: 400;
   display: block;
-  color: var(--theme-ink);
-  font-size: 26px;
-  line-height: .82;
-  letter-spacing: .02em;
+  width: 106px;
+  height: 47px;
+  background: var(--theme-logo-full) center / contain no-repeat;
 }
 
 .header-actions { display: flex; align-items: center; justify-content: flex-end; justify-self: end; gap: 25px; }
@@ -229,7 +224,7 @@ h3 {
 
   .site-header { height: 76px; padding: 0 20px; }
 
-  .brand-mark { font-size: 21px; }
+  .brand-mark { width: 96px; height: 42px; }
 
   .desktop-nav a { font-size: 12px; }
 
@@ -2042,21 +2037,11 @@ body:has(.legal-main) .legal-main {
 .footer-main p { margin: 20px 0; font-size: 13px; color: var(--theme-ink); }
 
 .footer-mark {
-  font-family: Anton, Impact, sans-serif;
-  font-weight: 400;
-  letter-spacing: -.012em;
-  font-size: clamp(80px, 14vw, 210px);
-  line-height: .85;
-}
-
-.footer-mark span {
-  position: relative;
-  letter-spacing: 0;
-  color: var(--red-ink);
-  top: -1.8em;
-  left: .1em;
-  font-family: "DM Sans", sans-serif;
-  font-size: .13em;
+  display: block;
+  height: clamp(58px, 10.15vw, 152px);
+  width: auto;
+  aspect-ratio: 720 / 308;
+  background: var(--theme-logo-ttd) left center / contain no-repeat;
 }
 
 .footer-details { display: flex; align-items: flex-start; gap: 36px; }

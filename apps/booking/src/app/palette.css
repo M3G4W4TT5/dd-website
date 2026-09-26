@@ -40,6 +40,8 @@
 
 /* Shared components consume the active theme, not a colour-named variable. */
 body {
+  --theme-logo-full: url("/branding/ttd/full-green-cropped.webp");
+  --theme-logo-ttd: url("/branding/ttd/ttd-only-green-cropped.webp");
   --theme-ink: var(--green-ink);
   --theme-bg: var(--green-bg);
   --theme-shadow: var(--green-shadow);
@@ -53,6 +55,8 @@ body {
 }
 
 body:has(.events-main) {
+  --theme-logo-full: url("/branding/ttd/full-purple-cropped.webp");
+  --theme-logo-ttd: url("/branding/ttd/ttd-only-purple-cropped.webp");
   --theme-ink: var(--purple-ink);
   --theme-bg: var(--purple-bg);
   --theme-shadow: var(--purple-shadow);
@@ -65,6 +69,8 @@ body:has(.events-main) {
 }
 
 body:has(.contact-main) {
+  --theme-logo-full: url("/branding/ttd/full-red-cropped.webp");
+  --theme-logo-ttd: url("/branding/ttd/ttd-only-red-cropped.webp");
   --theme-ink: var(--red-ink);
   --theme-bg: var(--red-bg);
   --theme-shadow: var(--red-shadow);
@@ -77,6 +83,8 @@ body:has(.contact-main) {
 }
 
 body:has(.not-found-main) {
+  --theme-logo-full: url("/branding/ttd/full-yellow-cropped.webp");
+  --theme-logo-ttd: url("/branding/ttd/ttd-only-yellow-cropped.webp");
   --theme-ink: var(--yellow-ink);
   --theme-bg: var(--yellow-bg);
   --theme-shadow: var(--yellow-shadow);
