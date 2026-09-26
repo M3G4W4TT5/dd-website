@@ -1,0 +1,74 @@
+/* Fixed brand colours. Never override these in a page theme. */
+:root {
+  --green-ink: #116E3A;
+  --green-bg: #DAF2E5;
+  --green-shadow: #A1CCB3;
+  --green-footer-bg: #C4E2D3;
+  --green-footer-gradient-max: #499269;
+  --purple-ink: #7349CD;
+  --purple-bg: #EFE9FB;
+  --purple-shadow: #D1C1F0;
+  --purple-footer-bg: #E3D8F6;
+  --purple-footer-gradient-max: #9575DA;
+  --red-ink: #DC3E16;
+  --red-bg: #FFE9E4;
+  --red-shadow: #F7BFB3;
+  --red-footer-bg: #FBD7CF;
+  --red-footer-gradient-max: #E56C4D;
+  --yellow-ink: #E3B936;
+  --yellow-bg: #FBF4DD;
+  --yellow-shadow: #EFDA99;
+  --yellow-footer-bg: #F6E9C2;
+  --yellow-footer-gradient-max: #EACB68;
+
+  /* Intentional interaction and neutral colours, outside the five brand shades. */
+  --green-hover: color-mix(in srgb, var(--green-ink) 85%, black);
+  --purple-hover: #5834AF;
+  --red-hover: #B72F0D;
+  --validation-error: #B23B32;
+  --surface: #F7FBF8;
+  --contact-input-bg: #FFF7F4;
+  --neutral-white: #FFFFFF;
+  --neutral-ink: #111111;
+  --overlay: color-mix(in srgb, var(--green-ink) 60%, transparent);
+  --nav-elevation: rgb(0 0 0 / 8%);
+  --dialog-elevation: rgb(0 0 0 / 20%);
+  --panel-elevation: color-mix(in srgb, var(--green-ink) 3.5%, transparent);
+  --selection-elevation: color-mix(in srgb, var(--green-ink) 13%, transparent);
+}
+
+/* Shared components consume the active theme, not a colour-named variable. */
+body {
+  --theme-ink: var(--green-ink);
+  --theme-bg: var(--green-bg);
+  --theme-shadow: var(--green-shadow);
+  --theme-footer-bg: var(--green-footer-bg);
+  --theme-footer-gradient-max: var(--green-footer-gradient-max);
+  --theme-hover: var(--green-hover);
+  --theme-preview-dot: var(--red-ink);
+  --theme-soft-bg: color-mix(in srgb, var(--surface) 75%, var(--theme-bg));
+  --line: color-mix(in srgb, var(--theme-ink) 24%, transparent);
+}
+
+body:has(.events-main) {
+  --theme-ink: var(--purple-ink);
+  --theme-bg: var(--purple-bg);
+  --theme-shadow: var(--purple-shadow);
+  --theme-footer-bg: var(--purple-footer-bg);
+  --theme-footer-gradient-max: var(--purple-footer-gradient-max);
+  --theme-hover: var(--purple-hover);
+  --theme-preview-dot: var(--purple-shadow);
+  --line: color-mix(in srgb, var(--theme-ink) 25%, transparent);
+}
+
+body:has(.contact-main) {
+  --theme-ink: var(--red-ink);
+  --theme-bg: var(--red-bg);
+  --theme-shadow: var(--red-shadow);
+  --theme-footer-bg: var(--red-footer-bg);
+  --theme-footer-gradient-max: var(--red-footer-gradient-max);
+  --theme-hover: var(--red-hover);
+  --theme-preview-dot: var(--red-shadow);
+  --line: color-mix(in srgb, var(--theme-ink) 25%, transparent);
+}
+

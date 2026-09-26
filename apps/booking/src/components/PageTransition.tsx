@@ -6,16 +6,16 @@ import { usePathname, useRouter } from "next/navigation";
 const DURATION = 340;
 type Phase = "idle" | "blur" | "colour" | "waiting" | "reveal";
 function pageColour(pathname: string) {
-  if (pathname === "/events" || pathname.startsWith("/events/")) return "#EFE9FB";
-  if (pathname === "/contact") return "#ffe9e4";
-  return "#daf2e5";
+  if (pathname === "/events" || pathname.startsWith("/events/")) return "var(--purple-bg)";
+  if (pathname === "/contact") return "var(--red-bg)";
+  return "var(--green-bg)";
 }
 
 export function PageTransition({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [phase, setPhase] = useState<Phase>("idle");
-  const [colour, setColour] = useState("#daf2e5");
+  const [colour, setColour] = useState("var(--green-bg)");
   const [pending, startTransition] = useTransition();
   const destination = useRef<URL | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);

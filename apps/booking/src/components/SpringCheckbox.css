@@ -34,19 +34,19 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1.5px var(--green-ink);
+  box-shadow: inset 0 0 0 1.5px var(--theme-ink);
   opacity: .55;
   transition: opacity 120ms ease;
 }
 
 .spring-checkbox:hover .spring-checkbox__ring { opacity: .8; }
-.spring-checkbox input:focus-visible + .spring-checkbox__box { outline: 2px solid var(--green-ink); outline-offset: 3px; }
+.spring-checkbox input:focus-visible + .spring-checkbox__box { outline: 2px solid var(--theme-ink); outline-offset: 3px; }
 
 .spring-checkbox__fill {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--green-ink);
+  background: var(--theme-ink);
   transform-origin: center;
 }
 
@@ -56,7 +56,7 @@
   height: 68%;
   overflow: visible;
   fill: none;
-  stroke: var(--paper);
+  stroke: var(--theme-bg);
   stroke-width: 2.6;
   stroke-linecap: round;
   stroke-linejoin: round;
