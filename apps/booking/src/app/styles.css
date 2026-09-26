@@ -201,7 +201,7 @@ h3 {
   mask-image: var(--header-mask);
 }
 
-.desktop-nav { display: flex; align-items: center; justify-self: start; margin: 0; gap: clamp(17px, 2.7vw, 45px); }
+.desktop-nav { display: flex; align-items: center; justify-self: start; margin: 0; gap: clamp(40px, calc(35.2px + 1.5vw), 64px); }
 
 .desktop-nav a { transition: color .2s; font-size: var(--header-font-size); font-weight: 500; }
 
@@ -211,8 +211,8 @@ h3 {
 
 .brand-mark {
   display: block;
-  width: 106px;
-  height: 47px;
+  width: 121.9px;
+  height: 54.05px;
   background: var(--theme-logo-full) center / contain no-repeat;
 }
 
@@ -225,14 +225,12 @@ h3 {
   font-weight: 700;
   letter-spacing: .06em;
   color: var(--theme-ink);
-  font-size: calc(var(--header-font-size) / 2);
+  font-size: calc(var(--header-font-size) * .75);
 }
 
 .mobile-nav { display: none; }
 
 @media (max-width: 1050px) {
-  .desktop-nav { gap: 16px; }
-
   .header-actions { gap: 11px; }
 
 }
@@ -241,7 +239,7 @@ h3 {
 
   .site-header { height: 76px; padding: 0 20px; }
 
-  .brand-mark { width: 96px; height: 42px; }
+  .brand-mark { width: 110.4px; height: 48.3px; }
 
   .site-header .booking-header-actions { flex-direction: column; align-items: flex-end; gap: 0; }
 
@@ -1525,7 +1523,7 @@ h3 {
   align-items: center;
   gap: 7px;
   color: var(--theme-ink);
-  font-size: calc(var(--header-font-size) / 2);
+  font-size: calc(var(--header-font-size) * .75);
   font-weight: 700;
   letter-spacing: .05em;
 }
