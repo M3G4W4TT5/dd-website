@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
 import { useEffect } from "react";
 
 type Language = "da" | "en";
@@ -10,13 +9,11 @@ export function HeaderBookingActions({
   onLanguageChange,
   languagePath,
   hideLanguageSwitch = false,
-  hideManageLink = false,
 }: {
   language: Language;
   onLanguageChange?: (language: Language) => void;
   languagePath?: string;
   hideLanguageSwitch?: boolean;
-  hideManageLink?: boolean;
 }) {
   useEffect(() => {
     document.documentElement.lang = language;
@@ -45,10 +42,5 @@ export function HeaderBookingActions({
       <span aria-hidden="true">/</span>
       <a href={`${languagePath}${languageSeparator}lang=da`} lang="da" aria-current={language === "da" ? "page" : undefined}>DA</a>
     </nav>}
-    {!hideManageLink && <a className="header-manage-link" href={`/manage?lang=${language}`} aria-label={language === "da" ? "Administrer din booking" : "Manage your booking"}>
-      <span className="desktop-label">{language === "da" ? "Administrer din booking" : "Manage your booking"}</span>
-      <span className="mobile-label" aria-hidden="true">{language === "da" ? "Administrer" : "Manage"}</span>
-      <ArrowUpRight size={16} aria-hidden="true" />
-    </a>}
   </div>;
 }

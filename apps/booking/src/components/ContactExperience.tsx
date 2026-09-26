@@ -11,7 +11,7 @@ import { SpringCheckbox } from "./SpringCheckbox";
 type Language = "da" | "en";
 const copy = {
   da: {
-    preview: "TTD STUDIO · KONTAKT", events: "Events", contact: "Kontakt",
+    events: "Events", contact: "Kontakt",
     title: "Kontakt os.", intro: "Spørg os om booking, events eller noget helt tredje. Vi glæder os til at høre fra dig.",
     form: "SEND EN BESKED", name: "Navn", email: "Din e-mail", topic: "Emne", choose: "Vælg emne", bookingTopic: "Booking", eventTopic: "Event", otherTopic: "Andet", message: "Besked", send: "Send besked",
     sending: "Sender…", sent: "Din besked er sendt. Tak!", failed: "Beskeden kunne ikke sendes. Prøv igen senere.",
@@ -21,7 +21,7 @@ const copy = {
     privacyRequired: "Du skal acceptere privatlivspolitikken for at sende beskeden.",
   },
   en: {
-    preview: "TTD STUDIO · CONTACT", events: "Events", contact: "Contact",
+    events: "Events", contact: "Contact",
     title: "Let's talk.", intro: "Ask us about bookings, events, or anything else. We'd love to hear from you.",
     form: "SEND A MESSAGE", name: "Name", email: "Your email", topic: "Topic", choose: "Choose a topic", bookingTopic: "Booking", eventTopic: "Event", otherTopic: "Other", message: "Message", send: "Send message",
     sending: "Sending…", sent: "Your message has been sent. Thank you!", failed: "Your message could not be sent. Please try again later.",
@@ -90,11 +90,10 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
   }
 
   return <>
-    <div className="preview-bar"><span className="preview-dot" />{t.preview}</div>
     <header className="site-header event-header">
       <MobileNavigation language={language} currentPage="contact" />
       <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
-        <a href={`/?lang=${language}#booking`}>Booking</a><a href={`/events?lang=${language}`}>{t.events}</a><a href={`/contact?lang=${language}`} aria-current="page">{t.contact}</a>
+        <a href={`/?lang=${language}`}>Booking</a><a href={`/events?lang=${language}`}>{t.events}</a><a href={`/contact?lang=${language}`} aria-current="page">{t.contact}</a>
       </nav>
       <a className="brand" href={`/?lang=${language}`} aria-label="TTD Studio — home"><span className="brand-mark">TTD<br />STUDIO</span></a>
       <HeaderBookingActions language={language} onLanguageChange={setLanguage} />

@@ -11,7 +11,7 @@ export default async function ManagePage({ searchParams }: { searchParams: Promi
   const da = language === "da";
   return <>
     <div className="static-page-surface">
-    <StaticSiteHeader language={language} languagePath="/manage" hideManageLink />
+    <StaticSiteHeader language={language} languagePath="/manage" />
     <main className="manage-main">
       <span className="section-kicker">TTD STUDIO / {da ? "DIN BOOKING" : "YOUR BOOKING"}</span>
       <h1>{da ? "Administrer din booking." : "Manage your booking."}</h1>
@@ -21,7 +21,6 @@ export default async function ManagePage({ searchParams }: { searchParams: Promi
         <section><span>02</span><h2>{da ? "Har du mistet linket?" : "Lost your link?"}</h2><p>{da ? "Indtast din e-mailadresse, og få et nyt link." : "Enter your email address to get a new link."}</p><ManageLinkRequest language={language} /></section>
       </div>
       <p className="manage-policy">{da ? "Når der er mere end 24 timer til den første bookede time, kan du ændre til et andet ledigt tidsrum. Du kan også afbestille din booking gratis. Læs" : "When more than 24 hours remain before the first booked hour, you can change to another available interval. You can also cancel your booking free of charge. Read the"} <a href={`/terms?lang=${language}`}>{da ? "bookingvilkårene" : "booking terms"}</a>.</p>
-      {process.env.NODE_ENV === "development" && <p className="manage-demo-link"><a href={`/manage/preview?lang=${language}`}>{da ? "Se lokal demo af bookingadministration" : "View local booking management demo"}</a></p>}
     </main>
     </div>
     <SiteFooter language={language} />

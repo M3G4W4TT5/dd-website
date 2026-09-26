@@ -18,7 +18,6 @@ export type ManagedBooking = {
 
 const copy = {
   da: {
-    preview: "DEMO · INGEN RIGTIG BOOKING ELLER REFUSION ÆNDRES",
     title: "Administrer din booking",
     reference: "Bookingreference",
     time: "Tid i studiet",
@@ -57,7 +56,6 @@ const copy = {
     refundNote: "Bookingen er afbestilt. Refusionens status vises særskilt.",
   },
   en: {
-    preview: "DEMO · NO REAL BOOKING OR REFUND IS CHANGED",
     title: "Manage your booking",
     reference: "Booking reference",
     time: "Studio time",
@@ -108,11 +106,10 @@ function money(ore: number, language: Language) {
   }).format(ore / 100);
 }
 
-export function ManageBookingPanel({ initialBooking, serverNowIso, language, preview = false, onChangeBooking, onCancel }: {
+export function ManageBookingPanel({ initialBooking, serverNowIso, language, onChangeBooking, onCancel }: {
   initialBooking: ManagedBooking;
   serverNowIso: string;
   language: Language;
-  preview?: boolean;
   onChangeBooking?: (booking: ManagedBooking, interval: AvailableInterval) => Promise<ManagedBooking>;
   onCancel?: (booking: ManagedBooking) => Promise<ManagedBooking>;
 }) {
@@ -219,7 +216,6 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, pre
   }
 
   return <section className="manage-card" aria-labelledby="managed-booking-title">
-    {preview && <p className="manage-preview">{t.preview}</p>}
     <div className="manage-card-heading"><span className="section-kicker">TTD STUDIO / BOOKING</span><h2 id="managed-booking-title">{t.title}</h2></div>
     <dl className="manage-facts">
       <div><dt>{t.reference}</dt><dd>{booking.reference}</dd></div>

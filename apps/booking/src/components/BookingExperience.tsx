@@ -26,7 +26,6 @@ type Language = "da" | "en";
 
 const copy = {
   da: {
-    preview: "LOKAL FORHÅNDSVISNING · INGEN BOOKINGER OPRETTES",
     galleryTitle: "STUDIET",
     navEvents: "Events",
     navContact: "Kontakt",
@@ -38,7 +37,7 @@ const copy = {
     metricTwo: "Alle dage · 08–22",
     perHour: "/time",
     bookingTitle: { firstLine: "Tid og rum", secondLinePrefix: "til ", lastWord: "bevægelse." },
-    unavailable: "Ledige tider kan ikke indlæses lige nu. Kontrollér den lokale pretix-forbindelse.",
+    unavailable: "Ledige tider kan ikke indlæses lige nu. Prøv igen senere.",
     pickDate: "01 / VÆLG DATO",
     pickTime: "02 / VÆLG STARTTID",
     pickEnd: "02 / VÆLG SLUTTID (VALGFRIT)",
@@ -67,7 +66,6 @@ const copy = {
     policy: "Gratis afbestilling indtil 24 timer før første bookede time.",
   },
   en: {
-    preview: "LOCAL PREVIEW · NO BOOKINGS ARE CREATED",
     galleryTitle: "THE STUDIO",
     navEvents: "Events",
     navContact: "Contact",
@@ -79,7 +77,7 @@ const copy = {
     metricTwo: "Every day · 08–22",
     perHour: "/hour",
     bookingTitle: { firstLine: "Give your idea room to ", secondLinePrefix: "", lastWord: "move." },
-    unavailable: "Availability could not be loaded. Check the local pretix connection.",
+    unavailable: "Availability could not be loaded. Please try again later.",
     pickDate: "01 / CHOOSE A DATE",
     pickTime: "02 / CHOOSE A START TIME",
     pickEnd: "02 / CHOOSE AN END TIME (OPTIONAL)",
@@ -339,11 +337,10 @@ export function BookingExperience({
 
   return (
     <>
-      <div className="preview-bar"><span className="preview-dot" />{t.preview}</div>
       <header className="site-header">
         <MobileNavigation language={language} />
         <nav className="desktop-nav" aria-label={language === "da" ? "Hovednavigation" : "Main navigation"}>
-          <a href="#booking">Booking</a>
+          <a href={`/?lang=${language}`}>Booking</a>
           <a href={`/events?lang=${language}`}>{t.navEvents}</a>
           <a href={`/contact?lang=${language}`}>{t.navContact}</a>
         </nav>
@@ -390,7 +387,7 @@ export function BookingExperience({
                       const selectedIndex = quote?.slotIds.indexOf(slot.id) ?? -1;
                       const spread = endSelected && selectedIndex > 0;
                       const clearing = selectedIndex < 0 && clearingSlotIds.includes(slot.id);
-                      return <button type="button" key={slot.id} className={`time-slot ${selectedIndex >= 0 ? "selected" : ""} ${spread ? "time-slot--spreading" : ""} ${clearing ? "time-slot--clearing" : ""}`} style={spread ? { animationDelay: `${(selectedIndex - 1) * 35}ms` } : undefined} disabled={loading || !slot.available} onClick={() => selectTime(slot)} aria-pressed={selectedIndex >= 0}>
+                      return <button type="button" key={slot.id} className={`time-slot ${!slot.available ? "time-slot--unavailable" : ""} ${selectedIndex >= 0 ? "selected" : ""} ${spread ? "time-slot--spreading" : ""} ${clearing ? "time-slot--clearing" : ""}`} style={spread ? { animationDelay: `${(selectedIndex - 1) * 35}ms` } : undefined} disabled={loading || !slot.available} onClick={() => selectTime(slot)} aria-pressed={selectedIndex >= 0}>
                         <span className="time-value">{timeLabel(slot.start)}</span>
                         {selectedIndex < 0 && !clearing && <span className="slot-state">{slot.available ? t.available : t.taken}</span>}
                       </button>;
@@ -401,7 +398,6 @@ export function BookingExperience({
                   </div>
                 </div>
               )}
-              <div className="picker-legend"><span><i className="legend-available" />{t.available}</span><span><i className="legend-taken" />{t.taken}</span></div>
             </div>
 
             <aside className="summary-panel" aria-labelledby="summary-title">

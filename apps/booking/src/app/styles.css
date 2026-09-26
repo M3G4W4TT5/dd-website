@@ -14,6 +14,10 @@ html { scroll-behavior: smooth; }
 
 a { color: inherit; text-decoration: none; }
 
+a:hover { color: var(--theme-link-hover); }
+
+.brand:hover .brand-mark { color: var(--theme-link-hover); }
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible {
@@ -51,7 +55,7 @@ p { margin-top: 0; }
   font-weight: 700;
 }
 
-.text-link:hover { color: var(--red-ink); border-color: var(--red-ink); }
+.text-link:hover { color: var(--theme-link-hover); border-color: var(--theme-link-hover); }
 
 .button-check:hover:not(:disabled) { background: var(--theme-hover); }
 
@@ -186,7 +190,7 @@ h3 {
 
 .desktop-nav a { transition: color .2s; font-size: clamp(12px, 1.1vw, 17px); font-weight: 500; }
 
-.desktop-nav a:hover { color: var(--red-ink); }
+.desktop-nav a:hover { color: var(--theme-link-hover); }
 
 .brand { align-items: center; gap: 17px; display: block; text-align: center; transform: rotate(-5deg); }
 
@@ -200,7 +204,7 @@ h3 {
   letter-spacing: .02em;
 }
 
-.header-actions { display: flex; align-items: center; justify-self: end; gap: 25px; }
+.header-actions { display: flex; align-items: center; justify-content: flex-end; justify-self: end; gap: 25px; }
 
 .lang-switch {
   display: flex;
@@ -317,7 +321,7 @@ h3 {
 
 .picker-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
 
-.legend-taken { background: var(--theme-shadow); }
+.legend-taken { background: var(--unavailable-color); }
 
 .summary-row strong { max-width: 65%; text-align: right; font-weight: 700; }
 
@@ -519,6 +523,8 @@ h3 {
   border-color: var(--line);
   background: color-mix(in srgb, var(--surface) 75%, var(--theme-bg));
 }
+
+.time-slot--unavailable:disabled { background: var(--unavailable-color); }
 
 .time-value { font-family: "DM Sans", sans-serif; font-size: 17px; font-weight: 700; }
 
@@ -999,7 +1005,7 @@ h3 {
 
 .hero-venue-link { color: inherit; text-decoration: underline; text-underline-offset: .14em; white-space: nowrap; }
 
-.hero-venue-link:hover { color: var(--red-ink); }
+.hero-venue-link:hover { color: var(--theme-link-hover); }
 
 .hero-venue-arrow {
   display: inline-block;
@@ -1166,6 +1172,8 @@ h3 {
   color: var(--purple-bg);
 }
 
+.calendar-day a:hover { color: var(--theme-link-hover); }
+
 .events-list { display: grid; scroll-margin-top: 112px; }
 
 .event-row {
@@ -1228,8 +1236,8 @@ h3 {
 
 .event-detail-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(280px, .7fr);
-  gap: 7vw;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(240px, .8fr);
+  gap: clamp(24px, 3vw, 48px);
   align-items: start;
 }
 
@@ -1237,11 +1245,9 @@ h3 {
 
 .event-image img { display: block; width: 100%; height: auto; }
 
-.event-description { max-width: 770px; margin-top: 45px; }
+.event-description { min-width: 0; }
 
-.event-description h2 { margin: 0 0 20px; font-size: clamp(37px, 4vw, 60px); text-transform: uppercase; }
-
-.event-description p { white-space: pre-line; font-size: 17px; line-height: 1.65; }
+.event-description p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; font-size: 17px; line-height: 1.65; }
 
 .event-facts { border-top: 1px solid var(--line); }
 
@@ -1463,23 +1469,7 @@ h3 {
    Booking management
    ========================================================================== */
 
-.header-manage-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 15px;
-  min-height: 42px;
-  border: 1px solid currentColor;
-  padding: 0 13px;
-  color: var(--theme-ink);
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-}
 
-.header-manage-link:hover { color: var(--theme-bg); background: var(--theme-ink); }
-
-.header-manage-link .mobile-label { display: none; }
 
 .manage-main { max-width: 1120px; min-height: 65vh; margin: 0 auto; padding: 90px max(3vw, 24px) 120px; }
 
@@ -1708,7 +1698,7 @@ h3 {
 
 .reschedule-picker h4 { margin: 24px 0 14px; font-size: 17px; }
 
-.reschedule-times { display: flex; flex-wrap: wrap; gap: 9px; }
+.reschedule-times { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr)); gap: 9px; }
 
 .reschedule-times button {
   min-height: 42px;
@@ -1811,13 +1801,8 @@ h3 {
 .manage-dialog button:disabled { opacity: .55; cursor: wait; }
 
 @media (max-width: 600px) {
-  .header-manage-link { min-height: 29px; gap: 5px; padding: 0 8px; font-size: 10px; }
 
-  .header-manage-link svg { width: 13px; height: 13px; }
 
-  .header-manage-link .desktop-label { display: none; }
-
-  .header-manage-link .mobile-label { display: inline; }
 
 }
 @media (max-width: 650px) {
@@ -1862,7 +1847,7 @@ h3 {
    Legal and marketing pages
    ========================================================================== */
 
-.legal-content a:hover { color: var(--red-ink); }
+.legal-content a:hover { color: var(--theme-link-hover); }
 
 .legal-main { max-width: 1160px; margin: 0 auto; padding: 82px max(7vw, 24px) 120px; }
 
@@ -1887,7 +1872,7 @@ body:has(.legal-main) .legal-main {
 .not-found-copy h1 { margin: 0 0 28px; font-size: clamp(180px, 21vw, 350px); line-height: .95; }
 .not-found-copy p { margin: 0 0 20px; font-size: clamp(17px, 1.4vw, 22px); line-height: 1.5; }
 .not-found-return { font-size: clamp(16px, 1.3vw, 20px); text-decoration: underline; text-underline-offset: 5px; }
-.not-found-return:hover { color: var(--theme-hover); }
+.not-found-return:hover { color: var(--theme-link-hover); }
 .not-found-return:focus-visible { outline: 2px solid currentColor; outline-offset: 8px; }
 .not-found-flowers { position: absolute; right: -5vw; bottom: calc(min(43vw, 700px) * -.19); width: min(43vw, 700px); height: auto; pointer-events: none; }
 
@@ -1970,7 +1955,7 @@ body:has(.legal-main) .legal-main {
 
 .footer-links a { display: flex; align-items: center; gap: 12px; font-size: 13px; }
 
-.footer-links a:hover { color: var(--red-ink); }
+.footer-links a:hover { color: var(--theme-link-hover); }
 
 .summary-footer {
   display: flex;
@@ -2073,6 +2058,9 @@ body:has(.legal-main) .legal-main {
   white-space: nowrap;
   letter-spacing: .04em;
 }
+
+.footer-credit:hover,
+.footer-credit:focus-visible { color: var(--theme-link-hover); }
 
 .footer-credit-logo {
   display: block;

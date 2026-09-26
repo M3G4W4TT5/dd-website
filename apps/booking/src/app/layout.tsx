@@ -8,8 +8,8 @@ import "./palette.css";
 import "./styles.css";
 
 export const metadata: Metadata = {
-  title: "TTD Studio | Booking preview",
-  description: "Preview TTD Studio at Nygaardsvej 5a, 2. sal, 2100 København Ø. No reservations are created yet.",
+  title: "TTD Studio | Booking",
+  description: "Book TTD Studio at Nygaardsvej 5a, 2. sal, 2100 København Ø.",
   robots: { index: false, follow: false },
 };
 

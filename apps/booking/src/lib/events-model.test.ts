@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DateTime } from "luxon";
-import { checkoutPath, normalizeEvent, occupiesRoom, overlaps, type RawEvent, type RawDate, type RawItem, type RawQuota } from "./events-model";
+import { checkoutPath, remainingPlaces, normalizeEvent, occupiesRoom, overlaps, type RawEvent, type RawDate, type RawItem, type RawQuota } from "./events-model";
 
 const now = DateTime.fromISO("2026-10-01T12:00:00Z");
 const event: RawEvent = { slug: "dance", name: { da: "Dans", en: "Dance" }, live: true, is_public: true, has_subevents: true, date_from: "2026-10-01T19:00:00+02:00", date_to: null, location: { da: "TTD Studio" }, meta_data: {} };
@@ -44,4 +44,15 @@ test("room blocking includes unpublished and sold out dates, and only explicit c
 test("DST start offsets define real instant overlap", () => {
   assert.equal(overlaps("2027-03-28T01:00:00+01:00", "2027-03-28T03:00:00+02:00", "2027-03-28T03:00:00+02:00", "2027-03-28T04:00:00+02:00"), false);
   assert.equal(overlaps("2027-10-31T02:00:00+02:00", "2027-10-31T03:00:00+01:00", "2027-10-31T02:30:00+01:00", "2027-10-31T03:30:00+01:00"), true);
+});
+
+test("remaining places count shared, independent and nested quotas without double counting", () => {
+  const second = { ...item, id: 8 };
+  assert.equal(remainingPlaces([item, second], [{ ...quota, items: [7, 8], available_number: 12 }]), 12);
+  assert.equal(remainingPlaces([item, second], [quota, { ...quota, items: [8], available_number: 6 }]), 10);
+  assert.equal(remainingPlaces([item, second], [quota, { ...quota, items: [8], available_number: 6 }, { ...quota, items: [7, 8], available_number: 7 }]), 7);
+  assert.equal(remainingPlaces([item], [{ ...quota, available_number: null }]), null);
+  assert.equal(remainingPlaces([item], [{ ...quota, available_number: 0, available: false }]), 0);
+  assert.equal(remainingPlaces([item], [{ ...quota, closed: true }]), 0);
+  assert.equal(remainingPlaces([item, second, { ...item, id: 9 }], [{ ...quota, items: [7, 8] }, { ...quota, items: [8, 9] }]), null);
 });

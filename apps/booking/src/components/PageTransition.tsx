@@ -63,6 +63,8 @@ export function PageTransition({ children }: { children: ReactNode }) {
     const committedColour = renderedPageColour(surface.current);
     const needsColourChange = committedColour !== pageColour(destination.current.pathname);
     if (needsColourChange) setColour(committedColour);
+    // Booking navigation always starts at the page top.
+    if (destination.current.pathname === "/" && !destination.current.hash) window.scrollTo({ top: 0, behavior: "instant" });
     // Reveal only after the destination's server content has committed.
     const frame = requestAnimationFrame(() => {
       timers.current.push(setTimeout(() => {

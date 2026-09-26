@@ -32,7 +32,7 @@ export type Occurrence = {
   key: string; slug: string; dateId: number | null; title: string; titleEn: string;
   description: string; descriptionEn: string; image: string | null; shopUrl: string | null; location: string;
   locationEn: string; start: string; end: string; status: "available" | "sold-out" | "not-on-sale" | "test" | "room-conflict";
-  roomVerified: boolean; tickets: { name: string; nameEn: string; price: string; remaining: number | null }[];
+  remaining: number | null; roomVerified: boolean; tickets: { name: string; nameEn: string; price: string; remaining: number | null }[];
 };
 export function localized(value: z.infer<typeof translated>, language: Language): string {
   if (!value) return "";
@@ -59,6 +59,36 @@ function validHttpsUrl(value: unknown): string | null {
 }
 function validImage(meta: Record<string, unknown> | undefined): string | null {
   return validHttpsUrl(meta?.ttd_image_url);
+}
+// Count each shared quota once. Overlapping quota groups that are not nested
+// have no reliable total without allocation data, so omit their count.
+export function remainingPlaces(items: RawItem[], quotas: RawQuota[]): number | null {
+  const ids = items.map(item => item.id);
+  if (!ids.length) return null;
+  const groups = quotas.map(quota => ({
+    ids: ids.filter(id => quota.items.includes(id)),
+    limit: quota.closed || quota.available === false ? 0 : quota.available_number ?? null,
+  })).filter(group => group.ids.length);
+  if (ids.some(id => !groups.some(group => group.ids.includes(id)))) return null;
+  for (const a of groups) for (const b of groups) {
+    if (a.ids.some(id => b.ids.includes(id)) &&
+      !a.ids.every(id => b.ids.includes(id)) && !b.ids.every(id => a.ids.includes(id))) return null;
+  }
+  function count(subset: number[]): number | null {
+    const covering = groups.filter(group => subset.every(id => group.ids.includes(id)));
+    const limits = covering.flatMap(group => group.limit === null ? [] : [Math.max(0, group.limit)]);
+    const children = groups.filter(group => group.ids.length < subset.length && group.ids.every(id => subset.includes(id)));
+    const maximal = children.filter(group => !children.some(other => other.ids.length > group.ids.length && group.ids.every(id => other.ids.includes(id))));
+    const distinct = maximal.filter((group, index) => maximal.findIndex(other => other.ids.join(',') === group.ids.join(',')) === index);
+    const partitions = [...distinct.map(group => group.ids), ...subset.filter(id => !distinct.some(group => group.ids.includes(id))).map(id => [id])];
+    if (subset.length > 1) {
+      const totals = partitions.map(count);
+      if (totals.every((value): value is number => value !== null)) limits.push(totals.reduce((sum, value) => sum + value, 0));
+      else if (!covering.some(group => group.limit !== null)) return null;
+    }
+    return limits.length ? Math.min(...limits) : null;
+  }
+  return count(ids);
 }
 export function normalizeEvent(event: RawEvent, date: RawDate | null, items: RawItem[], quotas: RawQuota[], now: DateTime = DateTime.utc(), includeDraftTestEvent = false): Occurrence | null {
   if (!(event.live || (includeDraftTestEvent && event.testmode)) || !event.is_public || (date && (!date.active || !date.is_public)) ||
@@ -92,6 +122,7 @@ export function normalizeEvent(event: RawEvent, date: RawDate | null, items: Raw
     location: localized(date?.location || event.location, "da"),
     locationEn: localized(date?.location || event.location, "en"), start, end,
     status: event.testmode ? "test" : !saleOpen || eligible.length === 0 ? "not-on-sale" : hasStock ? "available" : "sold-out",
+    remaining: remainingPlaces(eligible, quotas.filter(q => q.subevent === null || q.subevent === date?.id)),
     tickets: eligible.map(item => {
       const limits = quotas.filter(q => (q.subevent === null || q.subevent === date?.id) && q.items.includes(item.id))
         .map(q => q.available_number).filter((value): value is number => typeof value === "number");

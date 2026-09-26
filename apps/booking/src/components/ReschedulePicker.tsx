@@ -15,7 +15,7 @@ const copy = {
     chooseDate: "Vælg dato", available: "ledige starter", full: "Ingen plads",
     loading: "Henter ledige tider…", error: "Ledige tider kunne ikke indlæses. Prøv en anden uge eller kontakt studiet.",
     chooseTime: "Ledige starttider", noTimes: "Ingen sammenhængende ledige timer denne dag. Vælg en anden dato.",
-    demo: "Demotider – ingen reel booking ændres.", duration: "Bookingen flyttes med samme varighed:",
+    duration: "Bookingen flyttes med samme varighed:",
     hours: "timer", hour: "time", fullDay: "Hele dagen", selected: "Valgt nyt tidsrum",
   },
   en: {
@@ -24,7 +24,7 @@ const copy = {
     chooseDate: "Choose date", available: "available starts", full: "No space",
     loading: "Loading availability…", error: "Availability could not be loaded. Try another week or contact the studio.",
     chooseTime: "Available start times", noTimes: "No consecutive hours are available on this day. Choose another date.",
-    demo: "Demo availability – no real booking is changed.", duration: "The booking keeps the same duration:",
+    duration: "The booking keeps the same duration:",
     hours: "hours", hour: "hour", fullDay: "Full day", selected: "Selected new interval",
   },
 } as const;
@@ -151,6 +151,5 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
         {DateTime.fromISO(interval.firstHourIso, { setZone: true }).setZone(STUDIO_ZONE).toFormat("HH:mm")}–{DateTime.fromISO(interval.endIso, { setZone: true }).setZone(STUDIO_ZONE).toFormat("HH:mm")}
       </button>)}
     </div>}
-    {current?.source === "demo" && <p className="reschedule-demo">{t.demo}</p>}
   </div>;
 }

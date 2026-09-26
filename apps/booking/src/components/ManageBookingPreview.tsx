@@ -25,8 +25,8 @@ export function ManageBookingPreview({ language, initialBooking, initialToken, s
   }
   return <>
     <div className="static-page-surface">
-      <StaticSiteHeader language={language} languagePath="/manage/preview" hideManageLink />
-      <main className="manage-main"><ManageBookingPanel language={language} initialBooking={initialBooking} serverNowIso={serverNowIso} preview onChangeBooking={previewChange} onCancel={async (current) => {
+      <StaticSiteHeader language={language} languagePath="/manage/preview" />
+      <main className="manage-main"><ManageBookingPanel language={language} initialBooking={initialBooking} serverNowIso={serverNowIso} onChangeBooking={previewChange} onCancel={async (current) => {
       const response = await fetch("/api/manage/preview", {
         method: "POST", headers: { "Content-Type": "application/json" }, cache: "no-store",
         body: JSON.stringify({ action: "cancel", token }),
