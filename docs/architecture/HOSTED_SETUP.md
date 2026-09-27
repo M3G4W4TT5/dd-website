@@ -480,3 +480,37 @@ forced command accepts only an approved digest manifest. Runtime values,
 captures, container logs and private databases never enter CI artifacts.
 Authenticated browser, direct-origin, cookie and dependency checks follow the
 first successful deployment; readiness alone is not hosted application proof.
+
+## First deployment and smoke corrections
+
+PR #4 merged as `909c6e7b116fac1cd7fbadea1d922746f08af6c0`. The owner
+readiness check passed. GitHub Actions run `36353620658` then successfully
+deployed the three published digest references using the restricted CI identity.
+Booking database health and the Pretix proxy root both return HTTP 200. The
+authenticated HTTPS booking page loads through Cloudflare Access. Its Access
+cookies are Secure and HttpOnly. Public VPS ports 80, 443, 8080, 8025, 1025,
+1110, 5432, 6379, 3000, 3012 and 3013 are blocked from the external test client.
+Payment, mail release and booking write gates remain closed.
+
+The first browser smoke check found an unavailable rental calendar and a
+hardcoded local Administration link. The original configuration transfer omitted
+the source rental discount: fourteen distinct hours pay for twelve. Availability
+requires that rule and correctly refuses an incomplete price configuration.
+`complete-hosted-rental-configuration.py` adds only that reviewed rule using the
+scoped migrator, checks all its fields and product relationships, refuses an
+unexpected existing discount or any order state, and verifies availability using
+the real HTTP API and application parser. It preserves the imported events,
+products, quotas, runtime secrets and volumes. It can adopt an exact matching
+rule on a subsequent check. Do not repeat the original configuration importer.
+The transfer model allowlist now includes Discount for subsequent exports.
+
+The Administration link uses `/administration`, whose server route reads the
+runtime Pretix shop origin and redirects to `/control/`. Production refuses a
+missing or insecure origin; the local fallback is available only outside
+production. This avoids freezing a local hostname into a hosted client bundle.
+
+Repair verification passed in an isolated pinned Pretix container: absent rule
+creation, exact-match adoption, scoped API reads and refusal of a mismatched
+existing rule without replacement. Hosted repair and full calendar verification
+remain pending the owner's command. These results do not yet attest sandbox
+payments, external email delivery or completed hosted smoke testing.
