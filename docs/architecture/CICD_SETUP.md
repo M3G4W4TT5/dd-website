@@ -23,7 +23,10 @@ deployment account. A live CI-key connection reached the root-owned forced
 command and rejected invalid input. Requesting a shell command still invoked
 the forced command, and a valid-shaped manifest was rejected because the owner
 readiness marker is absent. `dd-deploy` has no TTY, forwarding or password login.
-No workflow has been committed/pushed or application deployed.
+The CI/CD files are published on branch `codex/vps-cicd` in
+[PR #3](https://github.com/M3G4W4TT5/dd-website/pull/3). The PR runs code checks and
+all three application image builds without image publication or deployment.
+No application has been deployed.
 
 The owner confirmed the key-restriction helper completed for `dd-owner` and
 `dd-setup`, a fresh owner login succeeded and the provider firewall now permits
@@ -184,11 +187,12 @@ observed current source IPv4 is `2.104.42.212`; recheck if the connection change
 
 ## 5. Configure GitHub
 
-In repository Settings → Rules → Rulesets (or Branches), protect `main`: require
-a pull request and the successful checks job, block force pushes and deletion.
-After the initial workflow runs, select its actual check name. For a solo owner,
-do not require a second person's approval unless a reviewer is available; an
-owner cannot approve their own PR. Review bypass access deliberately.
+Branch protection is configured for `main`: pull requests and the GitHub Actions
+checks `checks`, `images (booking)`, `images (communications)` and `images (worker)`
+are required, with the branch up to date. Protection applies to administrators;
+force pushes and deletion are blocked, and conversations must be resolved.
+No second-person approval is required for the solo owner. An owner cannot approve
+their own PR. Review bypass access deliberately if adding collaborators.
 
 Environment `hosted-sandbox` and its selected-branch `main` policy are already
 configured. Keep repository-level variable `DEPLOY_ENABLED=false` initially.
@@ -227,8 +231,8 @@ automatically set package visibility.
 
 ## 6. Activation and operations
 
-Commit/push/merge the reviewed workflow only when authorized. Publication is not
-deployment. Provision the private hosted stack prerequisites, verify database
+The reviewed workflow is committed/pushed in PR #3; merge only when authorized
+and required checks pass. Image publication is not deployment. Provision the private hosted stack prerequisites, verify database
 roles/migrations and image hygiene, confirm private Access ingress and capture,
 then create the root-owned readiness marker. Only then set `DEPLOY_ENABLED=true`
 and trigger the workflow on `main` for the first application deployment.
