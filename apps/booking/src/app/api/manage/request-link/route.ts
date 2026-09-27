@@ -1,3 +1,4 @@
+import { submissionId } from "../../../../../server/submission";
 import { boundedJson, HttpError } from "@dd/runtime";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400, headers });
   if (!parsed.data.website) {
     if (!await limit(bookingDb(), "recovery-total", 100, 3600)) return NextResponse.json({error:"Too many requests"},{status:429,headers:{...headers,"Retry-After":"3600"}});
-    try { await requestManageLinks(parsed.data.email, parsed.data.language); }
+    try { await requestManageLinks(parsed.data.email, parsed.data.language, submissionId(request)); }
     catch { console.error("Booking link request failed"); return NextResponse.json({ error: "Request unavailable" }, { status: 503, headers }); }
   }
   return NextResponse.json({ ok: true }, { headers });

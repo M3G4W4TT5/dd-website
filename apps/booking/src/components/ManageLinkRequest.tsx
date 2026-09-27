@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { submissionIdentity, submitWithIdentity } from "../lib/submission";
+
+import { useRef, useState, type FormEvent } from "react";
 
 export function ManageLinkRequest({ language }: { language: "da" | "en" }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const da = language === "da";
+  const submission = useRef<ReturnType<typeof submissionIdentity> | null>(null);
+  submission.current ??= submissionIdentity();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -13,7 +17,7 @@ export function ManageLinkRequest({ language }: { language: "da" | "en" }) {
     const form = event.currentTarget;
     const values = new FormData(form);
     try {
-      const response = await fetch("/api/manage/request-link", {
+      const response = await submitWithIdentity(submission.current!, "/api/manage/request-link", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: values.get("email"), language, website: values.get("website") }),
       });

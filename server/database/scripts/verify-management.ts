@@ -211,8 +211,8 @@ try {
     "UPDATE manage_sessions SET expires_at=now()-interval '1 second'",
   );
   assert.equal(await authorizedSessionEmail("ABCDE", access.session), null);
-  await requestManageLinks(order.email, "en");
-  await requestManageLinks(order.email, "en");
+  await requestManageLinks(order.email, "en", "retry-one");
+  await requestManageLinks(order.email, "en", "retry-one");
   assert.equal(
     (
       await p.query(
@@ -221,6 +221,16 @@ try {
     ).rows[0].n,
     1,
   );
+  // A consumed or expired token must permit another request in the same hour.
+  await requestManageLinks(order.email, "en", "replacement-after-consumption");
+  await p.query("UPDATE manage_link_tokens SET expires_at=now()-interval '1 second'");
+  // Reset only the fixture request counter: first two calls include a retry.
+  await p.query("UPDATE manage_link_requests SET request_count=1");
+  await requestManageLinks(order.email, "en", "replacement-after-expiry");
+  assert.equal((await p.query("SELECT count(*)::int n FROM deliveries WHERE kind='recovery'")).rows[0].n, 3);
+  await requestManageLinks(order.email, "en", "allowed-third");
+  await requestManageLinks(order.email, "en", "blocked-fourth");
+  assert.equal((await p.query("SELECT count(*)::int n FROM deliveries WHERE kind='recovery'")).rows[0].n, 4);
   // Pending and non-rental orders cannot create paid confirmation mail.
   const original = { ...order };
   order = { ...order, status: "n" };

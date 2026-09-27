@@ -1,7 +1,9 @@
 "use client";
 
+import { submissionIdentity, submitWithIdentity } from "../lib/submission";
+
 import { ArrowLeft, ArrowUpRight, ShieldCheck } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { BuyerDetailsFields, DetailsConsent, invalidDetailFields } from "./BookingFormFields";
 
 type Language = "da" | "en";
@@ -95,6 +97,8 @@ export function CustomerDetailsPreview({
   onConflict: () => Promise<void>;
 }) {
   const t = copy[language];
+  const submission = useRef<ReturnType<typeof submissionIdentity> | null>(null);
+  submission.current ??= submissionIdentity();
   const [customerType, setCustomerType] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -117,7 +121,7 @@ export function CustomerDetailsPreview({
     setStatus("working");
     setMarketingResult(null);
     try {
-      const response = await fetch("/api/preflight", {
+      const response = await submitWithIdentity(submission.current!, "/api/preflight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
