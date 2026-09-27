@@ -1,9 +1,16 @@
 name: dd-hosted
+x-logging: &logging
+  driver: local
+  options: {max-size: "10m", max-file: "3"}
 x-node: &node
   restart: unless-stopped
   init: true
   read_only: true
-  tmpfs: [/tmp]
+  tmpfs: ["/tmp:rw,nosuid,noexec,size=64m,mode=1777"]
+  mem_limit: 256m
+  cpus: 0.5
+  pids_limit: 128
+  logging: *logging
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
   stop_grace_period: 30s
@@ -12,6 +19,13 @@ services:
   postgres:
     image: postgres:17.6-alpine
     restart: unless-stopped
+    mem_limit: 512m
+    cpus: 0.75
+    pids_limit: 128
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3"}
+    command: [postgres, -c, max_connections=60, -c, shared_buffers=64MB, -c, work_mem=2MB, -c, maintenance_work_mem=64MB]
     environment:
       POSTGRES_USER: dd_admin
       POSTGRES_DB: postgres
@@ -27,7 +41,13 @@ services:
   redis:
     image: redis:7.4.5-alpine
     restart: unless-stopped
-    command: [redis-server, --appendonly, "yes"]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3"}
+    command: [redis-server, --appendonly, "yes", --maxmemory, 64mb, --maxmemory-policy, noeviction]
     volumes: [redis:/data]
     networks: [pretix]
     healthcheck:
@@ -35,14 +55,46 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+  mail-capture:
+    image: axllent/mailpit:v1.31.1
+    user: "10005:10005"
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,noexec,size=64m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3"}
+    environment:
+      MP_DATABASE: /tmp/mailpit.db
+      MP_MAX_MESSAGES: "100"
+      MP_MAX_AGE: 24h
+      MP_MAX_MESSAGE_SIZE: "1"
+      MP_DISABLE_VERSION_CHECK: "true"
+      MP_QUIET: "true"
+    ports: ["127.0.0.1:8025:8025"]
+    networks: [pretix, capture-ui]
   pretix:
     image: pretix/standalone:2026.7.0
     restart: unless-stopped
     command: all
+    mem_limit: 1024m
+    cpus: 1.0
+    pids_limit: 192
+    logging: *logging
     environment:
       AUTOMIGRATE: skip
       PRETIX_CONFIG_FILE: /run/secrets/runtime
-    volumes: [pretix:/data]
+      NUM_WORKERS: "1"
+    volumes:
+      - pretix:/data
+      - ./pretix-nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./pretix-settings.py:/pretix/src/production_settings.py:ro
+      - ./pretix-task.conf:/etc/supervisord/pretixtask.conf:ro
     secrets:
       - source: pretix-runtime
         target: runtime
@@ -50,9 +102,14 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
+      mail-capture: {condition: service_healthy}
   pretix-cron:
     image: pretix/standalone:2026.7.0
     restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.5
+    pids_limit: 64
+    logging: *logging
     entrypoint: [/bin/sh, -c]
     command: ["while true; do pretix cron; sleep 1800; done"]
     environment:
@@ -61,12 +118,20 @@ services:
     secrets:
       - source: pretix-runtime
         target: runtime
-    volumes: [pretix:/data]
+    volumes:
+      - pretix:/data
+      - ./pretix-settings.py:/pretix/src/production_settings.py:ro
     networks: [pretix, database, ingress]
   pretix-migrate:
     image: pretix/standalone:2026.7.0
     profiles: [migration]
     command: migrate
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 128
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3"}
     environment:
       AUTOMIGRATE: skip
       PRETIX_CONFIG_FILE: /run/secrets/runtime
@@ -77,6 +142,8 @@ services:
     networks: [database, pretix]
   booking:
     <<: *node
+    mem_limit: 512m
+    cpus: 0.75
     build: {context: .., dockerfile: infra/Dockerfile, target: booking}
     user: "10001:10001"
     networks: [database, booking-internal, ingress]
@@ -90,6 +157,9 @@ services:
       retries: 6
   booking-communications:
     <<: *node
+    tmpfs:
+      - /tmp:rw,nosuid,noexec,size=64m,mode=1777
+      - /capture:rw,nosuid,noexec,size=32m,mode=0700,uid=10002,gid=10002
     build: {context: .., dockerfile: infra/Dockerfile, target: communications}
     user: "10002:10002"
     networks: [database, booking-internal, ingress]
@@ -103,6 +173,9 @@ services:
       retries: 6
   booking-worker:
     <<: *node
+    tmpfs:
+      - /tmp:rw,nosuid,noexec,size=64m,mode=1777
+      - /capture:rw,nosuid,noexec,size=32m,mode=0700,uid=10003,gid=10003
     build: {context: .., dockerfile: infra/Dockerfile, target: worker}
     user: "10003:10003"
     networks: [database, ingress]
@@ -117,6 +190,10 @@ services:
   proxy:
     image: nginxinc/nginx-unprivileged:1.29-alpine
     restart: unless-stopped
+    mem_limit: 64m
+    cpus: 0.25
+    pids_limit: 64
+    logging: *logging
     ports: ["127.0.0.1:8080:8080"]
     volumes: ["./proxy.conf:/etc/nginx/conf.d/default.conf:ro"]
     networks: [ingress, booking-internal]
@@ -147,6 +224,7 @@ networks:
   pretix: {internal: true}
   booking-internal: {internal: true}
   ingress: {}
+  capture-ui: {}
 volumes:
   postgres: {}
   redis: {}

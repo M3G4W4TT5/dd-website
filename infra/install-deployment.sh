@@ -22,6 +22,9 @@ install -d -m 700 -o root -g root /var/lib/dd-hosted
 install -m 644 -o root -g root "$source_dir/compose.production.yaml" /etc/dd-hosted/compose.production.yaml
 install -m 644 -o root -g root "$source_dir/compose.hosted.yaml" /etc/dd-hosted/compose.hosted.yaml
 install -m 644 -o root -g root "$source_dir/proxy.conf" /etc/dd-hosted/proxy.conf
+for config in pretix-nginx.conf pretix-settings.py pretix-task.conf; do
+ install -m 644 -o root -g root "$source_dir/$config" "/etc/dd-hosted/$config"
+done
 install -m 750 -o root -g root "$source_dir/deploy.py" /usr/local/sbin/dd-deploy
 adduser --disabled-password --gecos '' dd-deploy
 install -d -m 755 -o root -g root /etc/ssh/authorized_keys

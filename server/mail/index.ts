@@ -1,5 +1,6 @@
 import nodemailer, { type SendMailOptions, type Transporter } from "nodemailer";
 import type { Site } from "@dd/contracts";
+export { createCapture } from "./capture";
 export type MailKind =
   | "inquiry"
   | "acknowledgement"

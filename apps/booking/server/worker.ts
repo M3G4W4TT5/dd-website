@@ -1,7 +1,5 @@
 import { createServer } from "node:http";
-import { mkdir, writeFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
-import { createMailer, DeliveryError } from "@dd/mail";
+import { createCapture, createMailer, DeliveryError } from "@dd/mail";
 import { mailConfig } from "@dd/runtime";
 import { pollDelivery } from "../../../server/database/delivery";
 import {
@@ -19,13 +17,8 @@ const key = payloadKey();
 const policy = mailConfig(process.env);
 if (policy.delivery !== "capture" && policy.user !== "booking@didde-mie.com")
   throw new Error("Incorrect transactional SMTP identity");
-const send = createMailer(policy, "booking", async (_mail, raw) => {
-  const directory = process.env.CAPTURE_DIRECTORY;
-  if (directory) {
-    await mkdir(directory, { recursive: true, mode: 0o700 });
-    await writeFile(`${directory}/${randomUUID()}.eml`, raw, { mode: 0o600 });
-  }
-});
+const capture = createCapture(process.env.CAPTURE_DIRECTORY);
+const send = createMailer(policy, "booking", capture);
 let stopping = false,
   lastSuccess = Date.now();
 const health = createServer((_req, res) => {
@@ -162,5 +155,6 @@ void loop();
 for (const signal of ["SIGTERM", "SIGINT"])
   process.on(signal, () => {
     stopping = true;
+    capture.close();
     health.close();
   });

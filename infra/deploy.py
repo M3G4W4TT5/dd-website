@@ -18,7 +18,7 @@ ROOT = Path("/etc/dd-hosted")
 STATE = Path("/var/lib/dd-hosted")
 PREFIX = "ghcr.io/m3g4w4tt5/dd-website-"
 TARGETS = {"booking": "DD_BOOKING_IMAGE", "communications": "DD_COMMUNICATIONS_IMAGE", "worker": "DD_WORKER_IMAGE"}
-SERVICES = ["postgres", "redis", "pretix", "pretix-cron", "booking", "booking-communications", "booking-worker", "proxy"]
+SERVICES = ["postgres", "redis", "mail-capture", "pretix", "pretix-cron", "booking", "booking-communications", "booking-worker", "proxy"]
 
 
 def validate_manifest(data):
@@ -53,7 +53,8 @@ def main():
     # by the owner only after private ingress, databases and secrets are ready.
     if not (ROOT / "ready").is_file():
         raise ValueError("Hosted prerequisites are incomplete: owner readiness marker is absent")
-    for name in ["compose.production.yaml", "compose.hosted.yaml", "proxy.conf", "ready"]:
+    for name in ["compose.production.yaml", "compose.hosted.yaml", "proxy.conf",
+                 "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf", "ready"]:
         path = ROOT / name
         stat = path.lstat()
         if path.is_symlink() or stat.st_uid != 0 or stat.st_mode & 0o022:

@@ -23,10 +23,12 @@ deployment account. A live CI-key connection reached the root-owned forced
 command and rejected invalid input. Requesting a shell command still invoked
 the forced command, and a valid-shaped manifest was rejected because the owner
 readiness marker is absent. `dd-deploy` has no TTY, forwarding or password login.
-The CI/CD files are published on branch `codex/vps-cicd` in
-[PR #3](https://github.com/M3G4W4TT5/dd-website/pull/3). The PR runs code checks and
-all three application image builds without image publication or deployment.
-No application has been deployed.
+[PR #3](https://github.com/M3G4W4TT5/dd-website/pull/3) is merged at
+`07110aeffffc649ab4d66dfcd34ae879f0802e65`. Main workflow run
+[36335038509](https://github.com/M3G4W4TT5/dd-website/actions/runs/36335038509)
+passed all checks and published all three images. Anonymous OCI manifest reads
+for their exact digests succeeded from the VPS. Deployment was skipped because
+`DEPLOY_ENABLED=false`; no application has been deployed.
 
 The owner confirmed the key-restriction helper completed for `dd-owner` and
 `dd-setup`, a fresh owner login succeeded and the provider firewall now permits
@@ -224,15 +226,15 @@ gh variable set DEPLOY_ENABLED --repo M3G4W4TT5/dd-website --body 'false'
 
 Set `DEPLOY_KNOWN_HOSTS` through the environment UI using the verified public
 record above. No GitHub account password/PAT or runtime service secret is needed
-by this workflow. Images initially published to GHCR may be private; after
-reviewing image hygiene, make these three application packages public so the VPS
-can pull without a persistent registry credential. Source visibility does not
-automatically set package visibility.
+by this workflow. The three published application images are anonymously
+accessible at their exact digests from the VPS; no persistent registry credential
+is needed. Verify this for any new package because public source alone does not
+guarantee public package visibility.
 
 ## 6. Activation and operations
 
-The reviewed workflow is committed/pushed in PR #3; merge only when authorized
-and required checks pass. Image publication is not deployment. Provision the private hosted stack prerequisites, verify database
+The reviewed workflow is merged. Image publication is not deployment.
+Continue with [HOSTED_SETUP.md](HOSTED_SETUP.md). Provision the private hosted stack prerequisites, verify database
 roles/migrations and image hygiene, confirm private Access ingress and capture,
 then create the root-owned readiness marker. Only then set `DEPLOY_ENABLED=true`
 and trigger the workflow on `main` for the first application deployment.
