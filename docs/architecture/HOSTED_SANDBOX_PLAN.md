@@ -11,7 +11,7 @@ Agreed plan, 27 September 2026. Saving this plan does not start implementation o
 
 ## Private access and application configurations
 
-Protect both `studio.didde-mie.com` and `ttd-checkout.didde-mie.com` with Cloudflare Access. Enforce origin protection so direct requests cannot bypass Access, using an authenticated origin connection and Access-token validation appropriate to the chosen ingress. Do not add a second interactive Basic-auth layer. Keep private access enforced throughout smoke, payment and email testing; `PREVIEW=true` is not access control.
+Protect both `booking.didde-mie.com` and `checkout.didde-mie.com` with Cloudflare Access. Enforce origin protection so direct requests cannot bypass Access, using an authenticated origin connection and Access-token validation appropriate to the chosen ingress. Do not add a second interactive Basic-auth layer. Keep private access enforced throughout smoke, payment and email testing; `PREVIEW=true` is not access control.
 
 Every hosted configuration uses `DD_MODE=production`, HTTPS public origins and `PAYMENT_ENVIRONMENT=sandbox`. Keep `PAYMENT_RELEASE_ENABLED=false` and `MAIL_RELEASE_ENABLED=false`; do not install live payment credentials or enable unrestricted mail.
 
@@ -29,7 +29,7 @@ The controlled external recipient **dev@memoryone.eu is approved**. Pretix stays
 
 ### Stripe to Pretix
 
-The proposed sole public callback exception is **POST `https://ttd-checkout.didde-mie.com/_stripe/webhook/`**. Confirm that exact path against the pinned image and the URL displayed in Pretix's Stripe settings before creating the destination. If they differ, record the actual single path before configuring ingress; never substitute a broad `/api/`, `/stripe/` or event-path wildcard.
+The proposed sole public callback exception is **POST `https://checkout.didde-mie.com/_stripe/webhook/`**. Confirm that exact path against the pinned image and the URL displayed in Pretix's Stripe settings before creating the destination. If they differ, record the actual single path before configuring ingress; never substitute a broad `/api/`, `/stripe/` or event-path wildcard.
 
 Configure a path-specific Access exception and exact host/path/method checks at ingress. Preserve the raw body and Stripe headers; enforce a suitable body bound and rate limit. This callback must not encounter interactive Access or ingress Basic authentication. Browser payment return/3-D Secure pages remain Access-protected.
 

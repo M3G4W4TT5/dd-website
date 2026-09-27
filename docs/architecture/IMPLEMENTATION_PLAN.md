@@ -9,7 +9,7 @@ Establish deliberate infrastructure and responsibility boundaries before a broad
 
 This is an infrastructure implementation, not an exhaustive security audit or a redesign of either site. Preserve approved copy, bilingual behavior, visual design and booking business rules unless a requirement below specifically changes behavior.
 
-The primary site is `didde-mie.com`, called `personal` in the repository. Booking is an additional service for studio rentals and event tickets, using the documented `studio.didde-mie.com` public origin. Pretix remains authoritative for orders, availability, payments and refunds. Neither app may import the other's source or read its environment files.
+The primary site is `didde-mie.com`, called `personal` in the repository. Booking is an additional service for studio rentals and event tickets, using the documented `booking.didde-mie.com` public origin. Pretix remains authoritative for orders, availability, payments and refunds. Neither app may import the other's source or read its environment files.
 
 The owner explicitly clarified that everything is local development: no launch, real customers or production data exist. Use a clean development cutover. Existing links, sessions and fixtures may be invalidated or reset. Historical-data migration, backward-compatible emailed links, a legacy API observation period, dual running and formal production-cutover ceremonies are not required. Routine backup/restore tooling for future operation is still required; do not confuse that deliverable with preserving disposable local fixtures.
 

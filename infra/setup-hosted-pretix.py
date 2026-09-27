@@ -22,7 +22,7 @@ def config(role, password, secret):
     cfg = configparser.ConfigParser(interpolation=None)
     cfg.read_dict({
         'pretix': {'instance_name': 'DD private hosted sandbox',
-                   'url': 'https://ttd-checkout.didde-mie.com', 'currency': 'DKK',
+                   'url': 'https://checkout.didde-mie.com', 'currency': 'DKK',
                    'datadir': '/data', 'trust_x_forwarded_for': 'on',
                    'trust_x_forwarded_proto': 'on', 'password_reset': 'off',
                    'plugins_default': 'pretix.plugins.statistics,pretix.plugins.checkinlists,pretix.plugins.stripe'},

@@ -79,7 +79,7 @@ def main():
         run(compose + ["up", "-d", "--no-build", "--pull", "missing", "--wait",
                        "--wait-timeout", "240"] + SERVICES, env)
         # Compose checks application health; also check both local proxy vhosts.
-        for host in ["studio.didde-mie.com", "ttd-checkout.didde-mie.com"]:
+        for host in ["booking.didde-mie.com", "checkout.didde-mie.com"]:
             run(["/usr/bin/curl", "--fail", "--silent", "--output", "/dev/null",
                  "--max-time", "15", "--header", "Host: " + host,
                  "http://127.0.0.1:8080/"], env)
