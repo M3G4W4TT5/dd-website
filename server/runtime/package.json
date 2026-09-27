@@ -1,0 +1,23 @@
+{
+  "name": "@dd/runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./browser-forbidden.ts",
+      "default": "./index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dd/contact": "0.1.0",
+    "@dd/marketing": "0.1.0",
+    "@dd/mail": "0.1.0",
+    "@dd/database": "0.1.0",
+    "@dd/contracts": "0.1.0",
+    "zod": "4.1.11"
+  }
+}

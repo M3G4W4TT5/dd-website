@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const personalMailbox = "contact@didde-mie.com";
 const bookingMailbox = "booking@didde-mie.com";
@@ -70,7 +70,7 @@ export function bookingAutoReply(name: string, email: string) {
       `style="display:block;width:94px;height:69px;border:0" /></div>`,
     attachments: [{
       filename: "ttd-studio-mark.png",
-      path: join(process.cwd(), "public", "branding", "ttd-email-mark.png"),
+      path: fileURLToPath(new URL("../mail/ttd-email-mark.png", import.meta.url)),
       cid: "ttd-studio-mark",
       contentType: "image/png",
       contentDisposition: "inline" as const,

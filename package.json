@@ -1,14 +1,23 @@
 {
   "name": "dd-platform",
   "private": true,
-  "workspaces": ["apps/*"],
+  "workspaces": [
+    "apps/*",
+    "server/*"
+  ],
   "scripts": {
     "dev:booking": "npm run dev -w @dd/booking",
     "dev:personal": "npm run dev -w @dd/personal",
     "build:booking": "npm run build -w @dd/booking",
     "build:personal": "npm run build -w @dd/personal",
     "typecheck": "npm run typecheck -w @dd/booking && npm run typecheck -w @dd/personal",
-    "test:booking": "npm run test -w @dd/booking"
+    "test:booking": "npm run test -w @dd/booking",
+    "typecheck:server": "npm run typecheck --workspaces --if-present --include-workspace-root=false",
+    "dev:primary-services": "tsx server/runtime/main.ts primary",
+    "dev:booking-services": "tsx server/runtime/main.ts booking",
+    "dev:worker": "tsx apps/booking/server/worker.ts",
+    "test:server": "tsx --test server/**/*.test.ts",
+    "verify:infrastructure": "npm run test:server && npm run test:booking && npm run typecheck && npm run typecheck:server && npm run build:personal && npm run build:booking"
   },
   "engines": {
     "node": ">=24.0.0"

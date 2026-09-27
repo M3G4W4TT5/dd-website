@@ -1,0 +1,19 @@
+{
+  "name": "@dd/mail",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "browser": "./browser-forbidden.ts",
+      "default": "./index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "nodemailer": "^10.0.10",
+    "@dd/contracts": "0.1.0"
+  }
+}

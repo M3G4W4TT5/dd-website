@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export function MarketingAction({ list, purpose, token, language }: { list: "personal" | "booking"; purpose: "confirm" | "unsubscribe"; token: string; language: "da" | "en" }) {
+export function MarketingAction({ list, purpose, token: initialToken, language }: { list: "personal" | "booking"; purpose: "confirm" | "unsubscribe"; token: string; language: "da" | "en" }) {
+  const [token,setToken]=useState(initialToken);
+  useEffect(()=>{setToken(new URLSearchParams(window.location.hash.slice(1)).get("token") || "");history.replaceState(null,"",window.location.pathname+window.location.search);},[]);
   const [state, setState] = useState<"ready" | "working" | "done" | "expired" | "error">("ready");
   const isPersonal = list === "personal";
   const da = language === "da" && !isPersonal;
@@ -23,7 +25,7 @@ export function MarketingAction({ list, purpose, token, language }: { list: "per
     <p>{purpose === "confirm"
       ? (da ? "Bekræft, at du vil modtage e-mails om TTD Studio-tilbud, nye events og rabatter." : `Confirm that you want ${isPersonal ? "DD's newsletter about her work and dance videos" : "TTD Studio emails about offers, new events and discounts"}.`)
       : (da ? "Stop e-mails om TTD Studio-tilbud, nye events og rabatter til denne adresse." : `Stop ${isPersonal ? "DD newsletter" : "TTD Studio promotional"} emails to this address.`)}</p>
-    {state === "ready" && <button type="button" onClick={() => void submit()}>{purpose === "confirm" ? (da ? "Bekræft tilmelding" : "Confirm signup") : (da ? "Afmeld" : "Unsubscribe")}</button>}
+    {state === "ready" && /^[A-Za-z0-9_-]{43}$/.test(token) && <button type="button" onClick={() => void submit()}>{purpose === "confirm" ? (da ? "Bekræft tilmelding" : "Confirm signup") : (da ? "Afmeld" : "Unsubscribe")}</button>}
     {state === "working" && <p role="status">{da ? "Arbejder…" : "Working…"}</p>}
     {state === "done" && <p role="status">{purpose === "confirm" ? (da ? "Din tilmelding er bekræftet." : "Your signup is confirmed.") : (da ? "Du er nu afmeldt." : "You have been unsubscribed.")}</p>}
     {state === "expired" && <p role="status">{da ? "Linket er udløbet eller er allerede brugt." : "This link has expired or has already been used."}</p>}

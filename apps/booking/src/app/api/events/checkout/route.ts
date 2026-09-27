@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getCatalog } from "@/lib/events";
 import { eventRegistrationSchema, nativeCartHandoff, registrationTicket } from "@/lib/event-registration";
-import { requestSubscription } from "@/lib/marketing";
+import { requestBookingSubscription } from "../../../../../server/marketing-client";
 
 export const runtime = "nodejs";
 const hits = new Map<string, { count: number; expires: number }>();
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     let marketingRequested: boolean | null = null;
     if (input.marketingOptIn) {
       try {
-        await requestSubscription("booking", input.email, input.language, "event-signup");
+        await requestBookingSubscription(input.email, input.language, "event-signup", input.marketingOptIn, `${input.slug}:${input.dateId}:${input.email.toLowerCase()}`);
         marketingRequested = true;
       } catch {
         marketingRequested = false;

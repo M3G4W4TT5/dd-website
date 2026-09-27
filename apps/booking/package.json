@@ -22,7 +22,10 @@
     "pg": "^8.23.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "zod": "4.1.11"
+    "zod": "4.1.11",
+    "@dd/contracts": "0.1.0",
+    "@dd/database": "0.1.0",
+    "@dd/runtime": "0.1.0"
   },
   "devDependencies": {
     "@types/luxon": "3.7.1",

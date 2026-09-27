@@ -166,9 +166,9 @@ All boxes below are implementation deliverables. Mark them done only with eviden
 
 ### 0. Establish the working baseline
 
-- [ ] S0.1 Read applicable instructions; verify the required branch, working tree, dependency/tool versions and existing service/port ownership. Keep unrelated work untouched.
-- [ ] S0.2 Revalidate the relevant route/config/database/Pretix findings without exposing secrets; record differences. Use owner-run commands for sudo.
-- [ ] S0.3 Record the concrete package/process layout and current work checkpoint; identify exactly which local fixtures, if any, will be reset.
+- [x] S0.1 Read applicable instructions; verify the required branch, working tree, dependency/tool versions and existing service/port ownership. Keep unrelated work untouched.
+- [x] S0.2 Revalidate the relevant route/config/database/Pretix findings without exposing secrets; record differences. Use owner-run commands for sudo.
+- [x] S0.3 Record the concrete package/process layout and current work checkpoint; identify exactly which local fixtures, if any, will be reset.
 
 ### 1. Shared packages and ownership
 

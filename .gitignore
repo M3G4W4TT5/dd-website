@@ -10,3 +10,7 @@ coverage/
 *.log
 .DS_Store
 *.tsbuildinfo
+
+infra/local/
+artifacts/private/
+__pycache__/

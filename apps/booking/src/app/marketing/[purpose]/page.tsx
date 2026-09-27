@@ -8,9 +8,7 @@ export default async function MarketingActionPage({ params, searchParams }: {
   searchParams: Promise<{ list?: string; token?: string; lang?: string }>;
 }) {
   const { purpose } = await params;
-  const { list, token, lang } = await searchParams;
-  if ((purpose !== "confirm" && purpose !== "unsubscribe") ||
-      (list !== "personal" && list !== "booking") ||
-      !token || !/^[A-Za-z0-9_-]{43}$/.test(token)) notFound();
-  return <MarketingAction purpose={purpose} list={list} token={token} language={lang === "da" ? "da" : "en"} />;
+  const { lang } = await searchParams;
+  if (purpose !== "confirm" && purpose !== "unsubscribe") notFound();
+  return <MarketingAction purpose={purpose} list="booking" token="" language={lang === "da" ? "da" : "en"} />;
 }

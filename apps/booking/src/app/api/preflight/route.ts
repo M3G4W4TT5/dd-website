@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAvailability } from "@/lib/availability";
 import { quoteInterval } from "@/lib/booking";
 import { preflightSchema } from "@/lib/customer";
-import { requestSubscription } from "@/lib/marketing";
+import { requestBookingSubscription } from "../../../../server/marketing-client";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       try {
         const expectedOrigin = new URL(process.env.CONTACT_BOOKING_ORIGIN || "http://127.0.0.1:3000").origin;
         if (request.headers.get("origin") !== expectedOrigin) throw new Error("Origin not allowed for marketing signup");
-        await requestSubscription("booking", input.data.details.email, input.data.marketingLanguage || "en", "booking-details");
+        await requestBookingSubscription(input.data.details.email, input.data.marketingLanguage || "en", "booking-details", input.data.marketingOptIn, input.data.details.email.toLowerCase());
         marketingRequested = true;
       } catch {
         console.error("Booking marketing signup failed");
