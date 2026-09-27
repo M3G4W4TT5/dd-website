@@ -78,11 +78,18 @@ def main():
         # Do not automatically roll back databases or recreate shared volumes.
         run(compose + ["up", "-d", "--no-build", "--pull", "missing", "--wait",
                        "--wait-timeout", "240"] + SERVICES, env)
-        # Compose checks application health; also check both local proxy vhosts.
-        for host in ["booking.didde-mie.com", "checkout.didde-mie.com"]:
+        # nginx resolves upstream container addresses at startup. Refresh them
+        # after Compose replaces an application container.
+        run(compose + ["restart", "proxy"], env)
+        # Compose checks application health; verify the proxy and live inventory.
+        for host, path in [("booking.didde-mie.com", "/"),
+                           ("booking.didde-mie.com", "/api/availability"),
+                           ("checkout.didde-mie.com", "/")]:
             run(["/usr/bin/curl", "--fail", "--silent", "--output", "/dev/null",
-                 "--max-time", "15", "--header", "Host: " + host,
-                 "http://127.0.0.1:8080/"], env)
+                 "--max-time", "15", "--retry", "5", "--retry-delay", "1",
+                 "--retry-max-time", "30", "--retry-all-errors",
+                 "--header", "Host: " + host,
+                 "http://127.0.0.1:8080" + path], env)
         current = STATE / "current.json"
         if current.exists() and json.loads(current.read_text()) != manifest:
             (STATE / "previous.json").write_bytes(current.read_bytes())
