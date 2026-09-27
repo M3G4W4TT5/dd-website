@@ -13,7 +13,7 @@ from django.db import transaction
 from django.utils.dateparse import parse_datetime
 from django_scopes import scopes_disabled
 
-MODELS = ['Organizer', 'Event', 'TaxRule', 'ItemCategory', 'Item', 'ItemVariation',
+MODELS = ['Organizer', 'Event', 'TaxRule', 'ItemCategory', 'Item', 'ItemVariation', 'Discount',
           'SubEvent', 'SubEventItem', 'SubEventItemVariation', 'Quota', 'Question',
           'QuestionOption', 'Organizer_SettingsStore', 'Event_SettingsStore']
 EVENTS = {'studio', 'dance-with-dd-dev', 'street-dance-workshop-dd-dev'}
