@@ -230,10 +230,10 @@ All boxes below are implementation deliverables. Mark them done only with eviden
 
 ### 7. Complete the run
 
-- [ ] S7.1 Every implementation checkbox above has evidence, and notes contain final decisions, verification limitations and reproducible commands. No in-scope work is disguised as a later owner action.
-- [ ] S7.2 Owner follow-up list contains concrete remaining external/provider/VPS/sandbox/security-review actions, with prerequisites and acceptance evidence; no test is represented as passed merely because documented.
-- [ ] S7.3 All coherent steps are committed on `codex/server-infrastructure`; final status is clean for this task's files and unrelated `web_clips/` remains excluded. Nothing was pushed/merged/deployed.
-- [ ] S7.4 Final response reports branch/commit, completed behavior, actual test evidence, important limitations and links to all handoff/operations documents. Implementation completion is clearly distinguished from launch readiness.
+- [x] S7.1 Every implementation checkbox above has evidence, and notes contain final decisions, verification limitations and reproducible commands. No in-scope work is disguised as a later owner action.
+- [x] S7.2 Owner follow-up list contains concrete remaining external/provider/VPS/sandbox/security-review actions, with prerequisites and acceptance evidence; no test is represented as passed merely because documented.
+- [x] S7.3 All coherent steps are committed on `codex/server-infrastructure`; final status is clean for this task's files and unrelated `web_clips/` remains excluded. Nothing was pushed/merged/deployed.
+- [x] S7.4 Final response reports branch/commit, completed behavior, actual test evidence, important limitations and links to all handoff/operations documents. Implementation completion is clearly distinguished from launch readiness.
 
 ## Sources and verification boundaries
 

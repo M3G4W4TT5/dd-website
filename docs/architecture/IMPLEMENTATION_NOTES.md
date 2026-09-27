@@ -2,10 +2,12 @@
 
 ## Current checkpoint
 
-- Status: S0–S6 complete and verified; final handoff/commit checkpoint in progress.
+- Status: S0–S7 complete; all implementation acceptance checks passed. Implementation completion is not launch approval.
 - Branch: `codex/server-infrastructure`.
 - Baseline code commit: `b31e32f`.
-- Next action: commit final cleanup/evidence, verify clean task status, finish S7 handoff and report final commit.
+- Final verified code commit: `a0f7fd3`; the final documentation handoff commit follows it in Git history.
+- Outstanding local implementation: none. No owner-assisted local checkpoint is pending.
+- Next action: owner reviews [OWNER_FOLLOW_UP.md](OWNER_FOLLOW_UP.md) and separately authorizes hosting/provider/paid-sandbox work when ready. Reproducible verification commands are in [OPERATIONS.md](OPERATIONS.md#complete-verification).
 - Existing unrelated state: untracked `web_clips/`; exclude from commits.
 - Approval: local architecture implementation and regular local step commits are authorized. External deployment/provider changes/live delivery/push/merge require separate authorization.
 - Privileged work: the owner runs copy-paste sudo commands and replies `done`; verify then continue.
@@ -27,6 +29,10 @@ Update this section after each coherent step. Include checklist IDs, changed res
 | Step/date | Checklist IDs | Outcome/evidence | Commit |
 | --- | --- | --- | --- |
 | 2026-09-27 preparation | Not implementation | Branch created from baseline; prompt, plan/checklist, notes and owner follow-up prepared | See Git history |
+| 2026-09-27 extraction | S0–S1, S4–S5 foundations | Shared packages, scoped communications and durable booking worker extracted; focused tests/type checks passed | `fa084ac` |
+| 2026-09-27 integrated implementation | S1–S5 | Scoped local database transition, reliability/isolation, operator tooling and independent deployment infrastructure verified; detailed evidence below | `1246d81` |
+| 2026-09-27 final verification | S6.1–S6.7 | Complete suite and integrated fixtures passed; obsolete paths retired, bounded requests/refund reporting corrected, token lock ordering and final image source verified | `a0f7fd3` |
+| 2026-09-27 handoff | S7.1–S7.4 | All implementation boxes complete, external gates reviewed, named-path commits and clean task status verified; final report includes branch/commit/evidence/limitations and handoff links | Final documentation commit in Git history |
 
 ## Decisions, discoveries and deviations
 
@@ -51,7 +57,7 @@ Populate at completion with actual development/production-build/integration/perm
 
 Final suite passed on 27 September 2026: 7 shared tests + 35 booking tests (42 total, no skips), app/package type checks, Astro static and Next standalone production builds, and six independent workspace package builds. Detailed integration and owner-assisted evidence follows. Hosted/provider/paid-sandbox checks have not been run.
 
-### Active owner checkpoint: scoped development transition
+### Completed owner checkpoint: scoped development transition
 
 Prepared `server/database/scripts/transition-local.sh` and `provision-local.py`. The script stops only Pretix web/cron, creates the two marketing schemas and management DB with restricted runtime/migration/operator roles, retains events/products/volumes, retires `dd_marketing`, renames the old cluster superuser to an explicit local administrator with a fresh private credential, runs the pinned Pretix migration job separately, and restarts Pretix with `pretix_runtime`, `AUTOMIGRATE=skip` and local Mailpit capture. Secrets are generated into ignored mode-0600 files and never printed. Per-domain migrations are transactional; private generated credentials survive an interrupted provision for safe resumption. Application permission and capture checks follow after owner completion.
 
@@ -85,7 +91,7 @@ App `.env.local` now contains only booking-web configuration. Its retired creden
 - Added production secret mounts/networks/read-only/non-root targets and local fixture overlay. Builds exclude env files/private captures and use no production secrets. Application Secure cookie policy now follows DD_MODE; production origins/config are validated independently of payment/mail release. Existing confirmation copy is retained; newly added neutral lifecycle text distinguishes cancellation from refund completion and remains draft-review under F8.
 - Operational documentation: `OPERATIONS.md`, marketing guide, management guide and existing email guide now describe the actual boundaries and commands. Provider scope/delivery, real HTTPS cookies and paid sandbox/refund/quota integration remain F1–F15 owner gates. They are not represented as local passes.
 
-Last passing focused command: `node --import tsx server/database/scripts/verify-management.ts`. Local running services: primary 3011, booking communications 3012, booking web 3000, worker 3013, primary preview 4321; production fixture services 3100/3112/3113, Pretix 8345 and Mailpit 8025. Next: final complete suite, production HTTP and secret/bundle/context hygiene; then final commits.
+At this intermediate checkpoint, the focused management check passed and final integrated verification remained next. The final acceptance table below supersedes this checkpoint. Local service ports: primary 3011, booking communications 3012, booking web 3000, worker 3013, primary preview 4321; production fixtures 3100/3112/3113, Pretix 8345 and Mailpit 8025.
 
 ### Final integration and cleanup checkpoint
 
@@ -97,7 +103,7 @@ Last passing focused command: `node --import tsx server/database/scripts/verify-
 - Independent primary production build passed with explicit fixture HTTPS public URLs; missing `PUBLIC_SERVICES_URL` is rejected by its production build config. Booking remains independent. The optional primary container profile is prepared; no primary deployment was performed.
 - Final isolated management adapter tests also pass same-duration/price restrictions, direct admin-stale recheck and concurrent changes with one remote write and native mail suppressed. All fixtures use a `.invalid` mock origin; no actual payment/refund/API write or external mail is exercised.
 
-Final source-image rebuild completed. Owner image hygiene passed 436 booking files and 186 files in each source service, plus exact current communications source hashes. Read-only subsequent health checks passed; production concurrent withdrawal now returns the correct unavailable-token response (410) without deadlock/reactivation. This replaces the earlier failed/stale-image evidence. Only final commits/handoff remain; launch/provider gates are still outstanding.
+Final source-image rebuild completed. Owner image hygiene passed 436 booking files and 186 files in each source service, plus exact current communications source hashes. Read-only subsequent health checks passed; production concurrent withdrawal now returns the correct unavailable-token response (410) without deadlock/reactivation. This replaces the earlier failed/stale-image evidence. Final production verification was repeated successfully after the owner's final rebuild reply; launch/provider gates remain outstanding.
 
 ### Final acceptance evidence (S6.1–S6.7)
 
@@ -120,3 +126,7 @@ Final source-image rebuild completed. Owner image hygiene passed 436 booking fil
 Remaining verification limitations are external by design: one.com VPS/TLS/DNS, Purelymail sender/header/envelope/bounce policy, real hosted HTTPS session behavior, Stripe sandbox purchases/refunds/webhooks, Pretix quotas/cross-channel reservations and draft copy/security/legal review. [OWNER_FOLLOW_UP.md](OWNER_FOLLOW_UP.md) gives prerequisites and acceptance evidence. Checkout/self-service/payment/mail release gates stay closed. No external mail, live payment, provider mutation, push, merge or VPS deployment occurred.
 
 Successful tests remove their scoped membership/order-intent/schema/export/database fixtures. Final targeted cleanup removed two primary fixture memberships left by an earlier failed HTTP run (strict generated UUID/example.com pattern only); no booking memberships remained. Private capture messages and the owner-run private backup proof artifacts remain outside Git for inspection. Existing Pretix events/products and shared volumes remain. Local development and production capture stacks remain running for inspection. Final code/image tests pass; no failing or skipped check has been reclassified as passing.
+
+### Completed handoff (S7.1–S7.4)
+
+The checklist and evidence were reviewed together: every implementation item is complete, and F1–F15 contain only external hosting/provider/paid-sandbox and pre-launch owner work with prerequisites and acceptance details. [OPERATIONS.md](OPERATIONS.md) documents repeatable startup, verification and recovery commands. Coherent implementation commits are `fa084ac`, `1246d81` and `a0f7fd3`, followed by this final documentation handoff commit on `codex/server-infrastructure`. Task files are committed; unrelated `web_clips/` remains untracked and unstaged. No branch push, merge, VPS deployment, DNS/provider change, live payment or external mail occurred. The final report links the checklist, notes, operations and owner actions and explicitly distinguishes completed implementation from outstanding launch verification.
