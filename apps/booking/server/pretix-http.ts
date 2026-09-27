@@ -1,3 +1,5 @@
+import { request } from "node:http";
+
 /** Keep API traffic on the private Docker network while using Pretix's public vhost. */
 export function pretixHeaders(
   url: URL,
@@ -22,6 +24,47 @@ export function pretixHeaders(
     headers["X-Forwarded-Proto"] = "https";
   }
   return headers;
+}
+
+/** Node's fetch replaces Host with the URL host, so hosted requests use http.request. */
+export async function pretixFetch(url: URL, init: RequestInit): Promise<Response> {
+  const headers = new Headers(init.headers);
+  if (!headers.has("Host")) return fetch(url, init);
+  if (url.protocol !== "http:") throw new Error("Invalid private Pretix URL");
+  if (init.body !== undefined && init.body !== null && typeof init.body !== "string")
+    throw new Error("Invalid private Pretix request body");
+  return new Promise<Response>((resolve, reject) => {
+    const outgoing = request(
+      url,
+      {
+        method: init.method || "GET",
+        headers: Object.fromEntries(headers),
+        signal: init.signal || undefined,
+      },
+      (incoming) => {
+        const chunks: Buffer[] = [];
+        let bytes = 0;
+        incoming.on("data", (chunk: Buffer) => {
+          bytes += chunk.length;
+          if (bytes > 8 * 1024 * 1024) {
+            incoming.destroy(new Error("Pretix response limit exceeded"));
+            return;
+          }
+          chunks.push(chunk);
+        });
+        incoming.on("error", reject);
+        incoming.on("end", () => {
+          const status = incoming.statusCode || 502;
+          const body = [204, 205, 304].includes(status)
+            ? null
+            : Buffer.concat(chunks);
+          resolve(new Response(body, { status, headers: incoming.headers as HeadersInit }));
+        });
+      },
+    );
+    outgoing.on("error", reject);
+    outgoing.end(init.body || undefined);
+  });
 }
 
 /** Never follow a public pagination link with an API credential. */

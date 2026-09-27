@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import { createServer } from "node:http";
 import test from "node:test";
-import { pretixHeaders, pretixNextPage } from "../../server/pretix-http";
+import { pretixFetch, pretixHeaders, pretixNextPage } from "../../server/pretix-http";
 
 test("hosted Pretix calls keep their private destination and canonical vhost", () => {
   const previous = [process.env.PRETIX_API_BASE, process.env.PRETIX_SHOP_BASE];
@@ -40,5 +41,26 @@ test("local Pretix requests use the configured API hostname", () => {
   } finally {
     if (previous === undefined) delete process.env.PRETIX_API_BASE;
     else process.env.PRETIX_API_BASE = previous;
+  }
+});
+
+test("private HTTP transport sends the approved Host and keeps the TCP destination local", async () => {
+  const server = createServer((request, response) => {
+    response.setHeader("Content-Type", "application/json");
+    response.end(JSON.stringify({ host: request.headers.host, proto: request.headers["x-forwarded-proto"] }));
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== "string");
+    const response = await pretixFetch(new URL(`http://127.0.0.1:${address.port}/api/`), {
+      headers: { Host: "checkout.didde-mie.com", "X-Forwarded-Proto": "https" },
+      signal: AbortSignal.timeout(1000),
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { host: "checkout.didde-mie.com", proto: "https" });
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
 });
