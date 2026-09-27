@@ -1,8 +1,6 @@
 import { Readable } from "node:stream";
 import { createServer } from "node:http";
-import { mkdir, writeFile } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
-import { createMailer, DeliveryError } from "@dd/mail";
+import { createCapture, createMailer, DeliveryError } from "@dd/mail";
 import { pollDelivery } from "../database/delivery";
 import { communicationsConfig } from "./config";
 import { service } from "./index";
@@ -10,14 +8,7 @@ const site = process.argv[2];
 if (site !== "primary" && site !== "booking")
   throw new Error("Fixed service identity required");
 const cfg = communicationsConfig(process.env, site);
-const capture = async (_mail: unknown, raw: Buffer) => {
-  if (cfg.captureDirectory) {
-    await mkdir(cfg.captureDirectory, { recursive: true, mode: 0o700 });
-    await writeFile(`${cfg.captureDirectory}/${randomUUID()}.eml`, raw, {
-      mode: 0o600,
-    });
-  }
-};
+const capture = createCapture(cfg.captureDirectory);
 const contactMailer = createMailer(cfg.mail, site, capture);
 // Primary newsletters use a separate SMTP identity; development remains credential free.
 const marketingPolicy =
@@ -86,5 +77,6 @@ void loop();
 for (const signal of ["SIGTERM", "SIGINT"])
   process.on(signal, () => {
     stopping = true;
+    capture.close();
     server.close();
   });
