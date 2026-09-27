@@ -1,3 +1,4 @@
+import { boundedJson, HttpError } from "@dd/runtime";
 import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getCatalog } from "@/lib/events";
@@ -18,10 +19,9 @@ export async function POST(request: Request) {
   const hit = hits.get(ip) || { count: 0, expires: now + 60_000 };
   if (++hit.count > 10 || hits.size > 5000) return json({ error: "Too many requests" }, 429);
   hits.set(ip, hit);
-  const raw = await request.text();
-  if (raw.length > 4096) return json({ error: "Request too large" }, 413);
   let body: unknown;
-  try { body = JSON.parse(raw); } catch { return json({ error: "Invalid JSON" }, 400); }
+  try { body = await boundedJson(request, 4096); }
+  catch (error) { return NextResponse.json({error: error instanceof HttpError ? error.message : "Invalid JSON"}, {status: error instanceof HttpError ? error.status : 400, headers: {"Cache-Control":"no-store"}}); }
   const parsed = eventRegistrationSchema.safeParse(body);
   if (!parsed.success) return json({ error: "Invalid event details" }, 400);
   const input = parsed.data;

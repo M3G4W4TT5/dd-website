@@ -1,3 +1,4 @@
+import { boundedJson, HttpError } from "@dd/runtime";
 import { NextResponse } from "next/server";
 import { getAvailability } from "@/lib/availability";
 import { quoteInterval } from "@/lib/booking";
@@ -7,16 +8,9 @@ import { requestBookingSubscription } from "../../../../server/marketing-client"
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const raw = await request.text();
-  if (raw.length > 8_192) {
-    return NextResponse.json({ error: "Request too large" }, { status: 413 });
-  }
   let body: unknown;
-  try {
-    body = JSON.parse(raw);
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  try { body = await boundedJson(request, 8_192); }
+  catch (error) { return NextResponse.json({error: error instanceof HttpError ? error.message : "Invalid JSON"}, {status: error instanceof HttpError ? error.status : 400, headers: {"Cache-Control":"no-store"}}); }
   const input = preflightSchema.safeParse(body);
   if (!input.success) {
     return NextResponse.json({ error: "Invalid booking details" }, { status: 400 });

@@ -1,4 +1,3 @@
-
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { Availability, MAX_HOURS, Slot, STUDIO_ZONE } from "../src/lib/booking";
@@ -15,7 +14,13 @@ const subeventSchema = z.object({
   date_from: z.string(),
   date_to: z.string().nullable(),
   item_price_overrides: z
-    .array(z.object({ item: z.number(), disabled: z.boolean(), price: z.string().nullable() }))
+    .array(
+      z.object({
+        item: z.number(),
+        disabled: z.boolean(),
+        price: z.string().nullable(),
+      }),
+    )
     .optional(),
 });
 
@@ -89,13 +94,23 @@ function readConfig(): PretixConfig | null {
   }
   if (!/^\d+$/.test(item!)) throw new Error("PRETIX_ITEM_ID must be numeric");
   const base = new URL(process.env.PRETIX_API_BASE || "http://127.0.0.1:8345");
-  if (!["http:", "https:"].includes(base.protocol)) throw new Error("Invalid pretix URL");
-  return { base, organizer: organizer!, event: event!, itemId: Number(item), token: token! };
+  if (!["http:", "https:"].includes(base.protocol))
+    throw new Error("Invalid pretix URL");
+  return {
+    base,
+    organizer: organizer!,
+    event: event!,
+    itemId: Number(item),
+    token: token!,
+  };
 }
 
 async function getJson(url: URL, config: PretixConfig): Promise<unknown> {
   const response = await fetch(url, {
-    headers: { Authorization: `Token ${config.token}`, Accept: "application/json" },
+    headers: {
+      Authorization: `Token ${config.token}`,
+      Accept: "application/json",
+    },
     cache: "no-store",
     signal: AbortSignal.timeout(10_000),
   });
@@ -111,12 +126,14 @@ async function listAll<T>(
   const results: T[] = [];
   let next: URL | null = url;
   while (next) {
-    const page = z.object({ results: z.array(schema), next: z.string().nullable() }).parse(
-      await getJson(next, config),
-    );
+    const page = z
+      .object({ results: z.array(schema), next: z.string().nullable() })
+      .parse(await getJson(next, config));
     results.push(...page.results);
     if (results.length > 2_000) throw new Error("pretix result limit exceeded");
-    const nextUrl: URL | null = page.next ? new URL(page.next, config.base) : null;
+    const nextUrl: URL | null = page.next
+      ? new URL(page.next, config.base)
+      : null;
     if (nextUrl && nextUrl.origin !== config.base.origin) {
       throw new Error("Unexpected pretix pagination origin");
     }
@@ -146,15 +163,30 @@ function demoAvailability(day: DateTime): Availability {
       priceOre: DEMO_PRICE_ORE,
     });
   }
-  return { date: day.toISODate()!, source: "demo", currency: "DKK", slots, checkedAt: DateTime.utc().toISO()! };
+  return {
+    date: day.toISODate()!,
+    source: "demo",
+    currency: "DKK",
+    slots,
+    checkedAt: DateTime.utc().toISO()!,
+  };
 }
 
-async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<Availability> {
+async function pretixAvailability(
+  day: DateTime,
+  config: PretixConfig,
+): Promise<Availability> {
   const prefix = `/api/v1/organizers/${encodeURIComponent(config.organizer)}/events/${encodeURIComponent(config.event)}/`;
   const subeventsUrl = new URL(`${prefix}subevents/`, config.base);
   subeventsUrl.searchParams.set("date_from_after", day.toUTC().toISO()!);
-  subeventsUrl.searchParams.set("date_from_before", day.plus({ days: 1 }).toUTC().minus({ milliseconds: 1 }).toISO()!);
-  const quotasUrl = new URL(`${prefix}quotas/?with_availability=true`, config.base);
+  subeventsUrl.searchParams.set(
+    "date_from_before",
+    day.plus({ days: 1 }).toUTC().minus({ milliseconds: 1 }).toISO()!,
+  );
+  const quotasUrl = new URL(
+    `${prefix}quotas/?with_availability=true`,
+    config.base,
+  );
   const itemUrl = new URL(`${prefix}items/${config.itemId}/`, config.base);
   const discountsUrl = new URL(`${prefix}discounts/`, config.base);
 
@@ -166,16 +198,24 @@ async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<
     getRoomOccupancy(day.toISODate()!),
   ]);
   const item = itemSchema.parse(rawItem);
-  if (!item.active || item.id !== config.itemId) throw new Error("Pretix room product is inactive");
+  if (!item.active || item.id !== config.itemId)
+    throw new Error("Pretix room product is inactive");
   const defaultPrice = toOre(item.default_price);
-  const relevantDiscounts = discounts.filter((discount) => discount.active &&
-    (discount.condition_all_products || discount.condition_limit_products.includes(config.itemId)));
-  if (relevantDiscounts.length !== 1) throw new Error("Expected one studio full-day discount");
+  const relevantDiscounts = discounts.filter(
+    (discount) =>
+      discount.active &&
+      (discount.condition_all_products ||
+        discount.condition_limit_products.includes(config.itemId)),
+  );
+  if (relevantDiscounts.length !== 1)
+    throw new Error("Expected one studio full-day discount");
   const fullDayRule = relevantDiscounts[0];
   if (
     !fullDayRule.all_sales_channels ||
-    fullDayRule.available_from !== null || fullDayRule.available_until !== null ||
-    fullDayRule.subevent_date_from !== null || fullDayRule.subevent_date_until !== null ||
+    fullDayRule.available_from !== null ||
+    fullDayRule.available_until !== null ||
+    fullDayRule.subevent_date_from !== null ||
+    fullDayRule.subevent_date_until !== null ||
     fullDayRule.subevent_mode !== "distinct" ||
     fullDayRule.condition_all_products ||
     fullDayRule.condition_limit_products.length !== 1 ||
@@ -185,38 +225,57 @@ async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<
     fullDayRule.benefit_discount_matching_percent !== "100.00" ||
     !fullDayRule.benefit_only_apply_to_cheapest_n_matches ||
     fullDayRule.benefit_only_apply_to_cheapest_n_matches >= MAX_HOURS
-  ) throw new Error("Unsupported studio discount configuration");
+  )
+    throw new Error("Unsupported studio discount configuration");
   const starts = new Set<string>();
 
   const slots = subevents
-    .filter((subevent) =>
-      subevent.active &&
-      subevent.is_public &&
-      subevent.date_to &&
-      DateTime.fromISO(subevent.date_from, { setZone: true }).setZone(STUDIO_ZONE).toISODate() === day.toISODate(),
+    .filter(
+      (subevent) =>
+        subevent.active &&
+        subevent.is_public &&
+        subevent.date_to &&
+        DateTime.fromISO(subevent.date_from, { setZone: true })
+          .setZone(STUDIO_ZONE)
+          .toISODate() === day.toISODate(),
     )
     .map((subevent): Slot => {
       const start = DateTime.fromISO(subevent.date_from, { setZone: true });
       const end = DateTime.fromISO(subevent.date_to!, { setZone: true });
-      if (!start.isValid || !end.isValid || end.toMillis() - start.toMillis() !== 3_600_000) {
+      if (
+        !start.isValid ||
+        !end.isValid ||
+        end.toMillis() - start.toMillis() !== 3_600_000
+      ) {
         throw new Error("Expected one-hour pretix time slots");
       }
-      if (starts.has(start.toUTC().toISO()!)) throw new Error("Duplicate pretix time slot");
+      if (starts.has(start.toUTC().toISO()!))
+        throw new Error("Duplicate pretix time slot");
       starts.add(start.toUTC().toISO()!);
-      const override = subevent.item_price_overrides?.find((entry) => entry.item === config.itemId);
+      const override = subevent.item_price_overrides?.find(
+        (entry) => entry.item === config.itemId,
+      );
       const priceOre = override?.price ? toOre(override.price) : defaultPrice;
-      if (priceOre !== defaultPrice) throw new Error("Studio slots must use one hourly price");
+      if (priceOre !== defaultPrice)
+        throw new Error("Studio slots must use one hourly price");
       const slotQuotas = quotas.filter(
-        (entry) => entry.subevent === subevent.id && entry.items.includes(config.itemId),
+        (entry) =>
+          entry.subevent === subevent.id && entry.items.includes(config.itemId),
       );
       const sharedQuotas = quotas.filter(
-        (entry) => entry.subevent === null && entry.items.includes(config.itemId),
+        (entry) =>
+          entry.subevent === null && entry.items.includes(config.itemId),
       );
       if (slotQuotas.some((quota) => quota.size !== 1 && quota.size !== 0)) {
-        throw new Error("Each studio slot needs capacity one or an administrative block");
+        throw new Error(
+          "Each studio slot needs capacity one or an administrative block",
+        );
       }
       const hasCapacity = [...slotQuotas, ...sharedQuotas].every(
-        (quota) => !quota.closed && quota.available === true && (quota.available_number ?? 0) >= 1,
+        (quota) =>
+          !quota.closed &&
+          quota.available === true &&
+          (quota.available_number ?? 0) >= 1,
       );
       return {
         id: String(subevent.id),
@@ -226,7 +285,14 @@ async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<
           slotQuotas.length > 0 &&
           hasCapacity &&
           !override?.disabled &&
-          !occupied.some(interval => overlaps(start.toISO()!, end.toISO()!, interval.start, interval.end)) &&
+          !occupied.some((interval) =>
+            overlaps(
+              start.toISO()!,
+              end.toISO()!,
+              interval.start,
+              interval.end,
+            ),
+          ) &&
           start > DateTime.now(),
         priceOre,
       };
@@ -234,8 +300,13 @@ async function pretixAvailability(day: DateTime, config: PretixConfig): Promise<
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
 
   return {
-    date: day.toISODate()!, source: "pretix", currency: "DKK", slots,
-    fullDayDiscount: { discountedHours: fullDayRule.benefit_only_apply_to_cheapest_n_matches! },
+    date: day.toISODate()!,
+    source: "pretix",
+    currency: "DKK",
+    slots,
+    fullDayDiscount: {
+      discountedHours: fullDayRule.benefit_only_apply_to_cheapest_n_matches!,
+    },
     checkedAt: DateTime.utc().toISO()!,
   };
 }

@@ -172,51 +172,51 @@ All boxes below are implementation deliverables. Mark them done only with eviden
 
 ### 1. Shared packages and ownership
 
-- [ ] S1.1 Add workspace packages/runtime entry points with dependency boundaries matching the plan; both apps remain independent of each other's source/env.
-- [ ] S1.2 Extract common mail transport, contact and marketing mechanisms; preserve current copy, field/consent semantics and language behavior.
-- [ ] S1.3 Move shared DB/operational tooling out of booking, package mail assets without CWD/public-directory dependence, and place server domain types outside UI-owned modules.
-- [ ] S1.4 Add explicit validated configuration contracts; server-only modules cannot enter browser bundles. Prove independent app/package builds.
+- [x] S1.1 Add workspace packages/runtime entry points with dependency boundaries matching the plan; both apps remain independent of each other's source/env.
+- [x] S1.2 Extract common mail transport, contact and marketing mechanisms; preserve current copy, field/consent semantics and language behavior.
+- [x] S1.3 Move shared DB/operational tooling out of booking, package mail assets without CWD/public-directory dependence, and place server domain types outside UI-owned modules.
+- [x] S1.4 Add explicit validated configuration contracts; server-only modules cannot enter browser bundles. Prove independent app/package builds.
 
 ### 2. Runtime modes, deployment configuration and isolation
 
-- [ ] S2.1 Implement development and production startup with independent payment/release/mail-delivery controls; missing production config fails safely.
-- [ ] S2.2 Development/preview mail is captured and production credentials are unavailable; provide explicit controlled-recipient sandbox delivery configuration without enabling it externally.
-- [ ] S2.3 Add production build/container/proxy/process configuration for the booking stack, worker and communications services. Primary services are optional; booking starts without them.
-- [ ] S2.4 Enforce separate service users/secrets/mounts/network exposure, bounded health checks and supervised worker shutdown/restart. Keep Redis owned by Pretix.
-- [ ] S2.5 Supply clean scoped env examples and root startup commands. Separate public URLs from server secrets and booking URLs from marketing URLs.
+- [x] S2.1 Implement development and production startup with independent payment/release/mail-delivery controls; missing production config fails safely.
+- [x] S2.2 Development/preview mail is captured and production credentials are unavailable; provide explicit controlled-recipient sandbox delivery configuration without enabling it externally.
+- [x] S2.3 Add production build/container/proxy/process configuration for the booking stack, worker and communications services. Primary services are optional; booking starts without them.
+- [x] S2.4 Enforce separate service users/secrets/mounts/network exposure, bounded health checks and supervised worker shutdown/restart. Keep Redis owned by Pretix.
+- [x] S2.5 Supply clean scoped env examples and root startup commands. Separate public URLs from server secrets and booking URLs from marketing URLs.
 
 ### 3. Databases and operator tooling
 
-- [ ] S3.1 Add reproducible versioned migrations/provisioning for management DB and the two marketing schemas, with separate owners/migrators and scoped runtime roles.
-- [ ] S3.2 Configure booking pools/session/recovery/operation locks against the management DB and each communications instance against only its schema. Apply the clean local development transition, with owner-run sudo as needed.
-- [ ] S3.3 Remove Pretix runtime superuser access and separate its migration execution; validate runtime access and migrations against the pinned image.
-- [ ] S3.4 Prove effective role isolation: intended reads/writes succeed; cross-list/cross-database access and runtime DDL/role escalation fail. Verify grants for newly migrated objects.
-- [ ] S3.5 Implement scoped per-list export/withdrawal/cleanup commands. Exports stay private/outside Git; cleanup cannot cross list boundaries inadvertently.
-- [ ] S3.6 Provide repeatable private backup/isolated restore tooling and validate it with disposable fixture databases and outgoing integrations disabled. No preservation requirement for old fixtures.
+- [x] S3.1 Add reproducible versioned migrations/provisioning for management DB and the two marketing schemas, with separate owners/migrators and scoped runtime roles.
+- [x] S3.2 Configure booking pools/session/recovery/operation locks against the management DB and each communications instance against only its schema. Apply the clean local development transition, with owner-run sudo as needed.
+- [x] S3.3 Remove Pretix runtime superuser access and separate its migration execution; validate runtime access and migrations against the pinned image.
+- [x] S3.4 Prove effective role isolation: intended reads/writes succeed; cross-list/cross-database access and runtime DDL/role escalation fail. Verify grants for newly migrated objects.
+- [x] S3.5 Implement scoped per-list export/withdrawal/cleanup commands. Exports stay private/outside Git; cleanup cannot cross list boundaries inadvertently.
+- [x] S3.6 Provide repeatable private backup/isolated restore tooling and validate it with disposable fixture databases and outgoing integrations disabled. No preservation requirement for old fixtures.
 
 ### 4. Contact and marketing APIs/frontends
 
-- [ ] S4.1 Run contact/marketing under fixed primary and booking identities; reject caller attempts to select another identity, inbox or sender.
-- [ ] S4.2 Implement safe public HTTP behavior: exact origins, bounded JSON bodies, trusted proxy headers, abuse limits, generic membership responses and stable error contracts.
-- [ ] S4.3 Replace primary form backend use of `PUBLIC_BOOKING_URL` with `PUBLIC_SERVICES_URL`, retaining actual booking navigation. Switch booking public contact/marketing to its communications service.
-- [ ] S4.4 Implement authenticated booking-only subscription calls from rental/event opt-in; preserve checkout behavior when optional marketing is unavailable and do not enqueue without consent.
-- [ ] S4.5 Place primary/booking marketing action UI on their respective sites; explicit POST token consumption, correct URL/language, no token logging/referrer leaks. Remove obsolete cross-app handlers rather than legacy compatibility.
-- [ ] S4.6 Test both sites' contact inquiry/acknowledgement using captured mail, including Reply-To, asset rendering and acknowledgement-only failure handling.
-- [ ] S4.7 Test each marketing list: pending signup, captured confirmation, activation, repeat/expired/wrong-list/wrong-purpose token rejection, unsubscribe-link/action, manual withdrawal and consent state.
-- [ ] S4.8 Enforce preview-wide no-delivery, including rental preflight marketing side effects; prove it with capture/negative tests.
+- [x] S4.1 Run contact/marketing under fixed primary and booking identities; reject caller attempts to select another identity, inbox or sender.
+- [x] S4.2 Implement safe public HTTP behavior: exact origins, bounded JSON bodies, trusted proxy headers, abuse limits, generic membership responses and stable error contracts.
+- [x] S4.3 Replace primary form backend use of `PUBLIC_BOOKING_URL` with `PUBLIC_SERVICES_URL`, retaining actual booking navigation. Switch booking public contact/marketing to its communications service.
+- [x] S4.4 Implement authenticated booking-only subscription calls from rental/event opt-in; preserve checkout behavior when optional marketing is unavailable and do not enqueue without consent.
+- [x] S4.5 Place primary/booking marketing action UI on their respective sites; explicit POST token consumption, correct URL/language, no token logging/referrer leaks. Remove obsolete cross-app handlers rather than legacy compatibility.
+- [x] S4.6 Test both sites' contact inquiry/acknowledgement using captured mail, including Reply-To, asset rendering and acknowledgement-only failure handling.
+- [x] S4.7 Test each marketing list: pending signup, captured confirmation, activation, repeat/expired/wrong-list/wrong-purpose token rejection, unsubscribe-link/action, manual withdrawal and consent state.
+- [x] S4.8 Enforce preview-wide no-delivery, including rental preflight marketing side effects; prove it with capture/negative tests.
 
 ### 5. Mail policy and notification reliability
 
-- [ ] S5.1 Implement the sender/Reply-To/envelope matrix centrally with typed permitted messages; booking web holds no SMTP credentials, and booking processes hold no primary credentials.
-- [ ] S5.2 Add durable inbox/outbox/attempt processing, authenticated webhook intake and deduplication using provider notification IDs plus business transition identity.
-- [ ] S5.3 Implement booking recovery and paid rental confirmation through the worker with authoritative Pretix reads, correct recipient/language, token lifetimes and scoped session behavior.
-- [ ] S5.4 Implement rental change, cancellation and appropriate refund-status notifications after verified state transitions; suppress competing Pretix notifications and document admin workflow ownership.
-- [ ] S5.5 Implement remote-operation reconciliation so ambiguous Pretix writes/refunds are verified before retry; ensure old/new lock domains cannot run as independent writers.
-- [ ] S5.6 Implement bounded retry/lease behavior, permanent-failure and ambiguous SMTP states, stable Message-IDs and sensitive payload retention/encryption as needed.
-- [ ] S5.7 Define enabled Pretix message ownership, self-hosted SMTP/default sender/Reply-To configuration and per-event inheritance checks; configure local capture where needed without enabling external sending.
-- [ ] S5.8 Provide actionable queue/failure visibility and bounce/direct-reply handling instructions, with a minimal marketing suppression mechanism. Record provider-specific unverified assumptions as owner gates.
-- [ ] S5.9 Test duplicate/reordered webhook handling, repeated mutations, worker restarts, expired leases, SMTP timeout/rejection and DB failure around acceptance. Assert no duplicate business intent and explicit ambiguous-delivery handling.
-- [ ] S5.10 Test EN/DA templates, sender/envelope/Reply-To, pending-versus-paid behavior, rental/event separation and refund-status accuracy with fixtures/capture, without claiming real delivery/payment proof.
+- [x] S5.1 Implement the sender/Reply-To/envelope matrix centrally with typed permitted messages; booking web holds no SMTP credentials, and booking processes hold no primary credentials.
+- [x] S5.2 Add durable inbox/outbox/attempt processing, authenticated webhook intake and deduplication using provider notification IDs plus business transition identity.
+- [x] S5.3 Implement booking recovery and paid rental confirmation through the worker with authoritative Pretix reads, correct recipient/language, token lifetimes and scoped session behavior.
+- [x] S5.4 Implement rental change, cancellation and appropriate refund-status notifications after verified state transitions; suppress competing Pretix notifications and document admin workflow ownership.
+- [x] S5.5 Implement remote-operation reconciliation so ambiguous Pretix writes/refunds are verified before retry; ensure old/new lock domains cannot run as independent writers.
+- [x] S5.6 Implement bounded retry/lease behavior, permanent-failure and ambiguous SMTP states, stable Message-IDs and sensitive payload retention/encryption as needed.
+- [x] S5.7 Define enabled Pretix message ownership, self-hosted SMTP/default sender/Reply-To configuration and per-event inheritance checks; configure local capture where needed without enabling external sending.
+- [x] S5.8 Provide actionable queue/failure visibility and bounce/direct-reply handling instructions, with a minimal marketing suppression mechanism. Record provider-specific unverified assumptions as owner gates.
+- [x] S5.9 Test duplicate/reordered webhook handling, repeated mutations, worker restarts, expired leases, SMTP timeout/rejection and DB failure around acceptance. Assert no duplicate business intent and explicit ambiguous-delivery handling.
+- [x] S5.10 Test EN/DA templates, sender/envelope/Reply-To, pending-versus-paid behavior, rental/event separation and refund-status accuracy with fixtures/capture, without claiming real delivery/payment proof.
 
 ### 6. Integrated verification and cleanup
 
