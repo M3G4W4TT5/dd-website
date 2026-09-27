@@ -1,5 +1,7 @@
 "use client";
 
+import { submissionIdentity, submitWithIdentity } from "../lib/submission";
+
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { DateTime } from "luxon";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -54,6 +56,8 @@ export function EventSignupForm({ occurrence, language, onBack }: {
   occurrence: Occurrence; language: Language; onBack: () => void;
 }) {
   const t = copy[language];
+  const submission = useRef<ReturnType<typeof submissionIdentity> | null>(null);
+  submission.current ??= submissionIdentity();
   const titleRef = useRef<HTMLHeadingElement>(null);
   const eligible = occurrence.tickets.filter(ticket => !ticket.hasVariations && ticketLimit(ticket, occurrence.remaining) >= ticket.minPerOrder);
   const [itemId, setItemId] = useState(eligible[0]?.id);
@@ -91,7 +95,7 @@ export function EventSignupForm({ occurrence, language, onBack }: {
     submitting.current = true;
     setStatus("working");
     try {
-      const response = await fetch("/api/events/checkout", {
+      const response = await submitWithIdentity(submission.current!, "/api/events/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug: occurrence.slug, dateId: occurrence.dateId, itemId: ticket.id, quantity: count, unitPrice: ticket.price,
           language, name: values.get("name"), email: values.get("email"), phone: values.get("phone"), termsAccepted, marketingOptIn }),

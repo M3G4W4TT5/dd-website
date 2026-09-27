@@ -1,0 +1,161 @@
+name: dd-hosted
+x-node: &node
+  restart: unless-stopped
+  init: true
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  stop_grace_period: 30s
+
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dd_admin
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/admin-password
+    volumes: [postgres:/var/lib/postgresql/data]
+    secrets: [admin-password]
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U dd_admin -d postgres]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7.4.5-alpine
+    restart: unless-stopped
+    command: [redis-server, --appendonly, "yes"]
+    volumes: [redis:/data]
+    networks: [pretix]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+  pretix:
+    image: pretix/standalone:2026.7.0
+    restart: unless-stopped
+    command: all
+    environment:
+      AUTOMIGRATE: skip
+      PRETIX_CONFIG_FILE: /run/secrets/runtime
+    volumes: [pretix:/data]
+    secrets:
+      - source: pretix-runtime
+        target: runtime
+    networks: [pretix, database, ingress]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+  pretix-cron:
+    image: pretix/standalone:2026.7.0
+    restart: unless-stopped
+    entrypoint: [/bin/sh, -c]
+    command: ["while true; do pretix cron; sleep 1800; done"]
+    environment:
+      AUTOMIGRATE: skip
+      PRETIX_CONFIG_FILE: /run/secrets/runtime
+    secrets:
+      - source: pretix-runtime
+        target: runtime
+    volumes: [pretix:/data]
+    networks: [pretix, database, ingress]
+  pretix-migrate:
+    image: pretix/standalone:2026.7.0
+    profiles: [migration]
+    command: migrate
+    environment:
+      AUTOMIGRATE: skip
+      PRETIX_CONFIG_FILE: /run/secrets/runtime
+    secrets:
+      - source: pretix-migration
+        target: runtime
+    volumes: [pretix:/data]
+    networks: [database, pretix]
+  booking:
+    <<: *node
+    build: {context: .., dockerfile: infra/Dockerfile, target: booking}
+    user: "10001:10001"
+    networks: [database, booking-internal, ingress]
+    secrets:
+      - source: booking-web
+        target: runtime
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+  booking-communications:
+    <<: *node
+    build: {context: .., dockerfile: infra/Dockerfile, target: communications}
+    user: "10002:10002"
+    networks: [database, booking-internal, ingress]
+    secrets:
+      - source: booking-communications
+        target: runtime
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3012/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+  booking-worker:
+    <<: *node
+    build: {context: .., dockerfile: infra/Dockerfile, target: worker}
+    user: "10003:10003"
+    networks: [database, ingress]
+    secrets:
+      - source: booking-worker
+        target: runtime
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3013/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+  proxy:
+    image: nginxinc/nginx-unprivileged:1.29-alpine
+    restart: unless-stopped
+    ports: ["127.0.0.1:8080:8080"]
+    volumes: ["./proxy.conf:/etc/nginx/conf.d/default.conf:ro"]
+    networks: [ingress, booking-internal]
+    depends_on: [booking, booking-communications, pretix]
+  primary-communications:
+    <<: *node
+    profiles: [primary]
+    build: {context: .., dockerfile: infra/Dockerfile, target: communications}
+    command: [node, --env-file=/run/secrets/runtime, --import, tsx, server/runtime/main.ts, primary]
+    user: "10004:10004"
+    networks: [database, ingress]
+    secrets:
+      - source: primary-communications
+        target: runtime
+  primary:
+    profiles: [primary]
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+      target: primary
+      args:
+        PUBLIC_SERVICES_URL: ${PUBLIC_SERVICES_URL:-}
+        PUBLIC_BOOKING_URL: ${PUBLIC_BOOKING_URL:-https://studio.didde-mie.com}
+    networks: [ingress]
+
+networks:
+  database: {internal: true}
+  pretix: {internal: true}
+  booking-internal: {internal: true}
+  ingress: {}
+volumes:
+  postgres: {}
+  redis: {}
+  pretix: {}
+secrets:
+  admin-password: {file: "${DD_SECRET_DIRECTORY:?Set private deployment secret directory}/postgres-admin-password"}
+  pretix-runtime: {file: "${DD_SECRET_DIRECTORY}/pretix-runtime.cfg"}
+  pretix-migration: {file: "${DD_SECRET_DIRECTORY}/pretix-migration.cfg"}
+  booking-web: {file: "${DD_SECRET_DIRECTORY}/booking-web.env"}
+  booking-worker: {file: "${DD_SECRET_DIRECTORY}/booking-worker.env"}
+  booking-communications: {file: "${DD_SECRET_DIRECTORY}/booking-communications.env"}
+  primary-communications: {file: "${DD_SECRET_DIRECTORY}/primary-communications.env"}

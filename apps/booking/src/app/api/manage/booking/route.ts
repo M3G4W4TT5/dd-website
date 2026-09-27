@@ -1,3 +1,4 @@
+import { boundedJson, HttpError } from "@dd/runtime";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authorizedManageEmail } from "@/lib/manage-session";
@@ -14,10 +15,9 @@ export async function POST(request: Request) {
   const expectedOrigin = new URL(process.env.CONTACT_BOOKING_ORIGIN || "http://127.0.0.1:3000").origin;
   if (request.headers.get("origin") !== expectedOrigin) return NextResponse.json({ error: "Origin not allowed" }, { status: 403, headers });
   if (!request.headers.get("content-type")?.startsWith("application/json")) return NextResponse.json({ error: "Expected JSON" }, { status: 415, headers });
-  const raw = await request.text();
-  if (raw.length > 2048) return NextResponse.json({ error: "Request too large" }, { status: 413, headers });
   let body: unknown;
-  try { body = JSON.parse(raw); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400, headers }); }
+  try { body = await boundedJson(request, 2048); }
+  catch (error) { return NextResponse.json({error: error instanceof HttpError ? error.message : "Invalid JSON"}, {status: error instanceof HttpError ? error.status : 400, headers: {"Cache-Control":"no-store"}}); }
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400, headers });
   try {

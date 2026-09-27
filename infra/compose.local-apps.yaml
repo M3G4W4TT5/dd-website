@@ -1,0 +1,39 @@
+services:
+  booking-production:
+    build: {context: ., dockerfile: infra/Dockerfile, target: booking}
+    user: "10001:10001"
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes: ["./infra/local/container/booking-web.env:/run/secrets/runtime:ro"]
+    ports: ["127.0.0.1:3100:3000"]
+    environment:
+      # Prevent Next request URL logs from retaining token-bearing query strings.
+      NODE_ENV: production
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  booking-communications:
+    build: {context: ., dockerfile: infra/Dockerfile, target: communications}
+    user: "10002:10002"
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes: ["./infra/local/container/booking-communications.env:/run/secrets/runtime:ro"]
+    ports: ["127.0.0.1:3112:3012"]
+  booking-worker-production:
+    build: {context: ., dockerfile: infra/Dockerfile, target: worker}
+    user: "10003:10003"
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes: ["./infra/local/container/booking-worker.env:/run/secrets/runtime:ro"]
+    ports: ["127.0.0.1:3113:3013"]

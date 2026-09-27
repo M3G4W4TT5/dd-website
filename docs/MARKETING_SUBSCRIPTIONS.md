@@ -1,62 +1,19 @@
-# DD newsletter and TTD Studio email promotions
+# Marketing subscriptions and manual campaigns
 
-## Boundaries
+DD and TTD use independent fixed-identity communications processes and physically separate marketing schemas. The primary static site calls `PUBLIC_SERVICES_URL`; booking uses same-origin form adapters. Booking web has no newsletter/contact SMTP credentials or marketing database role. [Operations](architecture/OPERATIONS.md) covers config, migrations and verification.
 
-The personal site signs people up for DD Production updates about Didde-Mie's work and dance videos. The booking site has a separate, initially unchecked option for TOTAL ENTERTAINMENT emails about TTD Studio offers, new events and discounts. A submitted form creates a pending request; only the recipient's confirmation activates it. Booking and transactional mail are separate.
+Signup records pending consent, source, wording version and language. A captured/sent confirmation link requires explicit POST activation before the address becomes active. Tokens are purpose/list-bound, single use and expire after 48 hours. GET/render never confirms. Unsubscribe requests return generic success; the explicit link action withdraws that list only. Booking consent remains optional and initially unchecked; unavailable optional marketing does not prevent checkout. Preview suppresses marketing side effects.
 
-The personal Astro site is static. Its signup and unsubscribe forms call the booking application's `/api/marketing` endpoint. The booking server therefore needs the `NEWSLETTER_SMTP_PASSWORD` and `CONTACT_SMTP_PASSWORD` even though those addresses belong to the personal site. Do not move those passwords into `apps/personal/.env.local`: static Astro cannot supply them to the server or keep them secret in a production build. Keep the personal sender's credentials separate from `BOOKING_SMTP_PASSWORD` and the booking confirmation sender.
+Primary messages use newsletter@didde-mie.com; booking promotions/subscription messages use booking@didde-mie.com. Inquiry/acknowledgement uses the corresponding contact/booking mailbox. Production controlled mail requires a recipient allowlist; provider policy and external delivery remain [owner checks](architecture/OWNER_FOLLOW_UP.md). Local verification uses capture, not external mail.
 
-## Current status and public launch checklist
+Run the shared operator tool with `OPERATOR_DATABASE_URL` for the matching primary/booking marketing operator. Choose the list explicitly. Exports include active members only, create a new mode-0600 file outside the repository, and never print addresses:
 
-As of 25 September 2026, the code is implemented locally and the separate local `marketing` database schema is applied. Both lists passed a live signup, confirmation and unsubscribe test using the two sender mailboxes; those test subscriptions are now unsubscribed. The implementation has **not been deployed**. The local confirmation links use `127.0.0.1` and are not suitable for public recipients.
-
-Before public deployment:
-
-1. Set `SUBSCRIPTIONS_PUBLIC_BASE` to the booking site's public **HTTPS origin** so confirmation and unsubscribe emails lead to a reachable page. Set `PUBLIC_BOOKING_URL` in the personal site's build environment to that same booking origin; the static personal forms send requests there.
-2. Put `SUBSCRIPTIONS_DATABASE_URL`, `NEWSLETTER_SMTP_PASSWORD`, `BOOKING_SMTP_PASSWORD` and `CONTACT_SMTP_PASSWORD` in the booking server's secret store. Use the production marketing database, separate from Pretix. Set `CONTACT_PERSONAL_ORIGIN` and `CONTACT_BOOKING_ORIGIN` to the exact public site origins, and check the other production settings against `apps/booking/.env.local.example` and `apps/personal/.env.example`. Do not publish server secrets in the personal build or commit either local `.env.local` file.
-3. Back up and restore-test the production marketing database. Confirm both public forms, the booking checkbox, confirmation links, unsubscribe pages and reply mailboxes end to end on the deployed HTTPS sites before inviting signups.
-4. Finish the privacy policies' pending provider, transfer and deployment-specific details before launch. Keep marketing consent separate from booking terms and keep the TTD marketing checkbox initially unchecked.
-5. Set up the DD newsletter and TTD Studio promotional-message templates together in the corresponding Purelymail Webmail accounts. Include the correct sender identity and unsubscribe page in each template, then send a test of each before the first campaign. Campaigns remain manual; no CMS or automated bulk sender is part of this implementation.
-
-## Database setup
-
-Use the existing PostgreSQL **service**, with a separate `marketing` database and a dedicated login role. Do not alter the `pretix` database or its volume. The Compose file publishes PostgreSQL to host loopback port 5433 for the locally running Next.js app; it does not publish it to the network.
-
-1. On the host with `sudo docker` access, run the setup script from the repository root. It creates the dedicated role and database, applies `apps/booking/subscriptions.sql`, and writes a generated secret to the ignored booking `.env.local`. It does not recreate containers or volumes.
-
-```sh
-bash apps/booking/scripts/setup-marketing-db.sh
+```bash
+node --env-file=/private/operator/primary.env --import tsx server/database/scripts/operator.ts primary export /private/exports/dd-active.csv
+node --env-file=/private/operator/booking.env --import tsx server/database/scripts/operator.ts booking export /private/exports/ttd-active.csv
+node --env-file=/private/operator/primary.env --import tsx server/database/scripts/operator.ts primary cleanup
 ```
 
-2. To expose the database only to the locally running Next.js app, apply the Compose port change (`127.0.0.1:5433`). `sudo docker compose up -d postgres` may briefly recreate the **container**, while keeping the named `pretix-postgres` data volume. Take a verified database backup and schedule this step so it does not interrupt active Pretix work. Do not remove or recreate the volume.
-3. In production, put the connection URL in the deployment secret store and use the database's internal host/port. Set `SUBSCRIPTIONS_PUBLIC_BASE` to the public HTTPS origin of the booking app, which hosts the confirmation pages.
-4. Back up and restore-test the `marketing` database alongside the existing Pretix database. Keep the databases logically separate.
+For reply-based withdrawal or a hard bounce, run `withdraw` or `suppress` instead of export, then enter the one address on standard input and finish with Ctrl-D. Do not put customer addresses in shell history. Both invalidate existing action tokens under the same per-address lock as public consumption. Cleanup is scoped to that schema and removes expired tokens and pending requests older than 30 days.
 
-The sender settings remain in `apps/booking/.env.local` and must be replicated as server secrets on deployment. The newsletter confirmation sender uses `newsletter@didde-mie.com`; TTD confirmation uses `booking@didde-mie.com`. Test sender authorization, inbox delivery, replies and failed delivery before publicly enabling the forms. No customer address or app password belongs in Git.
-
-## Manual campaign workflow
-
-Marketing campaigns are composed and sent manually in the corresponding Purelymail Webmail. There is no campaign CMS or automated bulk sender. Before each send, export only the active addresses for that list. The export tool writes a new private CSV with mode `0600`; it will not overwrite an existing file:
-
-```sh
-node --env-file=apps/booking/.env.local --import tsx apps/booking/scripts/marketing-admin.ts export personal /tmp/dd-active-2026-09.csv
-node --env-file=apps/booking/.env.local --import tsx apps/booking/scripts/marketing-admin.ts export booking /tmp/ttd-active-2026-09.csv
-```
-
-Use the correct sender and list; do not copy addresses between the two businesses. In Webmail, put recipients in **BCC**, never To or CC. Each marketing message must identify the sender, state how to unsubscribe, and include the relevant public page:
-
-- DD: `https://didde-mie.com/unsubscribe`
-- TTD Studio: `https://studio.didde-mie.com/unsubscribe`
-
-Also accept unsubscribe requests sent by reply. Apply such a request promptly before the next export:
-
-```sh
-node --env-file=apps/booking/.env.local --import tsx apps/booking/scripts/marketing-admin.ts unsubscribe personal subscriber@example.com
-node --env-file=apps/booking/.env.local --import tsx apps/booking/scripts/marketing-admin.ts unsubscribe booking subscriber@example.com
-```
-
-Delete each local CSV after composing the campaign. Do not reuse a prior export: a subscriber may have withdrawn consent since it was made. Create the Webmail message templates together with the owner after the signup implementation is verified, as requested.
-
-The website unsubscribe form emails a confirmation link to the submitted address. Its response does not disclose whether the address is on the list. The link's final button stops future marketing for that list. A reply request can be handled directly with the command above. Booking confirmations and receipts continue independently.
-
-Run `node --env-file=apps/booking/.env.local --import tsx apps/booking/scripts/marketing-admin.ts cleanup personal` periodically. The list argument is required by the CLI; cleanup covers both lists. It removes expired tokens and pending requests older than 30 days, without deleting active subscribers.
+Campaigns remain manual. Approve copy and current active-list export first, send from the correct identity, use BCC rather than exposing recipients in To/CC, include the relevant site's `/unsubscribe` page and a monitored reply option. Honor withdrawals/suppressions before each campaign. Do not copy subscribers between DD and TTD. Marketing suppression does not stop necessary booking receipts/recovery. Verify provider/inbox/bounce handling and privacy details before inviting public signups.

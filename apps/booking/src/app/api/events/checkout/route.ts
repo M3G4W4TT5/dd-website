@@ -1,8 +1,10 @@
+import { submissionId } from "../../../../../server/submission";
+import { boundedJson, HttpError } from "@dd/runtime";
 import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getCatalog } from "@/lib/events";
 import { eventRegistrationSchema, nativeCartHandoff, registrationTicket } from "@/lib/event-registration";
-import { requestSubscription } from "@/lib/marketing";
+import { requestBookingSubscription } from "../../../../../server/marketing-client";
 
 export const runtime = "nodejs";
 const hits = new Map<string, { count: number; expires: number }>();
@@ -18,10 +20,9 @@ export async function POST(request: Request) {
   const hit = hits.get(ip) || { count: 0, expires: now + 60_000 };
   if (++hit.count > 10 || hits.size > 5000) return json({ error: "Too many requests" }, 429);
   hits.set(ip, hit);
-  const raw = await request.text();
-  if (raw.length > 4096) return json({ error: "Request too large" }, 413);
   let body: unknown;
-  try { body = JSON.parse(raw); } catch { return json({ error: "Invalid JSON" }, 400); }
+  try { body = await boundedJson(request, 4096); }
+  catch (error) { return NextResponse.json({error: error instanceof HttpError ? error.message : "Invalid JSON"}, {status: error instanceof HttpError ? error.status : 400, headers: {"Cache-Control":"no-store"}}); }
   const parsed = eventRegistrationSchema.safeParse(body);
   if (!parsed.success) return json({ error: "Invalid event details" }, 400);
   const input = parsed.data;
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     let marketingRequested: boolean | null = null;
     if (input.marketingOptIn) {
       try {
-        await requestSubscription("booking", input.email, input.language, "event-signup");
+        await requestBookingSubscription(input.email, input.language, "event-signup", input.marketingOptIn, submissionId(request));
         marketingRequested = true;
       } catch {
         marketingRequested = false;

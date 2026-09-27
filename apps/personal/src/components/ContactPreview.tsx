@@ -24,7 +24,7 @@ export function ContactPreview() {
     setSending(true);
     setStatus("");
     try {
-      const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000";
+      const bookingUrl = import.meta.env.PUBLIC_SERVICES_URL || "http://127.0.0.1:3011";
       const response = await fetch(new URL("/api/contact", bookingUrl), {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -11,7 +11,7 @@ export function NewsletterUnsubscribe() {
     setSending(true);
     setStatus("");
     try {
-      const base = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000";
+      const base = import.meta.env.PUBLIC_SERVICES_URL || "http://127.0.0.1:3011";
       const response = await fetch(new URL("/api/marketing", base), {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ list: "personal", action: "unsubscribe", language: "en", email }),

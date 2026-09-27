@@ -1,22 +1,17 @@
+import { submissionId } from "../../../../server/submission";
+import { boundedJson, HttpError } from "@dd/runtime";
 import { NextResponse } from "next/server";
 import { getAvailability } from "@/lib/availability";
 import { quoteInterval } from "@/lib/booking";
 import { preflightSchema } from "@/lib/customer";
-import { requestSubscription } from "@/lib/marketing";
+import { requestBookingSubscription } from "../../../../server/marketing-client";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const raw = await request.text();
-  if (raw.length > 8_192) {
-    return NextResponse.json({ error: "Request too large" }, { status: 413 });
-  }
   let body: unknown;
-  try {
-    body = JSON.parse(raw);
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  try { body = await boundedJson(request, 8_192); }
+  catch (error) { return NextResponse.json({error: error instanceof HttpError ? error.message : "Invalid JSON"}, {status: error instanceof HttpError ? error.status : 400, headers: {"Cache-Control":"no-store"}}); }
   const input = preflightSchema.safeParse(body);
   if (!input.success) {
     return NextResponse.json({ error: "Invalid booking details" }, { status: 400 });
@@ -36,7 +31,7 @@ export async function POST(request: Request) {
       try {
         const expectedOrigin = new URL(process.env.CONTACT_BOOKING_ORIGIN || "http://127.0.0.1:3000").origin;
         if (request.headers.get("origin") !== expectedOrigin) throw new Error("Origin not allowed for marketing signup");
-        await requestSubscription("booking", input.data.details.email, input.data.marketingLanguage || "en", "booking-details");
+        await requestBookingSubscription(input.data.details.email, input.data.marketingLanguage || "en", "booking-details", input.data.marketingOptIn, submissionId(request));
         marketingRequested = true;
       } catch {
         console.error("Booking marketing signup failed");

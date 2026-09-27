@@ -7,14 +7,8 @@ import { canManageBooking, cancellationDeadline } from "@/lib/cancellation";
 import { ReschedulePicker, type AvailableInterval } from "./ReschedulePicker";
 
 type Language = "da" | "en";
-export type ManagedBooking = {
-  reference: string;
-  firstHourIso: string;
-  endIso: string;
-  paidOre: number;
-  status: "paid" | "cancelled";
-  refund: "none" | "pending" | "done" | "failed";
-};
+import type { ManagedBooking } from "@dd/contracts";
+export type { ManagedBooking } from "@dd/contracts";
 
 const copy = {
   da: {
