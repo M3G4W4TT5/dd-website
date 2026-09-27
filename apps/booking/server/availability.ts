@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import { z } from "zod";
 import { Availability, MAX_HOURS, Slot, STUDIO_ZONE } from "../src/lib/booking";
 import { getRoomOccupancy } from "./events";
+import { pretixHeaders, pretixNextPage } from "./pretix-http";
 import { overlaps } from "../src/lib/events-model";
 
 const MAX_LOOKAHEAD_DAYS = 45;
@@ -107,10 +108,7 @@ function readConfig(): PretixConfig | null {
 
 async function getJson(url: URL, config: PretixConfig): Promise<unknown> {
   const response = await fetch(url, {
-    headers: {
-      Authorization: `Token ${config.token}`,
-      Accept: "application/json",
-    },
+    headers: pretixHeaders(url, config.token),
     cache: "no-store",
     signal: AbortSignal.timeout(10_000),
   });
@@ -131,13 +129,7 @@ async function listAll<T>(
       .parse(await getJson(next, config));
     results.push(...page.results);
     if (results.length > 2_000) throw new Error("pretix result limit exceeded");
-    const nextUrl: URL | null = page.next
-      ? new URL(page.next, config.base)
-      : null;
-    if (nextUrl && nextUrl.origin !== config.base.origin) {
-      throw new Error("Unexpected pretix pagination origin");
-    }
-    next = nextUrl;
+    next = pretixNextPage(page.next, next, config.base);
   }
   return results;
 }
