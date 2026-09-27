@@ -217,10 +217,35 @@ try {
       read("operator")[site.toUpperCase() + "_DATABASE_URL"],
       site === "primary" ? "primary_marketing" : "booking_marketing",
     );
-    await op.query(
-      "UPDATE marketing_subscriptions SET status='unsubscribed',unsubscribed_at=now() WHERE email=$1",
-      [email],
+    const withdrawalToken = "w".repeat(43);
+    await current.query(
+      "INSERT INTO marketing_action_tokens(token_hash,email,purpose,expires_at) VALUES($1,$2,'confirm',now()+interval '1 hour')",
+      [digest(withdrawalToken), email],
     );
+    const operatorClient = await op.connect();
+    try {
+      await operatorClient.query("BEGIN");
+      await operatorClient.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
+        email,
+      ]);
+      await operatorClient.query(
+        "UPDATE marketing_subscriptions SET status='unsubscribed',unsubscribed_at=now() WHERE email=$1",
+        [email],
+      );
+      const consuming = list.consume(withdrawalToken, "confirm");
+      await new Promise((r) => setTimeout(r, 50));
+      await operatorClient.query(
+        "DELETE FROM marketing_action_tokens WHERE email=$1",
+        [email],
+      );
+      await operatorClient.query("COMMIT");
+      assert.equal(await consuming, false);
+    } catch (e) {
+      await operatorClient.query("ROLLBACK");
+      throw e;
+    } finally {
+      operatorClient.release();
+    }
     assert.equal(await list.consume(expiry, "confirm"), false);
     await current.query("DELETE FROM marketing_subscriptions WHERE email=$1", [
       email,

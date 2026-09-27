@@ -127,12 +127,20 @@ export function marketing(
   }
   async function consume(token: string, purpose: "confirm" | "unsubscribe") {
     return transaction(pool, async (c) => {
-      const found = await c.query<{ email: string }>(
-        "SELECT email FROM marketing_action_tokens WHERE token_hash=$1 AND purpose=$2 AND expires_at>now() FOR UPDATE",
+      // Discover the address without locking the token, then take the common
+      // per-address lock before row locks. Operator withdrawal uses this order.
+      const candidate = await c.query<{ email: string }>(
+        "SELECT email FROM marketing_action_tokens WHERE token_hash=$1 AND purpose=$2 AND expires_at>now()",
         [digest(token), purpose],
       );
-      if (!found.rows[0]) return false;
-      const email = found.rows[0].email;
+      if (!candidate.rows[0]) return false;
+      const email = candidate.rows[0].email;
+      await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [email]);
+      const found = await c.query(
+        "SELECT 1 FROM marketing_action_tokens WHERE token_hash=$1 AND email=$2 AND purpose=$3 AND expires_at>now() FOR UPDATE",
+        [digest(token), email, purpose],
+      );
+      if (!found.rowCount) return false;
       const result = await c.query(
         "UPDATE marketing_subscriptions SET status=$2,confirmed_at=CASE WHEN $2='active' THEN now() ELSE confirmed_at END,unsubscribed_at=CASE WHEN $2='unsubscribed' THEN now() ELSE NULL END WHERE email=$1 AND status=$3",
         [

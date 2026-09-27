@@ -2,10 +2,10 @@
 
 ## Current checkpoint
 
-- Status: S1–S5 implemented and focused verification passed; final integrated verification/cleanup in progress.
+- Status: S0–S6 complete and verified; final handoff/commit checkpoint in progress.
 - Branch: `codex/server-infrastructure`.
 - Baseline code commit: `b31e32f`.
-- Next action: complete hygiene and production HTTP checks, run the documented complete suite, inspect final diffs and commit all remaining evidence.
+- Next action: commit final cleanup/evidence, verify clean task status, finish S7 handoff and report final commit.
 - Existing unrelated state: untracked `web_clips/`; exclude from commits.
 - Approval: local architecture implementation and regular local step commits are authorized. External deployment/provider changes/live delivery/push/merge require separate authorization.
 - Privileged work: the owner runs copy-paste sudo commands and replies `done`; verify then continue.
@@ -35,7 +35,7 @@ For each material item record: observation; reason; chosen action; affected chec
 - S0.1–S0.3: branch and baseline verified; only unrelated `web_clips/` was untracked. Node 24.20.0, npm 11.19.0; installed Next 16.3.6 guides read before edits. Existing listeners: booking 3000, Pretix 8345, PostgreSQL 5433. Docker access requires owner-run sudo.
 - Owner read-only inventory completed: PostgreSQL 17.6, Redis 7.4.5, Pretix 2026.7.0; `pretix` is superuser, `dd_marketing` restricted. Databases `pretix` and `marketing`; all three configured events are test-mode/unpublished, zero orders. Container runs as uid 15371.
 - Concrete layout: workspace packages `@dd/{contracts,mail,contact,marketing,database,runtime}`; native Node HTTP communications processes fixed to primary/booking; dedicated booking worker. No extra framework or broker required. Server package browser exports fail closed.
-- Clean transition: create new marketing schemas and management DB, invalidate old app credentials/tokens by retiring old writers. Preserve Pretix event/product configuration and shared volumes. No fixtures have been reset yet.
+- Clean transition: create new marketing schemas and management DB, invalidate old app credentials/tokens by retiring old writers. Preserve Pretix event/product configuration and shared volumes. Old application writers were retired; scoped fixture records are created/cleaned by verification only.
 - Delivery payloads use per-process AES-256-GCM keys; delivery state distinguishes leases from sends. Expired sending leases become ambiguous and cannot auto-resend. Stable Message-ID is correlation only.
 - Development defaults to RFC822 capture via Nodemailer stream transport, without provider SMTP credentials. Marketing delivery runs in communications, never a detached request task.
 
@@ -49,7 +49,7 @@ Record sanitized command/script, purpose, expected result, whether the owner rep
 
 Populate at completion with actual development/production-build/integration/permission/capture-mail results and explicit hosted/provider limitations. Link detailed reports where useful. Keep reports free of secrets and personal data.
 
-Focused verification is recorded below; final suite pending.
+Final suite passed on 27 September 2026: 7 shared tests + 35 booking tests (42 total, no skips), app/package type checks, Astro static and Next standalone production builds, and six independent workspace package builds. Detailed integration and owner-assisted evidence follows. Hosted/provider/paid-sandbox checks have not been run.
 
 ### Active owner checkpoint: scoped development transition
 
@@ -86,3 +86,37 @@ App `.env.local` now contains only booking-web configuration. Its retired creden
 - Operational documentation: `OPERATIONS.md`, marketing guide, management guide and existing email guide now describe the actual boundaries and commands. Provider scope/delivery, real HTTPS cookies and paid sandbox/refund/quota integration remain F1–F15 owner gates. They are not represented as local passes.
 
 Last passing focused command: `node --import tsx server/database/scripts/verify-management.ts`. Local running services: primary 3011, booking communications 3012, booking web 3000, worker 3013, primary preview 4321; production fixture services 3100/3112/3113, Pretix 8345 and Mailpit 8025. Next: final complete suite, production HTTP and secret/bundle/context hygiene; then final commits.
+
+### Final integration and cleanup checkpoint
+
+- Commit `1246d81` completes the coherent shared-process, scoped database, management/delivery and deployment implementation (following extraction commit `fa084ac`). The final cleanup/evidence commit follows verification.
+- Actual scoped operator CLIs passed active-only mode-0600 exports outside Git, withdrawal, suppression, cleanup, queue resolution and operation rejection. Management operator cannot read sessions. Primary/booking/management migration CLIs ran idempotently; Python compilation, shell syntax and production Compose model checks passed. Future-object tests cover marketing defaults, explicit management opt-in grants/worker denial and Pretix runtime default table/sequence access with DDL denial.
+- Production container and image scans passed for separate UIDs and no embedded runtime private values/env files. The final cleanup removes an unused native-secret eligibility endpoint, bounds remaining quote/preview request reads and corrects canceled/partial/replaced refund reporting. A completed partial refund does not claim full refund; a later successful full refund supersedes failed/canceled attempts. The [Pretix refund API](https://docs.pretix.eu/dev/api/resources/orders.html) documents canceled refunds; fixture tests cover canceled, replaced, partial and pending outcomes. Hosted payment behavior remains unverified.
+- A concurrency test found inconsistent lock ordering between operator withdrawal and marketing consumption. Consumption now discovers the address, takes the shared advisory lock, then rechecks/locks the token before updating membership. Both lists pass concurrent withdrawal without deadlock/reactivation. An image copied before this fix returned 503 in the production race test; owner rebuild requested and source-hash checking added to the image script. This failure is not marked passing until the rebuilt container race check passes.
+- Deleting the legacy route left generated Next validator types referencing it. The complete suite correctly failed with TS2307; installed Next CLI documentation recommends `next typegen && tsc --noEmit`. Booking typecheck now regenerates route types before checking, so a fresh checkout and route deletions use current definitions. No source compatibility handler was restored.
+- Independent primary production build passed with explicit fixture HTTPS public URLs; missing `PUBLIC_SERVICES_URL` is rejected by its production build config. Booking remains independent. The optional primary container profile is prepared; no primary deployment was performed.
+- Final isolated management adapter tests also pass same-duration/price restrictions, direct admin-stale recheck and concurrent changes with one remote write and native mail suppressed. All fixtures use a `.invalid` mock origin; no actual payment/refund/API write or external mail is exercised.
+
+Final source-image rebuild completed. Owner image hygiene passed 436 booking files and 186 files in each source service, plus exact current communications source hashes. Read-only subsequent health checks passed; production concurrent withdrawal now returns the correct unavailable-token response (410) without deadlock/reactivation. This replaces the earlier failed/stale-image evidence. Only final commits/handoff remain; launch/provider gates are still outstanding.
+
+### Final acceptance evidence (S6.1–S6.7)
+
+| Check | Actual result | Coverage/limit |
+| --- | --- | --- |
+| `npm run verify:infrastructure` | PASS; 42 tests, 0 skipped, all app/package type checks and eight builds | Final route type regeneration included; no deployment |
+| `node --import tsx server/database/scripts/verify-local.ts` | PASS | Real scoped DML/negative grants/future objects; both list lifecycle/capture/concurrent withdrawal; isolated delivery retry/crash/ambiguity/DB-after-acceptance tests |
+| `node --import tsx server/database/scripts/verify-management.ts` | PASS | Disposable schema and `.invalid` Pretix mock: recipient/locale, paid/rental gates, single-use/session authorization, stale/price/duration restrictions, concurrent changes and lost refund response, reconciliation/revision dedup |
+| `node --import tsx server/database/scripts/verify-operators.ts` | PASS | Actual scoped CLIs: private active-only export, withdraw/suppress/cleanup, queue/operation resolution and denied session access |
+| `node --import tsx server/database/scripts/verify-http.ts` | PASS | Both integrated development sites/services and worker; contact/capture, exact Origin/body/cross-list rejection, action GET non-consumption and POST/repeat behavior, internal auth/consent/private route |
+| `node --import tsx server/database/scripts/verify-production.ts` | PASS on final rebuilt containers | Booking-only health/restart, private route and unauthenticated mutation rejection, HTTPS-origin enforcement, body/privacy headers, legacy route removal, final concurrent withdrawal; actual browser TLS/cookie transport remains hosted |
+| `node --import tsx server/database/scripts/verify-hygiene.ts` | PASS | Known private values absent from task source and frontend output; no browser server markers/cross-app imports; private context exclusions |
+| Owner `sudo bash infra/verify-container-fixtures.sh` | PASS | Pinned images, no primary dependency, UIDs 10001/10002/10003, sandbox/capture, worker restart and bounded health |
+| Owner `sudo bash infra/verify-image-hygiene.sh` | PASS | Per-service runtime secret/env exclusion in shipped application files; corrected communications source hash verified |
+| Owner `sudo python3 server/database/scripts/backup-restore-drill.py` | PASS | Actual scoped backup/restore tools, private custom dump/checksum, isolated fingerprint and integrations disabled; only fixture DBs removed |
+| Native Pretix capture | PASS, six EN/DA messages | All three test events: tagged From/ReturnPath and booking Reply-To. No external SMTP, orders or payments |
+| Migration CLIs / syntax / Compose | PASS | Three matching-role migration runs idempotent; Python compile, shell syntax, production Compose `config --no-interpolate --quiet` |
+| Primary explicit production config/build | PASS | HTTPS fixture public URLs build; missing service URL rejected; no primary container/host deployment |
+
+Remaining verification limitations are external by design: one.com VPS/TLS/DNS, Purelymail sender/header/envelope/bounce policy, real hosted HTTPS session behavior, Stripe sandbox purchases/refunds/webhooks, Pretix quotas/cross-channel reservations and draft copy/security/legal review. [OWNER_FOLLOW_UP.md](OWNER_FOLLOW_UP.md) gives prerequisites and acceptance evidence. Checkout/self-service/payment/mail release gates stay closed. No external mail, live payment, provider mutation, push, merge or VPS deployment occurred.
+
+Successful tests remove their scoped membership/order-intent/schema/export/database fixtures. Final targeted cleanup removed two primary fixture memberships left by an earlier failed HTTP run (strict generated UUID/example.com pattern only); no booking memberships remained. Private capture messages and the owner-run private backup proof artifacts remain outside Git for inspection. Existing Pretix events/products and shared volumes remain. Local development and production capture stacks remain running for inspection. Final code/image tests pass; no failing or skipped check has been reclassified as passing.

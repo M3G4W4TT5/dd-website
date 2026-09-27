@@ -69,6 +69,8 @@ const dates = [
     is_public: true,
   },
 ];
+let staleRead = false,
+  detailReads = 0;
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (input, init) => {
   const u = new URL(String(input));
@@ -140,7 +142,11 @@ globalThis.fetch = async (input, init) => {
     return Response.json(
       dates.find((d) => u.pathname.endsWith("/" + d.id + "/")),
     );
-  if (u.pathname.endsWith("/orders/ABCDE/")) return Response.json(order);
+  if (u.pathname.endsWith("/orders/ABCDE/")) {
+    if (staleRead && ++detailReads === 2)
+      order = { ...order, positions: [{ ...order.positions[0], subevent: 2 }] };
+    return Response.json(order);
+  }
   if (u.pathname.endsWith("/orders/"))
     return Response.json({
       next: null,
@@ -258,6 +264,19 @@ try {
       new Date(Date.parse(newEnd) + 3600000).toISOString(),
     ),
   );
+  order = { ...original, total: "700.00" };
+  await assert.rejects(() =>
+    changeManagedBooking("ABCDE", order.email, newStart, newEnd),
+  );
+  order = original;
+  staleRead = true;
+  detailReads = 0;
+  await assert.rejects(() =>
+    changeManagedBooking("ABCDE", order.email, newStart, newEnd),
+  );
+  assert.equal(posts, 0);
+  staleRead = false;
+  order = original;
   const changes = await Promise.allSettled([
     changeManagedBooking("ABCDE", order.email, newStart, newEnd),
     changeManagedBooking("ABCDE", order.email, newStart, newEnd),
@@ -327,7 +346,7 @@ try {
     2,
   );
   console.log(
-    "PASS isolated management: authoritative recipient/language, paid/rental gates, hash-only single-use recovery, scoped/expired sessions, duplicate/reordered intake, concurrent refund timeout, reconciliation, no repeat remote write and revision-based transitions",
+    "PASS isolated management: authoritative recipient/language, paid/rental gates, hash-only single-use recovery, scoped/expired sessions, duplicate/reordered intake, stale/price/duration rejection, concurrent changes/refund timeout, reconciliation, no repeat remote write and revision-based transitions",
   );
 } finally {
   globalThis.fetch = realFetch;

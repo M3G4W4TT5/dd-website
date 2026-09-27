@@ -220,13 +220,13 @@ All boxes below are implementation deliverables. Mark them done only with eviden
 
 ### 6. Integrated verification and cleanup
 
-- [ ] S6.1 Run repository/app/package type checks, meaningful tests and production builds; fix relevant failures and inspect final diffs.
-- [ ] S6.2 Start and exercise the local integrated development stack, including both communications identities, booking web/worker, Pretix and scoped DB roles. Check form/action routing and intended failures.
-- [ ] S6.3 Exercise the production build/configuration locally against fixtures/capture: booking-only startup, worker persistence/restart, private routes, secure-mode behavior and fail-closed config. Record HTTPS-specific checks that require later hosting.
-- [ ] S6.4 Verify no production secrets in frontend bundles, committed files, images/build contexts, logs, screenshots or test fixtures; verify cross-app imports/env dependencies are absent.
-- [ ] S6.5 Recheck management authorization, single-use recovery, sessions, 24-hour/DST cutoff, price/duration restrictions and stale/concurrent operations using isolated tests. Keep hosted-only gates disabled.
-- [ ] S6.6 Retire obsolete handlers/scripts/env variables and unnecessary local app-held credentials once replacements pass. Do not revoke shared/provider credentials or modify unrelated state without explicit scope.
-- [ ] S6.7 Update operational docs: architecture/ownership, API contracts, deployment modes/startup, envs, migrations/permissions, backup/restore, mail/retries, operator actions and future launch gates. Correct stale existing docs.
+- [x] S6.1 Run repository/app/package type checks, meaningful tests and production builds; fix relevant failures and inspect final diffs.
+- [x] S6.2 Start and exercise the local integrated development stack, including both communications identities, booking web/worker, Pretix and scoped DB roles. Check form/action routing and intended failures.
+- [x] S6.3 Exercise the production build/configuration locally against fixtures/capture: booking-only startup, worker persistence/restart, private routes, secure-mode behavior and fail-closed config. Record HTTPS-specific checks that require later hosting.
+- [x] S6.4 Verify no production secrets in frontend bundles, committed files, images/build contexts, logs, screenshots or test fixtures; verify cross-app imports/env dependencies are absent.
+- [x] S6.5 Recheck management authorization, single-use recovery, sessions, 24-hour/DST cutoff, price/duration restrictions and stale/concurrent operations using isolated tests. Keep hosted-only gates disabled.
+- [x] S6.6 Retire obsolete handlers/scripts/env variables and unnecessary local app-held credentials once replacements pass. Do not revoke shared/provider credentials or modify unrelated state without explicit scope.
+- [x] S6.7 Update operational docs: architecture/ownership, API contracts, deployment modes/startup, envs, migrations/permissions, backup/restore, mail/retries, operator actions and future launch gates. Correct stale existing docs.
 
 ### 7. Complete the run
 

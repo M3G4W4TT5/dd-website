@@ -45,7 +45,7 @@ COPY apps/personal ./apps/personal
 COPY server/contracts ./server/contracts
 ARG PUBLIC_SERVICES_URL
 ARG PUBLIC_BOOKING_URL
-ENV PUBLIC_SERVICES_URL=$PUBLIC_SERVICES_URL PUBLIC_BOOKING_URL=$PUBLIC_BOOKING_URL
+ENV DD_MODE=production PUBLIC_SERVICES_URL=$PUBLIC_SERVICES_URL PUBLIC_BOOKING_URL=$PUBLIC_BOOKING_URL
 RUN npm run build:personal
 FROM nginxinc/nginx-unprivileged:1.29-alpine AS primary
 COPY --from=primary-build /app/apps/personal/dist /usr/share/nginx/html

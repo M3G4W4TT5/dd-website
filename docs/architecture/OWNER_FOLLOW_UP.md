@@ -7,7 +7,7 @@ Keep every entry concrete: why it is needed, prerequisites, action and evidence 
 ## Provider and domain setup
 
 - [ ] F1. Confirm the final primary communications hostname when preparing its deployment. `forms.didde-mie.com` is provisional. Verify deployment URL configuration, DNS and HTTPS together; no DNS changes are part of the implementation run.
-- [ ] F2. Review Purelymail's actual account sending restrictions. After separately authorizing changes, restrict contact/newsletter/booking users to the approved sender scopes and assess separately revocable process credentials. Verify both visible From and SMTP envelope authorization; multiple app passwords/tags do not themselves establish isolation. Test rejection of cross-identity sends as well as permitted sends.
+- [ ] F2. Review Purelymail's actual account sending restrictions. Use the sender scope tests below and the [operations guide](OPERATIONS.md). After separately authorizing changes, restrict contact/newsletter/booking users to the approved sender scopes and assess separately revocable process credentials. Verify both visible From and SMTP envelope authorization; multiple app passwords/tags do not themselves establish isolation. Test rejection of cross-identity sends as well as permitted sends.
 - [ ] F3. Verify inbound booking/contact/newsletter mail and no-reply tagged routing, monitoring responsibility, bounce handling and direct replies. Verify actual delivered headers, Return-Path, SPF/DKIM/DMARC results and the inline contact logo using controlled test recipients. No external test mail has been sent by this handoff run.
 
 ## one.com VPS deployment, separate task
@@ -31,8 +31,14 @@ Keep every entry concrete: why it is needed, prerequisites, action and evidence 
 - [ ] F14. Review the completed architecture and evidence in the planned broader pre-launch security review. Complete deployment-specific legal/privacy/provider documentation and approve live-payment/public-release gates separately.
 - [ ] F15. Before the first manual campaign, approve templates and verify current scoped active-list exports, unsubscribe pages/reply handling, suppression and safe recipient handling. No automated campaign engine is being introduced.
 
-## Newly discovered owner actions
+## Acceptance details and prerequisites
 
-Append new, specifically actionable entries here during implementation, using the next F-number. Link their originating implementation-note/checklist item and distinguish approval, configuration and verification.
+F2/F3 require separately authorized provider access and controlled recipients. Permit contact credentials only for contact header/envelope; newsletter only for newsletter; booking only for booking and noreply+booking. For every credential test both approved sender/envelope combinations and rejected cross-scope combinations, including base no-reply and another domain. Verify mixed header/envelope attempts are rejected too. Test independent process credential revocation where supported, without assuming multiple passwords mean separate sender scope. Record sanitized outcomes and delivered authentication headers; never paste credentials or recipient details.
 
-None yet.
+F4/F5 use [OPERATIONS.md](OPERATIONS.md), `infra/compose.production.yaml`, process env examples, the explicit administrator `provision.ts` job and per-domain `migrate.ts`. Prerequisites are an approved VPS/HTTPS plan and private per-UID secret files outside the repository. Acceptance includes booking-only healthy startup, non-superuser runtime roles, negative cross-schema/database access, private route rejection and closed payment/mail release gates. The optional primary profile must remain unnecessary.
+
+F6 requires a chosen backup schedule/retention and private storage, using `backup.py` and `restore.py`. Repeat the isolated checksum/content drill with outgoing integrations disabled and record recovery timings. Local disposable-fixture evidence does not prove a hosted recovery.
+
+F8 must review every enabled category in the [Pretix ownership inventory](OPERATIONS.md#pretix-message-inventory-and-ownership), including organizer/system messages without an event and schedules. Approve the EN/DA rental lifecycle drafts before user testing. Verify admin changes produce the worker-owned notice once and no competing native/manual message. Local event captures establish only local SMTP sink behavior.
+
+F9–F12 require F4–F8 and separate authorization for provider/paid sandbox actions. Record actual order, payment/refund, quota, webhook and mail outcomes rather than treating successful HTTP or browser return as payment proof. Real hosted HTTPS session transport, DNS/TLS, provider sender policy and delivery/bounces remain outstanding. No in-scope implementation work has been deferred to this list.

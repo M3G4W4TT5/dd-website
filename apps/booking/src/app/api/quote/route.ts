@@ -1,3 +1,4 @@
+import { boundedJson, HttpError } from "@dd/runtime";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getAvailability } from "@/lib/availability";
@@ -12,12 +13,29 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = requestSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Invalid selection" }, { status: 400 });
+  let body: unknown;
+  try {
+    body = await boundedJson(request, 2048);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof HttpError ? error.message : "Invalid request" },
+      {
+        status: error instanceof HttpError ? error.status : 400,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  }
+  const parsed = requestSchema.safeParse(body);
+  if (!parsed.success)
+    return NextResponse.json({ error: "Invalid selection" }, { status: 400 });
 
   try {
     const availability = await getAvailability(parsed.data.date);
-    const quote = quoteInterval(availability, parsed.data.startId, parsed.data.hours);
+    const quote = quoteInterval(
+      availability,
+      parsed.data.startId,
+      parsed.data.hours,
+    );
     if (!quote) {
       return NextResponse.json(
         { error: "Selected hours are no longer available" },
@@ -25,14 +43,26 @@ export async function POST(request: Request) {
       );
     }
     return NextResponse.json(
-      { quote, source: availability.source, checkedAt: availability.checkedAt, reservationCreated: false },
+      {
+        quote,
+        source: availability.source,
+        checkedAt: availability.checkedAt,
+        reservationCreated: false,
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
     const isDateError = error instanceof RangeError;
     return NextResponse.json(
-      { error: isDateError ? "Invalid date" : "Availability is temporarily unavailable" },
-      { status: isDateError ? 400 : 503, headers: { "Cache-Control": "no-store" } },
+      {
+        error: isDateError
+          ? "Invalid date"
+          : "Availability is temporarily unavailable",
+      },
+      {
+        status: isDateError ? 400 : 503,
+        headers: { "Cache-Control": "no-store" },
+      },
     );
   }
 }

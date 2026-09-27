@@ -10,6 +10,8 @@ Primary communications owns primary contact and newsletter mechanisms, its marke
 
 Use the env examples under `infra/`, `apps/booking/.env.local.example` and `apps/personal/.env.example`. `DD_MODE=development` requires capture with no SMTP passwords. `DD_MODE=production` requires explicit sandbox/live payment choice and HTTPS public origins. Production defaults to capture. `MAIL_DELIVERY=controlled` requires a recipient allowlist and scoped SMTP credentials; `enabled` additionally requires `MAIL_RELEASE_ENABLED=true`. Live payment requires its own release gate. Keep checkout and self-service gates disabled until owner checks pass. `PREVIEW=true` rejects external-mail secrets and open write gates and suppresses private marketing side effects.
 
+Primary production static builds require explicit HTTPS `PUBLIC_SERVICES_URL` and `PUBLIC_BOOKING_URL`; these remain public configuration only.
+
 Primary SMTP correspondence authenticates as contact; its marketing transport uses a separate newsletter credential (`MARKETING_SMTP_*`). Booking correspondence authenticates as booking. The worker and Pretix use separately revocable booking credentials where the provider supports them, with the exact tagged sender authorized. Application validation does not prove provider restrictions.
 
 Local commands, from repository root, after private configuration is provisioned:
@@ -64,6 +66,22 @@ The base proxy exposes studio and checkout vhosts at loopback 8080. Terminate re
 
 The local overlay `infra/compose.local-apps.yaml` exercises production images on 3100/3112/3113 with existing development DBs and capture/sandbox config. The owner runs `sudo bash infra/verify-container-fixtures.sh`; this builds only those three services, verifies distinct UIDs and restarts the worker. It does not touch VPS, DNS or provider settings. After source changes affecting those images, rebuild the relevant targets for renewed container evidence.
 
+## Pretix message inventory and ownership
+
+All local events remain unpublished/test-mode. Native SMTP points only to Mailpit; three event default senders/contact values were checked through six EN/DA captures. No customer feature or payment flow was enabled for these infrastructure checks. The following inventory assigns responsibility whenever a category is enabled; F8 requires hosted per-event/settings/content verification before opening it.
+
+| Category | Owner and behavior |
+| --- | --- |
+| Placed order/pending, free order and paid receipt/invoice | Pretix; tagged booking sender, monitored booking contact; pending copy must not claim payment |
+| Event ticket/download notices | Pretix; never an app rental confirmation |
+| Approval/denial, incomplete/failed payment, expiry/payment reminders | Pretix when enabled; inspect enabled event rules and keep state-specific wording |
+| Waiting list, native recovery, customer/security notifications | Pretix when those features are enabled; inspect organizer/system inheritance and Reply-To, including messages without an event |
+| Scheduled native mail | Pretix/operator; inventory schedules and disable competing rental lifecycle notices |
+| Custom rental confirmation and access recovery | Booking worker; authoritative paid/rental checks and one-use management link |
+| Rental change/cancellation/refund, including admin-originated transitions | Booking worker reconciliation; no parallel native/manual rental lifecycle notice |
+
+Do not enable unused features just to test infrastructure. Global sender configuration alone is insufficient for Reply-To: events/organizers must supply the monitored contact and overrides must preserve the inherited default sender. Local event capture establishes the installed event-mail behavior; customer/system categories and provider envelopes remain hosted owner verification. Administrative control-account/security mail is operational; monitor its destination and do not treat it as customer rental mail.
+
 ## Delivery, reconciliation and operator recovery
 
 Communications polls its subscription deliveries; booking worker polls webhook inbox, delivery intents and authoritative orders. Workers are supervised processes and drain on SIGTERM. Web requests never spawn detached SMTP. Identity uniquely records organizer/event/order/kind/observed revision, allowing legitimate repeated changes while suppressing duplicate notifications. Pending/event-ticket orders cannot generate rental confirmation. Admin changes are discovered by reconciliation; operators must not also send a native/manual rental change/cancellation notice. App changes request `send_email:false`; installed Pretix cancellation/refund uses its no-native-mail path. Hosted behavior still needs verification.
@@ -103,6 +121,7 @@ Load private backup/restore envs using the operational scheduler or secure shell
 npm run verify:infrastructure
 node --import tsx server/database/scripts/verify-local.ts
 node --import tsx server/database/scripts/verify-management.ts
+node --import tsx server/database/scripts/verify-operators.ts
 node --import tsx server/database/scripts/verify-http.ts
 node --import tsx server/database/scripts/verify-production.ts
 node --import tsx server/database/scripts/verify-hygiene.ts
