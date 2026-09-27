@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { pretixHeaders, pretixNextPage } from "./pretix-http";
 import { createCapture, createMailer, DeliveryError } from "@dd/mail";
 import { mailConfig } from "@dd/runtime";
 import { pollDelivery } from "../../../server/database/delivery";
@@ -41,9 +42,7 @@ async function sweep() {
   let url: URL | null = new URL(prefix, base);
   for (let page = 0; url && page < 20; page++) {
     const response = await fetch(url, {
-      headers: {
-        Authorization: `Token ${process.env.PRETIX_MANAGE_API_TOKEN}`,
-      },
+      headers: pretixHeaders(url, process.env.PRETIX_MANAGE_API_TOKEN || ""),
       signal: AbortSignal.timeout(10000),
     });
     if (!response.ok) throw new Error("Reconciliation unavailable");
@@ -63,9 +62,7 @@ async function sweep() {
           )
             throw e;
         });
-    url = data.next ? new URL(data.next, base) : null;
-    if (url && (url.origin !== base.origin || url.pathname !== prefix))
-      throw new Error("Invalid reconciliation page");
+    url = pretixNextPage(data.next, url, base);
   }
   if (url) throw new Error("Reconciliation pagination limit");
 }

@@ -2,6 +2,7 @@ import { Pool } from "pg";
 import { randomUUID } from "node:crypto";
 import { bookingDb } from "./notifications";
 import { DateTime } from "luxon";
+import { pretixHeaders } from "./pretix-http";
 import { canManageBooking } from "../src/lib/cancellation";
 import { getAvailability } from "./availability";
 import { quoteInterval, STUDIO_ZONE } from "../src/lib/booking";
@@ -57,11 +58,11 @@ export function selfServiceEnabled() {
 async function api(url: URL, token: string, body?: unknown) {
   const response = await fetch(url, {
     method: body === undefined ? "GET" : "POST",
-    headers: {
-      Authorization: `Token ${token}`,
-      Accept: "application/json",
-      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
-    },
+    headers: pretixHeaders(
+      url,
+      token,
+      body === undefined ? {} : { "Content-Type": "application/json" },
+    ),
     body: body === undefined ? undefined : JSON.stringify(body),
     cache: "no-store",
     signal: AbortSignal.timeout(15000),

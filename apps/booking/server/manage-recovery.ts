@@ -3,6 +3,7 @@ import { enqueue, digest } from "@dd/database";
 import type { Mailer } from "@dd/mail";
 import { Pool } from "pg";
 import { DateTime } from "luxon";
+import { pretixHeaders, pretixNextPage } from "./pretix-http";
 import {
   recoveryLinks,
   recoveryOrdersSchema,
@@ -118,10 +119,7 @@ async function findOrders(cfg: ReturnType<typeof config>, email: string) {
   const orders: RecoveryOrder[] = [];
   for (let i = 0; page && i < 10; i++) {
     const response: Response = await fetch(page, {
-      headers: {
-        Authorization: `Token ${cfg.token}`,
-        Accept: "application/json",
-      },
+      headers: pretixHeaders(page, cfg.token),
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
@@ -129,9 +127,7 @@ async function findOrders(cfg: ReturnType<typeof config>, email: string) {
     const data = recoveryOrdersSchema.parse(await response.json());
     orders.push(...data.results);
     if (orders.length > 200) throw new Error("Too many matching orders");
-    page = data.next ? new URL(data.next, cfg.api) : null;
-    if (page && (page.origin !== cfg.api.origin || page.pathname !== prefix))
-      throw new Error("Unexpected pretix page URL");
+    page = pretixNextPage(data.next, page, cfg.api);
   }
   if (page) throw new Error("Too many pretix pages");
   const paid = recoveryLinks(

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DateTime } from "luxon";
+import { pretixHeaders, pretixNextPage } from "./pretix-http";
 import {
   dateSchema,
   eventSchema,
@@ -32,10 +33,7 @@ async function list<T>(
   const output: T[] = [];
   while (url) {
     const response = await fetch(url, {
-      headers: {
-        Authorization: `Token ${cfg.token}`,
-        Accept: "application/json",
-      },
+      headers: pretixHeaders(url, cfg.token),
       cache: "no-store",
       signal: AbortSignal.timeout(10000),
     });
@@ -46,10 +44,7 @@ async function list<T>(
     output.push(...page.results);
     if (output.length > LIMIT)
       throw new Error("pretix catalog result limit exceeded");
-    const next: URL | null = page.next ? new URL(page.next, cfg.base) : null;
-    if (next && next.origin !== cfg.base.origin)
-      throw new Error("Unexpected pretix pagination origin");
-    url = next;
+    url = pretixNextPage(page.next, url, cfg.base);
   }
   return output;
 }
