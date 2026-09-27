@@ -250,3 +250,16 @@ These primary references informed the plan. Check version-specific behavior agai
 - [PostgreSQL row security and bypass behavior](https://www.postgresql.org/docs/17/ddl-rowsecurity.html)
 
 No claim is made that Purelymail account policies, delivered headers, hosted HTTPS flows, payment/refund behavior or real webhook retries have already passed. Implement local evidence and explicit later gates.
+
+## PR #1 review regression checklist (27 September 2026)
+
+Fix branch: `codex/review-six-fixes`, based on PR #1 head `6c4dd9f`. These checks supplement the historical S0–S7 acceptance evidence above.
+
+- [x] R1 Backup SELECT covers existing/future sequences in marketing (both schemas), management and Pretix. Scoped checks deny nextval/setval; owner-run actual restore drill verifies called/uncalled state and next values.
+- [x] R2 Fragment extraction survives repeated effects without consuming the token. Focused replay test and development EN confirmation/DA unsubscribe browser controls pass with scrubbed URL.
+- [x] R3 Recovery replacements use new submission identities after consumption/expiry; retries share identity and existing rate limits remain. Isolated management fixture passes.
+- [x] R4 Private marketing retries use submission-specific keys; later opt-ins after unsubscribe/48-hour expiry create new confirmation intents. Both-list fixture asserts retry deduplication and deferred mail under the existing throttle.
+- [x] R5 Delayed lifecycle intents retain observed state; superseded change/refund revisions coalesce. EN/DA tests and decrypted disposable queue checks verify repeated intervals and pending/completed refund behavior.
+- [x] R6 Acknowledgement reservation/delivery failures preserve accepted inquiry success; inquiry delivery errors remain failures. Both site tests pass.
+- [x] R7 Final production container/source verification, development/production action controls, HTTP capture-isolation rerun, docs and branch-only diff pass. Full suite passes 45 tests, no skips, all type checks/eight builds; owner image/source hashes and subsequent production checks pass.
+- [ ] R8 Push the fix branch and create a new PR targeting `codex/server-infrastructure`, link PR #1, report final commit and preserve unrelated state. Publication is the final handoff step.
