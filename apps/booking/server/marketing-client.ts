@@ -4,7 +4,7 @@ export async function requestBookingSubscription(
   language: "en" | "da",
   source: "booking-details" | "event-signup",
   optIn: boolean,
-  identity: string,
+  submissionId: string,
 ) {
   if (!optIn) return;
   // Preview suppresses every marketing side effect, including preflight.
@@ -32,7 +32,7 @@ export async function requestBookingSubscription(
       source,
       optIn: true,
       idempotencyKey: createHash("sha256")
-        .update(source + ":" + identity)
+        .update(source + ":" + submissionId)
         .digest("hex"),
     }),
     cache: "no-store",

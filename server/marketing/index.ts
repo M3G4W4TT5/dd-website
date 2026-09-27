@@ -48,24 +48,33 @@ export function marketing(
           [email, consentVersion[site], source, language],
         );
       } else if (row?.status !== "active") return;
-      const recent = await c.query(
-        "SELECT 1 FROM deliveries WHERE identity LIKE $1 AND created_at>now()-interval '15 minutes'",
+      const recent = await c.query<{ next_at: Date }>(
+        "SELECT greatest(created_at,next_at)+interval '15 minutes' AS next_at FROM deliveries WHERE identity LIKE $1 AND greatest(created_at,next_at)>now()-interval '15 minutes' ORDER BY greatest(created_at,next_at) DESC LIMIT 1",
         [site + ":" + purpose + ":" + digest(email) + ":%"],
       );
-      if (recent.rowCount) return;
+      if (recent.rowCount && purpose === "unsubscribe") return;
+      const identity =
+        site +
+        ":" +
+        purpose +
+        ":" +
+        digest(email) +
+        ":" +
+        randomBytes(16).toString("hex");
       await enqueue(
         c,
-        site +
-          ":" +
-          purpose +
-          ":" +
-          digest(email) +
-          ":" +
-          randomBytes(16).toString("hex"),
+        identity,
         "marketing",
         { email, language, purpose },
         key,
       );
+      // A fresh opt-in after withdrawal must not get stuck pending without a
+      // confirmation. Preserve the per-address mail throttle by deferring it.
+      if (recent.rows[0])
+        await c.query("UPDATE deliveries SET next_at=$2 WHERE identity=$1", [
+          identity,
+          recent.rows[0].next_at,
+        ]);
     });
   }
   async function render(payload: {

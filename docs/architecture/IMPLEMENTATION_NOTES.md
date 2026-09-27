@@ -1,6 +1,14 @@
 # DD/TTD implementation notes
 
-## Current checkpoint
+## Current review checkpoint
+
+- Six findings from [PR #1](https://github.com/M3G4W4TT5/dd-website/pull/1) are fixed on `codex/review-six-fixes`, based on `6c4dd9f`.
+- Final application code checkpoint: `c7ecd0c`; verification tooling/documentation commits follow.
+- All local regression, scoped database, actual restore, development/production browser, image-source and HTTP/capture checks pass. Complete suite: 45 tests, zero skips, all type checks and eight builds.
+- No local owner-assisted checkpoint remains. [PR #2](https://github.com/M3G4W4TT5/dd-website/pull/2) is published against `codex/server-infrastructure`; external F1–F15 remain outstanding and are not launch approval.
+- Unrelated `web_clips/` remains excluded. No external mail/provider configuration, deployment or merge occurred.
+
+## Original implementation checkpoint (historical)
 
 - Status: S0–S7 complete; all implementation acceptance checks passed. Implementation completion is not launch approval.
 - Branch: `codex/server-infrastructure`.
@@ -130,3 +138,28 @@ Successful tests remove their scoped membership/order-intent/schema/export/datab
 ### Completed handoff (S7.1–S7.4)
 
 The checklist and evidence were reviewed together: every implementation item is complete, and F1–F15 contain only external hosting/provider/paid-sandbox and pre-launch owner work with prerequisites and acceptance details. [OPERATIONS.md](OPERATIONS.md) documents repeatable startup, verification and recovery commands. Coherent implementation commits are `fa084ac`, `1246d81` and `a0f7fd3`, followed by this final documentation handoff commit on `codex/server-infrastructure`. Task files are committed; unrelated `web_clips/` remains untracked and unstaged. No branch push, merge, VPS deployment, DNS/provider change, live payment or external mail occurred. The final report links the checklist, notes, operations and owner actions and explicitly distinguishes completed implementation from outstanding launch verification.
+
+## PR #1 review fixes (27 September 2026)
+
+- Base revalidated: latest `origin/codex/server-infrastructure` is reviewed commit `6c4dd9f`; fix branch `codex/review-six-fixes`. Only unrelated `web_clips/` was untracked and remains excluded.
+- Findings 2–4 verified in source: Strict Mode replay cleared the scrubbed fragment token; recovery used an hourly address identity; private marketing callers used permanent address/source identities. Fixed with retained fragment state and per-submission UUIDs, preserved across failed retries and renewed on success or changed form input. Existing recovery address/global limits and marketing throttles remain active; missing-key callers represent a new request, not a retry.
+- Focused booking tests pass (37), including fragment replay and submission retry/reset. Isolated management verification passes with mocked `.invalid` Pretix, single-use/expired links, replacement identities and retained address limits. Development browser shows the confirmation control after hydration with the fragment removed. No action token consumed by rendering.
+- Earlier checkpoint (completed below): owner sequence grants/restore drill requested; dependent effective-grant checks waited for `done`.
+
+- Findings 5–6: intents now include snapshot revision; queued change/refund notices are coalesced against that revision and authoritative state, then rendered from the observed transition. This also handles A → B → A without flattening both A notices into duplicates. Cancellation retains its original transition/refund state, and is suppressed if cancellation is reversed. Recipient/locale are still authoritative. Acknowledgement reservation and delivery both sit inside the best-effort boundary; inquiry delivery errors still propagate. Eight shared tests pass, including EN/DA pending/done and acknowledgement DB failure.
+- Finding 1: provisioning now grants backup SELECT on existing/future sequences under each of the four migration owners across three databases. Owner replied `done`: narrow grant repair and actual custom-format backup/restore drill passed sequence `last_value`/`is_called` fingerprints and next values (82/37). Direct scoped checks passed all four schemas, including future sequence reads and denied nextval/setval. No application data or provider/service configuration changed.
+- Commit `e1c861d` covers findings 2–4. Expanded both-list DB checks passed new opt-ins after unsubscribe and expiry, with old keys still deduplicated; existing captured mail, isolation, concurrency and delivery-fault tests passed. Full verification initially found missing-value TypeScript guards in the new sequence checker; guards fixed and complete suite rerun.
+
+- `205cedd` implements findings 5–6. Disposable-management checks additionally decrypt delayed queued intents and assert exactly one current change/refund revision renders; pending and done refunds cannot both render done.
+- Full `npm run verify:infrastructure` passed: 8 shared + 37 booking tests (45, no skips), all app/package type checks and eight builds. Subsequent narrow marketing change passed its package type check/build and the expanded real scoped lifecycle suite; full suite rerun follows below.
+- Additional finding-4 edge case: rapid re-opt-in following unsubscribe hit the existing 15-minute confirmation throttle after setting pending, leaving no delivery. New confirmation intents now wait until the throttle boundary instead of being dropped; existing pending/active/suppressed handling and unsubscribe throttles remain. Both lists assert a single deferred replacement confirmation and a new delivery after 48-hour expiry; old submission retries never enqueue again.
+
+- Final source checkpoint `c7ecd0c`: complete suite rerun passes 45 tests, zero skips, all app/package type checks and eight builds. Owner rebuilt booking-only production fixtures and restarted worker; subsequent production HTTP/configuration/private-route/concurrent-withdrawal checks pass. Development and rebuilt production browsers show EN confirmation/DA unsubscribe controls after hydration with fragments scrubbed; rendering never consumes the synthetic token.
+- Supplemental development HTTP capture check initially failed for booking while both production and development communications consumed the same local schema into different private capture sinks. Primary capture and actual scoped operator CLI checks passed. Prepared `infra/verify-http-fixtures.sh` to pause only the competing production communications container and always restart it via EXIT trap. Await owner `done` on this rerun and source/image hygiene before claiming final supplemental passes. No unrelated state changed.
+
+- Owner capture-isolation checkpoint completed: both sites passed HTTP inquiry/capture/origin/body/action-consumption tests; private bearer/unchecked-consent checks and worker health passed. The production communications container was restored by the wrapper. Owner image scan passed 435 booking and 194 files per source-service image, but the exact marketing-source hash was stale because its build overlapped final source edits. Requested narrow rebuild of only communications/worker and another exact hash check; do not count this failed freshness check as passing.
+
+- Final owner reply `done`: narrow communications/worker rebuild completed; image scans passed 435/194/194 files and both exact current marketing-source hashes matched. Fresh `verify-production.ts` passes all checks including concurrent withdrawal/consumption. This supersedes the earlier stale-image failure; no verification failure or local checkpoint remains.
+- Final documentation/tooling check: shell syntax and `git diff --check` pass; source/browser bundle hygiene passes; latest PR #1 head remains `6c4dd9f`. Operations documents include the reproducible capture-isolation wrapper and sequence checks; owner gates F6/F10 explicitly retain hosted sequence recovery and real lifecycle verification.
+
+- Published [PR #2](https://github.com/M3G4W4TT5/dd-website/pull/2) against `codex/server-infrastructure`, linking PR #1. Verification/documentation checkpoint `c364ff3` pushed successfully; this final handoff documentation commit follows it. PR diff contains only the six fixes, focused regression tooling and architecture evidence. Neither PR was merged.

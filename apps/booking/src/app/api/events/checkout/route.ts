@@ -1,3 +1,4 @@
+import { submissionId } from "../../../../../server/submission";
 import { boundedJson, HttpError } from "@dd/runtime";
 import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     let marketingRequested: boolean | null = null;
     if (input.marketingOptIn) {
       try {
-        await requestBookingSubscription(input.email, input.language, "event-signup", input.marketingOptIn, `${input.slug}:${input.dateId}:${input.email.toLowerCase()}`);
+        await requestBookingSubscription(input.email, input.language, "event-signup", input.marketingOptIn, submissionId(request));
         marketingRequested = true;
       } catch {
         marketingRequested = false;

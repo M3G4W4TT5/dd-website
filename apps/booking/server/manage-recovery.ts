@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
 import { enqueue, digest } from "@dd/database";
 import type { Mailer } from "@dd/mail";
 import { Pool } from "pg";
@@ -174,7 +174,7 @@ async function findOrders(cfg: ReturnType<typeof config>, email: string) {
   ];
 }
 
-export async function requestManageLinks(rawEmail: string, language: Language) {
+export async function requestManageLinks(rawEmail: string, language: Language, submissionId: string = randomUUID()) {
   const email = rawEmail.trim().toLowerCase();
   const cfg = config();
   if (!(await reserveRequest(cfg.database, cfg.hashKey, email))) return;
@@ -183,7 +183,7 @@ export async function requestManageLinks(rawEmail: string, language: Language) {
     throw new Error("Recovery queue unavailable");
   await enqueue(
     database(cfg),
-    `recovery:${createHmac("sha256", cfg.hashKey).update(email).digest("hex")}:${Math.floor(Date.now() / 3600000)}`,
+    `recovery:${createHmac("sha256", cfg.hashKey).update(email).digest("hex")}:${digest(submissionId)}`,
     "recovery",
     { email, language },
     key,

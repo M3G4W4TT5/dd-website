@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fragmentToken } from "../lib/fragment-token";
 
 export function MarketingAction({
   list,
@@ -15,9 +16,8 @@ export function MarketingAction({
 }) {
   const [token, setToken] = useState(initialToken);
   useEffect(() => {
-    setToken(
-      new URLSearchParams(window.location.hash.slice(1)).get("token") || "",
-    );
+    const hash = window.location.hash;
+    setToken((previous) => fragmentToken(previous, hash));
     history.replaceState(
       null,
       "",

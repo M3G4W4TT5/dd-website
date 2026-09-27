@@ -205,7 +205,63 @@ try {
       "UPDATE marketing_subscriptions SET requested_at=now()-interval '1 hour' WHERE email=$1",
       [email],
     );
-    await list.request(email, "en", "confirm", "fixture-2");
+    // A later opt-in uses a new submission key, including after unsubscribe.
+    const confirmationCount = (
+      await current.query(
+        "SELECT count(*)::int n FROM deliveries WHERE identity LIKE $1",
+        [site + ":confirm:" + digest(email) + ":%"],
+      )
+    ).rows[0].n;
+    const replacementKey = fixture + ":replacement";
+    await list.request(email, "en", "confirm", "fixture-2", replacementKey);
+    await list.request(email, "en", "confirm", "fixture-2", replacementKey);
+    assert.equal(
+      (
+        await current.query(
+          "SELECT status FROM marketing_subscriptions WHERE email=$1",
+          [email],
+        )
+      ).rows[0].status,
+      "pending",
+    );
+    const replacements = await current.query(
+      "SELECT count(*)::int n,bool_or(next_at>now()) AS deferred FROM deliveries WHERE identity LIKE $1",
+      [site + ":confirm:" + digest(email) + ":%"],
+    );
+    assert.equal(replacements.rows[0].n, confirmationCount + 1);
+    assert.equal(replacements.rows[0].deferred, true);
+    const beforeExpiry = (
+      await current.query(
+        "SELECT count(*)::int n FROM deliveries WHERE identity LIKE $1",
+        [site + ":%:" + digest(email) + ":%"],
+      )
+    ).rows[0].n;
+    await current.query(
+      "UPDATE marketing_subscriptions SET requested_at=now()-interval '49 hours' WHERE email=$1",
+      [email],
+    );
+    await current.query(
+      "UPDATE deliveries SET created_at=now()-interval '49 hours',next_at=now()-interval '49 hours' WHERE identity LIKE $1",
+      [site + ":%:" + digest(email) + ":%"],
+    );
+    // The original key remains a retry, even after expiry; a fresh key can enqueue.
+    await list.request(email, "en", "confirm", "fixture-2", replacementKey);
+    await list.request(
+      email,
+      "en",
+      "confirm",
+      "fixture-2",
+      fixture + ":expired-replacement",
+    );
+    assert.equal(
+      (
+        await current.query(
+          "SELECT count(*)::int n FROM deliveries WHERE identity LIKE $1",
+          [site + ":%:" + digest(email) + ":%"],
+        )
+      ).rows[0].n,
+      beforeExpiry + 1,
+    );
     // Expiry and manual withdrawal invalidate activation even with a correctly bound token.
     const expiry = "z".repeat(43);
     await current.query(
@@ -257,9 +313,16 @@ try {
     await current.query("DELETE FROM deliveries WHERE identity LIKE $1", [
       site + ":%:" + digest(email) + ":%",
     ]);
-    await current.query("DELETE FROM internal_requests WHERE key=$1", [
-      digest(fixture),
-    ]);
+    await current.query(
+      "DELETE FROM internal_requests WHERE key=ANY($1::text[])",
+      [
+        [
+          fixture,
+          fixture + ":replacement",
+          fixture + ":expired-replacement",
+        ].map(digest),
+      ],
+    );
   }
   console.log(
     "PASS both lists: pending/activation, captured mail, consent state, idempotency, wrong-list/purpose/repeat/expired rejection, unsubscribe and manual withdrawal",

@@ -34,16 +34,16 @@ export async function contact(
     subject: `[${name}] ${topic}`,
     text: `New ${name} inquiry\n\nName: ${input.name}\nEmail: ${input.email}\nTopic: ${topic}\n\nMessage:\n${input.message}`,
   });
-  if (await reserve(input.email)) {
-    try {
+  try {
+    if (await reserve(input.email)) {
       await send(
         "acknowledgement",
         site === "primary"
           ? personalAutoReply(input.name, input.email)
           : bookingAutoReply(input.name, input.email),
       );
-    } catch {
-      console.error("Contact acknowledgement failed; inquiry accepted");
     }
+  } catch {
+    console.error("Contact acknowledgement failed; inquiry accepted");
   }
 }
