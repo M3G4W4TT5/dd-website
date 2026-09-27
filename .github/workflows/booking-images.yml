@@ -1,0 +1,154 @@
+name: Booking checks and images
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: booking-images-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run test:server
+      - run: npm run test:booking
+      - run: npm run typecheck -w @dd/booking
+      - run: npm run typecheck:server
+      - run: npm run build:server
+      - run: python3 infra/deploy.test.py
+
+  images:
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [booking, communications, worker]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set lowercase image name
+        id: name
+        env:
+          REPOSITORY: ${{ github.repository }}
+          TARGET: ${{ matrix.target }}
+        run: echo "image=ghcr.io/${REPOSITORY,,}-${TARGET}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Authenticate publication on main only
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build image; publish only from main
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: infra/Dockerfile
+          target: ${{ matrix.target }}
+          platforms: linux/amd64
+          push: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+          tags: ${{ steps.name.outputs.image }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          provenance: mode=max
+          sbom: true
+      - name: Record published digest
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          TARGET: ${{ matrix.target }}
+          IMAGE: ${{ steps.name.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          mkdir -p candidate
+          jq -n --arg target "$TARGET" --arg image "$IMAGE@$DIGEST" --arg commit "$COMMIT" \
+            '{target: $target, image: $image, commit: $commit}' > "candidate/$TARGET.json"
+      - name: Upload candidate image reference
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: booking-candidate-${{ matrix.target }}-${{ github.sha }}
+          path: candidate/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  deploy:
+    needs: [checks, images]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: hosted-sandbox
+    concurrency:
+      group: hosted-sandbox-deployment
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: booking-candidate-*-${{ github.sha }}
+          path: candidate
+          merge-multiple: true
+      - name: Assemble digest manifest
+        env:
+          COMMIT: ${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json, os, runpy
+          from pathlib import Path
+          images = {}
+          for path in sorted(Path('candidate').glob('*.json')):
+              data = json.loads(path.read_text())
+              assert data['commit'] == os.environ['COMMIT'], 'Candidate commit mismatch'
+              assert data['target'] not in images, 'Duplicate candidate target'
+              images[data['target']] = data['image']
+          manifest = {'commit': os.environ['COMMIT'], 'images': images}
+          runpy.run_path('infra/deploy.py')['validate_manifest'](manifest)
+          Path('release.json').write_text(json.dumps(manifest))
+          PY
+      - name: Deploy using the restricted CI key
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_KNOWN_HOSTS: ${{ vars.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" == '85.190.108.73' ]]
+          [[ -n "$DEPLOY_KNOWN_HOSTS" && -n "$DEPLOY_SSH_KEY" ]]
+          umask 077
+          key="$RUNNER_TEMP/dd-deploy-key"
+          hosts="$RUNNER_TEMP/dd-deploy-hosts"
+          trap 'rm -f "$key" "$hosts"' EXIT
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$hosts"
+          ssh -F /dev/null -T -p 22 \
+            -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$hosts" -o ConnectTimeout=20 \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+            -i "$key" "dd-deploy@$DEPLOY_HOST" < release.json
