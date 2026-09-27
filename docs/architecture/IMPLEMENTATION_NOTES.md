@@ -5,7 +5,7 @@
 - Six findings from [PR #1](https://github.com/M3G4W4TT5/dd-website/pull/1) are fixed on `codex/review-six-fixes`, based on `6c4dd9f`.
 - Final application code checkpoint: `c7ecd0c`; verification tooling/documentation commits follow.
 - All local regression, scoped database, actual restore, development/production browser, image-source and HTTP/capture checks pass. Complete suite: 45 tests, zero skips, all type checks and eight builds.
-- No local owner-assisted checkpoint remains. Final branch publication/new PR handoff follows; external F1–F15 remain outstanding and are not launch approval.
+- No local owner-assisted checkpoint remains. [PR #2](https://github.com/M3G4W4TT5/dd-website/pull/2) is published against `codex/server-infrastructure`; external F1–F15 remain outstanding and are not launch approval.
 - Unrelated `web_clips/` remains excluded. No external mail/provider configuration, deployment or merge occurred.
 
 ## Original implementation checkpoint (historical)
@@ -161,3 +161,5 @@ The checklist and evidence were reviewed together: every implementation item is 
 
 - Final owner reply `done`: narrow communications/worker rebuild completed; image scans passed 435/194/194 files and both exact current marketing-source hashes matched. Fresh `verify-production.ts` passes all checks including concurrent withdrawal/consumption. This supersedes the earlier stale-image failure; no verification failure or local checkpoint remains.
 - Final documentation/tooling check: shell syntax and `git diff --check` pass; source/browser bundle hygiene passes; latest PR #1 head remains `6c4dd9f`. Operations documents include the reproducible capture-isolation wrapper and sequence checks; owner gates F6/F10 explicitly retain hosted sequence recovery and real lifecycle verification.
+
+- Published [PR #2](https://github.com/M3G4W4TT5/dd-website/pull/2) against `codex/server-infrastructure`, linking PR #1. Verification/documentation checkpoint `c364ff3` pushed successfully; this final handoff documentation commit follows it. PR diff contains only the six fixes, focused regression tooling and architecture evidence. Neither PR was merged.
