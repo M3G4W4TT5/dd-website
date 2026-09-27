@@ -3,7 +3,7 @@ import { enqueue, digest } from "@dd/database";
 import type { Mailer } from "@dd/mail";
 import { Pool } from "pg";
 import { DateTime } from "luxon";
-import { pretixHeaders, pretixNextPage } from "./pretix-http";
+import { pretixFetch, pretixHeaders, pretixNextPage } from "./pretix-http";
 import {
   recoveryLinks,
   recoveryOrdersSchema,
@@ -118,7 +118,7 @@ async function findOrders(cfg: ReturnType<typeof config>, email: string) {
   page.searchParams.set("email", email);
   const orders: RecoveryOrder[] = [];
   for (let i = 0; page && i < 10; i++) {
-    const response: Response = await fetch(page, {
+    const response: Response = await pretixFetch(page, {
       headers: pretixHeaders(page, cfg.token),
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),

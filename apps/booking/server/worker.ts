@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { pretixHeaders, pretixNextPage } from "./pretix-http";
+import { pretixFetch, pretixHeaders, pretixNextPage } from "./pretix-http";
 import { createCapture, createMailer, DeliveryError } from "@dd/mail";
 import { mailConfig } from "@dd/runtime";
 import { pollDelivery } from "../../../server/database/delivery";
@@ -41,7 +41,7 @@ async function sweep() {
   const prefix = `/api/v1/organizers/${process.env.PRETIX_ORGANIZER_SLUG}/events/${process.env.PRETIX_EVENT_SLUG}/orders/`;
   let url: URL | null = new URL(prefix, base);
   for (let page = 0; url && page < 20; page++) {
-    const response = await fetch(url, {
+    const response = await pretixFetch(url, {
       headers: pretixHeaders(url, process.env.PRETIX_MANAGE_API_TOKEN || ""),
       signal: AbortSignal.timeout(10000),
     });

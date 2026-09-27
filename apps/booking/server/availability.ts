@@ -2,7 +2,7 @@ import { DateTime } from "luxon";
 import { z } from "zod";
 import { Availability, MAX_HOURS, Slot, STUDIO_ZONE } from "../src/lib/booking";
 import { getRoomOccupancy } from "./events";
-import { pretixHeaders, pretixNextPage } from "./pretix-http";
+import { pretixFetch, pretixHeaders, pretixNextPage } from "./pretix-http";
 import { overlaps } from "../src/lib/events-model";
 
 const MAX_LOOKAHEAD_DAYS = 45;
@@ -107,7 +107,7 @@ function readConfig(): PretixConfig | null {
 }
 
 async function getJson(url: URL, config: PretixConfig): Promise<unknown> {
-  const response = await fetch(url, {
+  const response = await pretixFetch(url, {
     headers: pretixHeaders(url, config.token),
     cache: "no-store",
     signal: AbortSignal.timeout(10_000),

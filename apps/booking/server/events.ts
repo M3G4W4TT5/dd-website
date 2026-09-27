@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { DateTime } from "luxon";
-import { pretixHeaders, pretixNextPage } from "./pretix-http";
+import { pretixFetch, pretixHeaders, pretixNextPage } from "./pretix-http";
 import {
   dateSchema,
   eventSchema,
@@ -32,7 +32,7 @@ async function list<T>(
   let url: URL | null = new URL(path, cfg.base);
   const output: T[] = [];
   while (url) {
-    const response = await fetch(url, {
+    const response = await pretixFetch(url, {
       headers: pretixHeaders(url, cfg.token),
       cache: "no-store",
       signal: AbortSignal.timeout(10000),
