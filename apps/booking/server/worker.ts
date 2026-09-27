@@ -8,7 +8,7 @@ import {
   bookingDb,
   payloadKey,
   observeOrder,
-  lifecycleMessage,
+  currentLifecycleMessage,
 } from "./notifications";
 import { deliverAccess } from "./manage-recovery";
 import { orderState, view, ManageConflict } from "./pretix-live-management";
@@ -121,21 +121,21 @@ async function loop() {
             throw new DeliveryError("permanent");
           const state = await orderState(payload.code);
           const booking = view(state.order, state.interval);
-          // A later authoritative reversal can make an earlier queued notice obsolete.
-          if (
-            (row.kind === "change" && booking.status !== "paid") ||
-            (row.kind === "cancellation" && booking.status !== "cancelled")
-          )
-            return;
           const language = state.order.locale?.startsWith("da") ? "da" : "en";
+          const snapshot = await pool.query<{ revision: string }>("SELECT revision FROM order_snapshots WHERE order_code=$1", [payload.code]);
+          const message = currentLifecycleMessage(
+            row.kind as "change" | "cancellation" | "refund",
+            payload.observed,
+            booking,
+            state.order.email.toLowerCase(),
+            language,
+            payload.revision,
+            Number(snapshot.rows[0]?.revision),
+          );
+          if (!message) return;
           await send(
             row.kind as "change" | "cancellation" | "refund",
-            lifecycleMessage(
-              row.kind as "change" | "cancellation" | "refund",
-              booking,
-              state.order.email.toLowerCase(),
-              language,
-            ),
+            message,
             id,
           );
         } catch (error) {

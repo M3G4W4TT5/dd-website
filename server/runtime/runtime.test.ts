@@ -8,6 +8,7 @@ import { service } from "./index";
 import {
   transitionKinds,
   lifecycleMessage,
+  currentLifecycleMessage,
 } from "../../apps/booking/server/notifications";
 const env = {
   DD_MODE: "development",
@@ -173,6 +174,16 @@ test("both contact inquiries and acknowledgements preserve copy, envelope and in
       async () => true,
     );
     assert.equal(count, 2);
+    count = 0;
+    await contact(site, input, async () => { count++; }, async () => {
+      throw new Error("fixture reservation database failure");
+    });
+    assert.equal(count, 1, "accepted inquiry survives acknowledgement reservation failure");
+    let reservations = 0;
+    await assert.rejects(() => contact(site, input, async () => {
+      throw new Error("inquiry rejected");
+    }, async () => { reservations++; return true; }));
+    assert.equal(reservations, 0);
   }
 });
 test("sender policy and SMTP acceptance uncertainty are explicit", async () => {
@@ -250,6 +261,17 @@ test("repeated transitions are revision based and refund completion is never imp
       lang === "en" ? /Refund: Pending/ : /Refusion: Afventer/,
     );
     assert.doesNotMatch(text, /Completed|Gennemført/);
+    assert.equal(currentLifecycleMessage("change", changed, paid, "fixture@example.com", lang, 2, 3), null);
+    // A -> B -> A must not send both historical A notices from current A.
+    assert.equal(currentLifecycleMessage("change", paid, paid, "fixture@example.com", lang, 1, 3), null);
+    assert.ok(currentLifecycleMessage("change", paid, paid, "fixture@example.com", lang, 3, 3));
+    const refunded = { ...cancelled, refund: "done" } as const;
+    assert.equal(currentLifecycleMessage("refund", cancelled, refunded, "fixture@example.com", lang, 4, 5), null);
+    const completed = currentLifecycleMessage("refund", refunded, refunded, "fixture@example.com", lang, 5, 5)!;
+    assert.match(completed.text, /Completed|Gennemført/);
+    const cancellation = currentLifecycleMessage("cancellation", cancelled, refunded, "fixture@example.com", lang, 4, 5)!;
+    assert.match(cancellation.text, /Pending|Afventer/);
+    assert.doesNotMatch(cancellation.text, /Completed|Gennemført/);
   }
 });
 

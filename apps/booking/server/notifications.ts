@@ -73,7 +73,7 @@ export async function observeOrder(
           c,
           identity,
           kind,
-          { code, observed: next },
+          { code, observed: next, revision },
           payloadKey(),
         );
       }
@@ -148,4 +148,26 @@ export function lifecycleMessage(
     "booking@didde-mie.com",
   ].join("\n");
   return { to: email, subject, text };
+}
+
+/** Coalesce superseded intervals/refund states, retaining the encrypted observed
+ * transition for rendering. Recipient and locale remain authoritative at send. */
+export function currentLifecycleMessage(
+  kind: "change" | "cancellation" | "refund",
+  observed: ManagedBooking,
+  current: ManagedBooking,
+  email: string,
+  language: Language,
+  revision: number,
+  currentRevision: number,
+) {
+  if (kind !== "cancellation" && revision !== currentRevision) return null;
+  if (observed.reference !== current.reference || observed.status !== current.status)
+    return null;
+  if (kind === "change" && (current.status !== "paid" ||
+      observed.firstHourIso !== current.firstHourIso || observed.endIso !== current.endIso))
+    return null;
+  if (kind === "cancellation" && current.status !== "cancelled") return null;
+  if (kind === "refund" && observed.refund !== current.refund) return null;
+  return lifecycleMessage(kind, observed, email, language);
 }
