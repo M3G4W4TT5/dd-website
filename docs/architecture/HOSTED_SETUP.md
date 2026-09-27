@@ -169,8 +169,8 @@ must not be activated unchanged.
 Cloudflare configuration was created and read back on 27 September 2026:
 
 - Tunnel: `dd-hosted-sandbox`, ID `7c39829f-b117-4294-9424-bf422d88966f`, remotely managed.
-- `studio.didde-mie.com` Access application: `3cbc23d4-0cc1-49d0-ac59-a374d68b7112`.
-- `ttd-checkout.didde-mie.com` Access application: `49a3da94-87cc-4e2c-951b-36e035092d2c`.
+- `booking.didde-mie.com` Access application: `3cbc23d4-0cc1-49d0-ac59-a374d68b7112`.
+- `checkout.didde-mie.com` Access application: `49a3da94-87cc-4e2c-951b-36e035092d2c`.
 - Each application permits only `dev@memoryone.eu`, using the existing one-time
   PIN provider and an eight-hour session. There are no bypass policies.
 - Proxied CNAMEs point to this tunnel. Neither hostname had a previous record;
@@ -310,7 +310,7 @@ The owner-run `infra/setup-hosted-pretix.py` job generates a private Django
 signing secret and two INI files, with separate migrator/runtime database roles.
 Both files are mode 0400 owned by image UID 15371; each container receives only
 its selected file. No SMTP password, Stripe key or development credential is
-copied. Hosted checkout origin is `https://ttd-checkout.didde-mie.com`, currency
+copied. Hosted checkout origin is `https://checkout.didde-mie.com`, currency
 DKK, timezone Europe/Copenhagen, with EN/DA enabled.
 
 The job starts Redis and internal Mailpit, then runs `migrate --noinput` with the
@@ -514,3 +514,21 @@ creation, exact-match adoption, scoped API reads and refusal of a mismatched
 existing rule without replacement. Hosted repair and full calendar verification
 remain pending the owner's command. These results do not yet attest sandbox
 payments, external email delivery or completed hosted smoke testing.
+
+On 28 September the owner approved `booking.didde-mie.com` for the booking site
+and `checkout.didde-mie.com` for Pretix. CI deployment was disabled and a queued
+deployment job in run `36354560995` was cancelled; image publication and checks
+had passed. The two existing Cloudflare Access applications were renamed with
+their owner-only policies and audiences preserved. The same tunnel now has exact
+new-host routes, mandatory Access JWT checks and a catch-all 404. Existing proxied
+CNAME records were renamed without changing their tunnel target; there were no
+records occupying the new names. No public VPS ports were opened.
+
+`migrate-hosted-hostnames.py` is the remaining owner-run VPS checkpoint. It
+compares each old runtime/Pretix configuration byte-for-byte with the reviewed
+generators, preserves existing credentials, and changes only the two approved
+origins. It installs reviewed proxy, Compose and deployment files, restarts the
+affected applications without rebuilding or replacing database volumes, and
+checks new-host success and retired-host denial at loopback. The rental discount
+repair follows this hostname checkpoint. Keep `DEPLOY_ENABLED=false` until both
+owner checks pass and the new private HTTPS routes have been verified.

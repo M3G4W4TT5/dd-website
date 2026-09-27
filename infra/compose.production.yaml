@@ -216,7 +216,7 @@ services:
       target: primary
       args:
         PUBLIC_SERVICES_URL: ${PUBLIC_SERVICES_URL:-}
-        PUBLIC_BOOKING_URL: ${PUBLIC_BOOKING_URL:-https://studio.didde-mie.com}
+        PUBLIC_BOOKING_URL: ${PUBLIC_BOOKING_URL:-https://booking.didde-mie.com}
     networks: [ingress]
 
 networks:

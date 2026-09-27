@@ -34,9 +34,9 @@ const post = (origin: string, body: unknown) =>
     body: JSON.stringify(body),
   });
 assert.equal((await post("http://127.0.0.1:3100", {})).status, 403);
-assert.equal((await post("https://studio.didde-mie.com", {})).status, 400);
+assert.equal((await post("https://booking.didde-mie.com", {})).status, 400);
 assert.equal(
-  (await post("https://studio.didde-mie.com", { message: "x".repeat(9000) }))
+  (await post("https://booking.didde-mie.com", { message: "x".repeat(9000) }))
     .status,
   413,
 );
@@ -48,8 +48,8 @@ const web = parseEnv(readFileSync("infra/local/booking-web.env", "utf8"));
 validateBooking({
   ...web,
   DD_MODE: "production",
-  BOOKING_PUBLIC_BASE_URL: "https://studio.didde-mie.com",
-  CONTACT_BOOKING_ORIGIN: "https://studio.didde-mie.com",
+  BOOKING_PUBLIC_BASE_URL: "https://booking.didde-mie.com",
+  CONTACT_BOOKING_ORIGIN: "https://booking.didde-mie.com",
   PRETIX_MANAGE_WEBHOOK_USER: "fixture",
   PRETIX_MANAGE_WEBHOOK_PASSWORD: "x".repeat(32),
 });
@@ -62,8 +62,8 @@ const cfg = communicationsConfig(
   {
     ...comm,
     DD_MODE: "production",
-    ALLOWED_ORIGINS: "https://studio.didde-mie.com",
-    MARKETING_ACTION_BASE_URL: "https://studio.didde-mie.com",
+    ALLOWED_ORIGINS: "https://booking.didde-mie.com",
+    MARKETING_ACTION_BASE_URL: "https://booking.didde-mie.com",
   },
   "booking",
 );
@@ -96,7 +96,7 @@ assert.equal(
     await fetch(base + "/api/manage/booking", {
       method: "POST",
       headers: {
-        Origin: "https://studio.didde-mie.com",
+        Origin: "https://booking.didde-mie.com",
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ action: "cancel", code: "ABCDE" }),
@@ -140,7 +140,7 @@ try {
   const consuming = fetch(base + "/api/marketing/action", {
     method: "POST",
     headers: {
-      Origin: "https://studio.didde-mie.com",
+      Origin: "https://booking.didde-mie.com",
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ list: "booking", purpose: "confirm", token }),
