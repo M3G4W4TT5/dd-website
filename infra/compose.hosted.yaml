@@ -1,0 +1,11 @@
+# Used only with compose.production.yaml on the VPS. Never build on the host.
+services:
+  booking:
+    build: !reset null
+    image: ${DD_BOOKING_IMAGE:?Supply a published booking digest}
+  booking-communications:
+    build: !reset null
+    image: ${DD_COMMUNICATIONS_IMAGE:?Supply a published communications digest}
+  booking-worker:
+    build: !reset null
+    image: ${DD_WORKER_IMAGE:?Supply a published worker digest}
