@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { randomUUID, createHash } from "node:crypto";
-import { database } from "../index";
+import { database, decrypt } from "../index";
 const read = (name: string) =>
   parseEnv(readFileSync(`infra/local/${name}.env`, "utf8")) as Record<
     string,
@@ -159,17 +159,14 @@ globalThis.fetch = async (input, init) => {
     });
   throw new Error("Unexpected fixture endpoint");
 };
-const { bookingDb, intakeWebhook, observeOrder } = await import(
-  "../../../apps/booking/server/notifications"
-);
+const { bookingDb, intakeWebhook, observeOrder, currentLifecycleMessage } =
+  await import("../../../apps/booking/server/notifications");
 const { cancelManagedBooking, changeManagedBooking, getManagedBooking } =
   await import("../../../apps/booking/server/pretix-live-management");
-const { deliverAccess, consumeManageLink, requestManageLinks } = await import(
-  "../../../apps/booking/server/manage-recovery"
-);
-const { authorizedSessionEmail } = await import(
-  "../../../apps/booking/server/manage-session"
-);
+const { deliverAccess, consumeManageLink, requestManageLinks } =
+  await import("../../../apps/booking/server/manage-recovery");
+const { authorizedSessionEmail } =
+  await import("../../../apps/booking/server/manage-session");
 const p = bookingDb();
 try {
   await assert.rejects(() => getManagedBooking("ABCDE", "other@example.com"));
@@ -223,14 +220,30 @@ try {
   );
   // A consumed or expired token must permit another request in the same hour.
   await requestManageLinks(order.email, "en", "replacement-after-consumption");
-  await p.query("UPDATE manage_link_tokens SET expires_at=now()-interval '1 second'");
+  await p.query(
+    "UPDATE manage_link_tokens SET expires_at=now()-interval '1 second'",
+  );
   // Reset only the fixture request counter: first two calls include a retry.
   await p.query("UPDATE manage_link_requests SET request_count=1");
   await requestManageLinks(order.email, "en", "replacement-after-expiry");
-  assert.equal((await p.query("SELECT count(*)::int n FROM deliveries WHERE kind='recovery'")).rows[0].n, 3);
+  assert.equal(
+    (
+      await p.query(
+        "SELECT count(*)::int n FROM deliveries WHERE kind='recovery'",
+      )
+    ).rows[0].n,
+    3,
+  );
   await requestManageLinks(order.email, "en", "allowed-third");
   await requestManageLinks(order.email, "en", "blocked-fourth");
-  assert.equal((await p.query("SELECT count(*)::int n FROM deliveries WHERE kind='recovery'")).rows[0].n, 4);
+  assert.equal(
+    (
+      await p.query(
+        "SELECT count(*)::int n FROM deliveries WHERE kind='recovery'",
+      )
+    ).rows[0].n,
+    4,
+  );
   // Pending and non-rental orders cannot create paid confirmation mail.
   const original = { ...order };
   order = { ...order, status: "n" };
@@ -339,6 +352,34 @@ try {
     ).rows[0].n,
     2,
   );
+  // Delayed refund queue: pending and completed must not both render Completed.
+  const refundSnapshot = (
+    await p.query(
+      "SELECT state,revision FROM order_snapshots WHERE order_code='ABCDE'",
+    )
+  ).rows[0];
+  const refunds = (
+    await p.query("SELECT payload FROM deliveries WHERE kind='refund'")
+  ).rows;
+  const renderedRefunds = refunds
+    .map((row) => {
+      const payload = decrypt<{ observed: typeof before; revision: number }>(
+        row.payload,
+        process.env.PAYLOAD_KEY!,
+      );
+      return currentLifecycleMessage(
+        "refund",
+        payload.observed,
+        refundSnapshot.state,
+        order.email,
+        "da",
+        payload.revision,
+        Number(refundSnapshot.revision),
+      );
+    })
+    .filter(Boolean);
+  assert.equal(renderedRefunds.length, 1);
+  assert.match(renderedRefunds[0]!.text, /Gennemført/);
   const changed = {
     ...before,
     firstHourIso: new Date(Date.parse(start) + 86400000).toISOString(),
@@ -355,6 +396,37 @@ try {
     ).rows[0].n,
     2,
   );
+  const finalSnapshot = (
+    await p.query(
+      "SELECT state,revision FROM order_snapshots WHERE order_code='ABCDE'",
+    )
+  ).rows[0];
+  const queuedChanges = (
+    await p.query("SELECT payload FROM deliveries WHERE kind='change'")
+  ).rows;
+  const renderedChanges = queuedChanges
+    .map((row) => {
+      const payload = decrypt<{ observed: typeof before; revision: number }>(
+        row.payload,
+        process.env.PAYLOAD_KEY!,
+      );
+      return currentLifecycleMessage(
+        "change",
+        payload.observed,
+        finalSnapshot.state,
+        order.email,
+        "en",
+        payload.revision,
+        Number(finalSnapshot.revision),
+      );
+    })
+    .filter(Boolean);
+  assert.equal(
+    renderedChanges.length,
+    1,
+    "A/B/A delayed queue coalesces superseded revisions",
+  );
+  assert.match(renderedChanges[0]!.text, new RegExp(changed.firstHourIso));
   console.log(
     "PASS isolated management: authoritative recipient/language, paid/rental gates, hash-only single-use recovery, scoped/expired sessions, duplicate/reordered intake, stale/price/duration rejection, concurrent changes/refund timeout, reconciliation, no repeat remote write and revision-based transitions",
   );
