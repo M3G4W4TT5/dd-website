@@ -15,7 +15,7 @@ def sql(db,text):return cmd(base+['psql','-U','dd_local_admin','-d',db,'-XqAt','
 saved=json.loads((root/'infra/local/provisioning-private.json').read_text())
 sql('postgres',f'CREATE DATABASE {fixture};')
 try:
- sql(fixture,f"REVOKE CONNECT ON DATABASE {fixture} FROM PUBLIC; GRANT CONNECT ON DATABASE {fixture} TO dd_backup; CREATE TABLE proof(id integer PRIMARY KEY,value text NOT NULL); INSERT INTO proof VALUES(1,'isolated fixture'),(2,'restore proof'); GRANT SELECT ON proof TO dd_backup;")
+ sql(fixture,f"REVOKE CONNECT ON DATABASE {fixture} FROM PUBLIC; GRANT CONNECT ON DATABASE {fixture} TO dd_backup; CREATE TABLE proof(id serial PRIMARY KEY,value text NOT NULL); INSERT INTO proof(value) VALUES('isolated fixture'),('restore proof'); CREATE SEQUENCE unused_sequence START 37 INCREMENT 5; SELECT setval('proof_id_seq',81,true); GRANT SELECT ON proof TO dd_backup; GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO dd_backup;")
  parent=Path(tempfile.mkdtemp(prefix='dd-backup-drill-'));parent.chmod(0o700);directory=parent/'snapshot'
  backup_url='postgresql://dd_backup:'+saved['passwords']['dd_backup']+'@127.0.0.1:5433/postgres'
  restore_url='postgresql://dd_local_admin:'+saved['admin']+'@127.0.0.1:5433/postgres'
@@ -24,6 +24,9 @@ try:
  subprocess.run(['python3','server/database/scripts/restore.py',str(directory),name],env=env,check=True)
  query="SELECT count(*)||':'||md5(string_agg(id::text||value,',' ORDER BY id)) FROM proof;"
  if sql(fixture,query)!=sql(name,query):raise RuntimeError('Restore content fingerprint mismatch')
- print('PASS actual scoped backup/restore tools, private custom-format artifact and content fingerprint; integrations disabled')
+ sequence_query="SELECT last_value,is_called FROM proof_id_seq; SELECT last_value,is_called FROM unused_sequence;"
+ if sql(fixture,sequence_query)!=sql(name,sequence_query):raise RuntimeError('Restore sequence state mismatch')
+ if sql(name,"SELECT nextval('proof_id_seq'); SELECT nextval('unused_sequence');")!=b'82\n37\n':raise RuntimeError('Restored sequence next values mismatch')
+ print('PASS actual scoped backup/restore tools, private custom-format artifact and content/sequence state fingerprints and next values; integrations disabled')
 finally:
  sql('postgres',f'DROP DATABASE IF EXISTS {name}; DROP DATABASE {fixture};')
