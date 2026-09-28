@@ -25,11 +25,17 @@ FILES = ("compose.production.yaml", "compose.hosted.yaml", "proxy.conf",
          "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf", "deploy.py")
 
 
+def config_path(root, name):
+    if name == "deploy.py" and root == Path("/etc/dd-hosted"):
+        return Path("/usr/local/sbin/dd-deploy")
+    return root / name
+
+
 def config_version(root):
     digest = hashlib.sha256()
     for name in FILES:
         digest.update(name.encode() + b"\0")
-        digest.update((root / name).read_bytes())
+        digest.update(config_path(root, name).read_bytes())
         digest.update(b"\0")
     return digest.hexdigest()
 
@@ -120,7 +126,7 @@ def main():
     if not (ROOT / "ready").is_file():
         raise ValueError("Hosted prerequisites are incomplete: owner readiness marker is absent")
     for name in [*FILES, "ready"]:
-        path = ROOT / name
+        path = config_path(ROOT, name)
         stat = path.lstat()
         if path.is_symlink() or stat.st_uid != 0 or stat.st_mode & 0o022:
             raise ValueError("Deployment configuration must be root-owned and not writable by others")

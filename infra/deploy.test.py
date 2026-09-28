@@ -20,6 +20,11 @@ def manifest():
 
 
 class ManifestTests(unittest.TestCase):
+    def test_installed_deployer_is_hashed_from_its_actual_location(self):
+        self.assertEqual(deploy.config_path(Path('/etc/dd-hosted'), 'deploy.py'),
+                         Path('/usr/local/sbin/dd-deploy'))
+        self.assertEqual(deploy.config_path(Path('infra'), 'deploy.py'), Path('infra/deploy.py'))
+
     def test_exact_digest_manifest(self):
         self.assertEqual(deploy.validate_manifest(manifest()), manifest())
 

@@ -40,7 +40,7 @@ TARGET = {
     'pretix-nginx.conf': '479478ac117a25c9fcedbe02346885f3a874ef7051dd14942b3060a800a24bf6',
     'pretix-settings.py': '139ee2020dabbd2aac1a230c682d994197f6b0831a6767a432f4bd470fce7df2',
     'pretix-task.conf': '3e3036710bd4a0135c3f2743345fb4b5e6ad952aec1395859a516291fbc7abbb',
-    'deploy.py': '3820d556a2cb4325719121ea27a9e3cc2461c6daf6bb587abc9810ebfc561183',
+    'deploy.py': 'cf8068a74e877d7f0acb7b365365417d59a8f14147cdfd763cac7f45692f0dbb',
 }
 WEBHOOK_EVENTS = (
     'pretix.event.order.placed', 'pretix.event.order.paid',
