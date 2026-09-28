@@ -13,7 +13,8 @@ RECIPIENT = 'dev@memoryone.eu'
 USER = 'booking@didde-mie.com'
 ALLOWED = ('booking@didde-mie.com', 'noreply+booking@didde-mie.com')
 DENIED = ('contact@didde-mie.com', 'newsletter@didde-mie.com',
-          'noreply@didde-mie.com', 'outside@example.net')
+          'noreply@didde-mie.com', 'booking+unapproved@didde-mie.com',
+          'noreply+booking-extra@didde-mie.com', 'outside@example.net')
 
 
 def values(name):
