@@ -2,7 +2,7 @@
 
 This file tracks external setup and verification deliberately outside the local implementation run. Add actions as they arise. Do not move unfinished in-scope implementation here. An unchecked item below does not prevent local implementation completion, but applicable items do prevent hosting/testing/launch claims.
 
-The agreed next-run sequence and configurations are in [HOSTED_SANDBOX_PLAN.md](HOSTED_SANDBOX_PLAN.md): private smoke testing first, then a defined Stripe sandbox run and controlled email to `dev@memoryone.eu`. It separates Access protection from `PREVIEW=true`, defines callback exceptions and postpones recurring backup-provider choices until the stack runs. Saving that plan does not start deployment.
+The active deployment sequence is in [HOSTED_CURRENT_CHECKPOINT.md](HOSTED_CURRENT_CHECKPOINT.md), under the approved [HOSTED_SANDBOX_PLAN.md](HOSTED_SANDBOX_PLAN.md). Entries below cover follow-up work and launch prerequisites; earlier F4–F9 setup wording is historical until live status is reconciled. Backup/restore and broader rehearsals remain deferred to step 10 by the owner.
 
 Keep every entry concrete: why it is needed, prerequisites, action and evidence that it is complete. Never include credentials, tokenized links, private subscriber exports or customer details. If an owner action becomes necessary to finish local implementation, record it as an active checkpoint in the implementation notes and request it during the run instead of deferring it here.
 

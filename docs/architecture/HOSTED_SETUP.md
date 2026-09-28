@@ -1,8 +1,6 @@
 # Hosted sandbox setup
 
-Continue after [CICD_SETUP.md](CICD_SETUP.md). Applications remain undeployed and
-`DEPLOY_ENABLED=false`. The owner performs VPS sudo operations; the temporary
-setup account remains unprivileged.
+For the current consolidated deployment, use [HOSTED_CURRENT_CHECKPOINT.md](HOSTED_CURRENT_CHECKPOINT.md). The setup steps below are historical evidence and may describe an earlier running state. `dd-setup` remains unprivileged; the owner performs VPS sudo operations.
 
 ## Continuation checkpoint, 27 September 2026
 
@@ -29,9 +27,7 @@ confirmed four ready tunnel connections. Mailpit's loopback UI returned no HTTP
 response; inspect its internal-only network/port publishing during step 2 before
 claiming the SSH inspection path works.
 
-Next: complete the deployment PR and CI review, install its final host files,
-verify the exact published images with the readiness job, and deploy through
-GitHub Actions. Applications remain stopped and readiness absent.
+The current sequence and owner checkpoint supersede this earlier continuation note.
 
 ### Remaining step 1: scoped application credentials
 

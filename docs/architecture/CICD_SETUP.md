@@ -1,5 +1,7 @@
 # Public repository and hosted sandbox CI/CD
 
+Current release procedure: [HOSTED_CURRENT_CHECKPOINT.md](HOSTED_CURRENT_CHECKPOINT.md). The setup history below describes earlier checkpoints; verify the live VPS and GitHub state before using it.
+
 The authoritative repository remains public at `M3G4W4TT5/dd-website`, owned by
 the existing personal account. Its owner now uses GitHub Pro. No transfer or
 visibility change is planned. The private hosted booking scope and release gates

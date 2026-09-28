@@ -23,7 +23,7 @@ export function service(
 ) {
   const list = cfg.site === "primary" ? "personal" : "booking";
   const subscriptions = marketing(pool, cfg.site, cfg.actionBase, cfg.key);
-  async function handle(request: Request, peer = "unknown") {
+  async function handle(request: Request, peer = "unknown", verifiedProxy = false) {
     const path = new URL(request.url).pathname;
     const suppliedOrigin = request.headers.get("origin");
     const internal = path === "/internal/booking-subscription";
@@ -68,7 +68,7 @@ export function service(
         path === "/api/contact" ? 8192 : 2048,
       );
       let ip = peer;
-      if (cfg.trustedProxies.includes(peer)) {
+      if (verifiedProxy || cfg.trustedProxies.includes(peer)) {
         const header = request.headers.get("x-real-ip");
         if (header && /^[a-fA-F0-9:.]{3,64}$/.test(header)) ip = header;
       }

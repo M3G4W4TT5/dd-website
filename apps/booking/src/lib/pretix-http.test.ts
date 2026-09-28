@@ -64,3 +64,59 @@ test("private HTTP transport sends the approved Host and keeps the TCP destinati
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   }
 });
+
+test("private transport preserves POST bodies and follows only canonical pagination", async () => {
+  const seen: Array<{ method: string; body: string; host: string; path: string }> = [];
+  const server = createServer(async (request, response) => {
+    const chunks: Buffer[] = [];
+    for await (const chunk of request) chunks.push(chunk);
+    seen.push({ method: request.method || "", body: Buffer.concat(chunks).toString(),
+      host: request.headers.host || "", path: request.url || "" });
+    response.setHeader("Content-Type", "application/json");
+    response.end(JSON.stringify({ next: seen.length === 1
+      ? "https://checkout.didde-mie.com/api/items/?page=2" : null, results: [seen.length] }));
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const address = server.address();
+    assert(address && typeof address !== "string");
+    const base = new URL(`http://127.0.0.1:${address.port}`);
+    const first = new URL("/api/items/", base);
+    const response = await pretixFetch(first, { method: "POST", body: '{"synthetic":true}',
+      headers: { Host: "checkout.didde-mie.com", "Content-Type": "application/json" } });
+    const page = await response.json();
+    const previous = process.env.PRETIX_SHOP_BASE;
+    process.env.PRETIX_SHOP_BASE = "https://checkout.didde-mie.com";
+    try {
+      const next = pretixNextPage(page.next, first, base);
+      assert(next);
+      const second = await pretixFetch(next, { headers: { Host: "checkout.didde-mie.com" } });
+      assert.deepEqual(await second.json(), { next: null, results: [2] });
+    } finally {
+      if (previous === undefined) delete process.env.PRETIX_SHOP_BASE;
+      else process.env.PRETIX_SHOP_BASE = previous;
+    }
+    assert.deepEqual(seen, [
+      { method: "POST", body: '{"synthetic":true}', host: "checkout.didde-mie.com", path: "/api/items/" },
+      { method: "GET", body: "", host: "checkout.didde-mie.com", path: "/api/items/?page=2" },
+    ]);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+});
+
+test("private transport aborts a stalled Pretix response", async () => {
+  const server = createServer((_request, _response) => {});
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  try {
+    const address = server.address();
+    assert(address && typeof address !== "string");
+    await assert.rejects(pretixFetch(new URL(`http://127.0.0.1:${address.port}/api/`), {
+      headers: { Host: "checkout.didde-mie.com" }, signal: AbortSignal.timeout(50),
+    }), { name: "AbortError" });
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+});

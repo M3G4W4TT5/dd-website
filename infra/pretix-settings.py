@@ -8,6 +8,11 @@ from pretix.settings import *  # noqa: F403
 
 STORAGES['staticfiles']['BACKEND'] = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
+# Pinned Pretix blocks RFC1918 webhook targets by default. This owner-only
+# sandbox needs its authenticated booking callback on the private Docker network.
+# Reassess before public launch; Pretix offers only this instance-wide switch.
+ALLOW_HTTP_TO_PRIVATE_NETWORKS = True
+
 
 class PrivateFormatter(logging.Formatter):
     def format(self, record):
