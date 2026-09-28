@@ -8,7 +8,7 @@ import { getAvailability } from "./availability";
 import { quoteInterval, STUDIO_ZONE } from "../src/lib/booking";
 import {
   managedInterval,
-  managedOrderSchema,
+  parseManageableOrder,
   refundStatus,
   toOre,
   type ManagedOrder,
@@ -86,7 +86,8 @@ export async function orderState(code: string, email?: string) {
     cfg.base,
   );
   orderUrl.searchParams.set("include_canceled_positions", "true");
-  const order = managedOrderSchema.parse(await api(orderUrl, cfg.readToken));
+  const order = parseManageableOrder(await api(orderUrl, cfg.readToken));
+  if (!order) throw new ManageConflict("Order is not paid or cancelled");
   if (
     order.code !== code ||
     order.event !== cfg.event ||
