@@ -41,6 +41,7 @@ const itemSchema = z.object({
 });
 
 const discountSchema = z.object({
+  id: z.number().int().positive().optional(),
   active: z.boolean(),
   all_sales_channels: z.boolean(),
   available_from: z.string().nullable(),
@@ -298,6 +299,7 @@ async function pretixAvailability(
     slots,
     fullDayDiscount: {
       discountedHours: fullDayRule.benefit_only_apply_to_cheapest_n_matches!,
+      id: fullDayRule.id,
     },
     checkedAt: DateTime.utc().toISO()!,
   };

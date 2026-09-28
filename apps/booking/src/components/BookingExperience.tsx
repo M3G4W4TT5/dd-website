@@ -15,7 +15,7 @@ import { DateTime } from "luxon";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Availability, Quote, Slot } from "@/lib/booking";
 import { MAX_HOURS, quoteInterval, STUDIO_ZONE } from "@/lib/booking";
-import { CustomerDetailsPreview } from "@/components/CustomerDetailsPreview";
+import { CustomerDetailsPreview, type BookingDetailsDraft } from "@/components/CustomerDetailsPreview";
 import { useVisualEffects } from "@/components/useVisualEffects";
 import { SiteFooter } from "@/components/SiteFooter";
 import { MobileNavigation } from "@/components/MobileNavigation";
@@ -149,6 +149,8 @@ export function BookingExperience({
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<"idle" | "checked" | "changed" | "error">("idle");
+  const [acceptedQuote, setAcceptedQuote] = useState<Quote | null>(null);
+  const detailsDraft = useRef<BookingDetailsDraft>({ fields: {}, termsAccepted: false, marketingOptIn: false });
   const [phase, setPhase] = useState<"selection" | "selection-out" | "details" | "details-out">("selection");
   const [hasVisitedDetails, setHasVisitedDetails] = useState(false);
   const [error, setError] = useState(!initialAvailability);
@@ -214,6 +216,7 @@ export function BookingExperience({
   const quote = current && selectedId ? quoteInterval(current, selectedId, hours) : null;
   function selectTime(slot: Slot) {
     if (!current || !slot.available) return;
+    setAcceptedQuote(null);
     if (!selectedId || endSelected) {
       setClearingSlotIds(endSelected ? quote?.slotIds.filter((id) => id !== slot.id) ?? [] : []);
       setSelectedId(slot.id);
@@ -258,6 +261,7 @@ export function BookingExperience({
     setEndSelected(false);
     setClearingSlotIds([]);
     setStatus("idle");
+    setAcceptedQuote(null);
     setLoading(true);
     setError(false);
     const blurDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -324,7 +328,14 @@ export function BookingExperience({
       } else {
         const result = (await response.json()) as { quote: Quote; reservationCreated: boolean };
         if (result.reservationCreated) setStatus("error");
+        else if (!quote || result.quote.totalOre !== quote.totalOre ||
+          result.quote.start !== quote.start || result.quote.end !== quote.end ||
+          result.quote.slotIds.join(",") !== quote.slotIds.join(",")) {
+          await selectDate(date);
+          setStatus("changed");
+        }
         else {
+          setAcceptedQuote(result.quote);
           setStatus("checked");
           setPhase("selection-out");
         }
@@ -360,7 +371,7 @@ export function BookingExperience({
           </div>
           <div id="booking-flow" className={`booking-layout booking-stage ${phase.endsWith("-out") ? "booking-stage--leaving" : phase === "details" || hasVisitedDetails ? "booking-stage--entering" : ""} ${phase === "details" || phase === "details-out" ? "booking-layout--details" : ""}`} tabIndex={-1} inert={phase.endsWith("-out")}>
             {phase === "details" || phase === "details-out" ? (
-              <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId!} hours={hours} onBack={() => setPhase("details-out")} onConflict={async () => { await selectDate(date); setStatus("changed"); setPhase("selection"); }} />
+              <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId!} hours={hours} acceptedQuote={acceptedQuote!} draft={detailsDraft.current} onBack={() => setPhase("details-out")} onConflict={async () => { await selectDate(date); setStatus("changed"); setPhase("selection"); }} />
             ) : <>
             <div className="picker-panel">
               <div className="picker-head"><span>{t.pickDate}</span><CalendarDays size={19} /></div>

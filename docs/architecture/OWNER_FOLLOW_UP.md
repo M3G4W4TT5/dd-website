@@ -32,6 +32,7 @@ Keep every entry concrete: why it is needed, prerequisites, action and evidence 
 - [ ] F13. When the primary design is ready, deploy its independent static frontend and communications identity. Verify its contact, double-opt-in, unsubscribe and navigation end to end, with sender/data isolation from booking.
 - [ ] F14. Review the completed architecture and evidence in the planned broader pre-launch security review. Complete deployment-specific legal/privacy/provider documentation and approve live-payment/public-release gates separately.
 - [ ] F15. Before the first manual campaign, approve templates and verify current scoped active-list exports, unsubscribe pages/reply handling, suppression and safe recipient handling. No automated campaign engine is being introduced.
+- [ ] F16. **Deferred final pre-launch phase, after functional checkout work:** owner-led mobile review and design. Review layouts, visual defects and usability, then design mobile-only guided journeys for rental booking, event purchase and booking modification, presenting one step at a time (for example start time → end time → customer details). Await the owner's active participation and design direction before audit, design or implementation.
 
 ## Acceptance details and prerequisites
 

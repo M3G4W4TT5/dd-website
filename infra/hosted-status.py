@@ -139,7 +139,7 @@ def main():
         'checkout_root': probe('checkout.didde-mie.com', '/'),
     }
     code = """from django_scopes import scopes_disabled
-from pretix.base.models import Event, Discount, Item, Order, Quota, SubEvent
+from pretix.base.models import Event, Discount, Item, Order, Quota, SubEvent, Organizer, SalesChannel
 import json
 with scopes_disabled():
  discounts=list(Discount.objects.filter(event__slug='studio',event__organizer__slug='dd-studio'))
@@ -147,7 +147,9 @@ with scopes_disabled():
   str(discounts[0].benefit_discount_matching_percent)=='100.00' and
   discounts[0].benefit_only_apply_to_cheapest_n_matches==2 and
   list(discounts[0].condition_limit_products.values_list('id',flat=True))==[1])
- print('DD_STATUS=' + json.dumps({'events':[{'slug':e.slug,'live':e.live,'testmode':e.testmode} for e in Event.objects.all().order_by('slug')], 'products':Item.objects.count(), 'dates':SubEvent.objects.count(), 'quotas':Quota.objects.count(), 'discounts':Discount.objects.count(), 'full_day_discount_complete':full_day, 'orders':Order.objects.count()}))
+ organizer=Organizer.objects.get(slug='dd-studio')
+ web=list(SalesChannel.objects.filter(organizer=organizer,identifier='web').values_list('type',flat=True))
+ print('DD_STATUS=' + json.dumps({'events':[{'slug':e.slug,'live':e.live,'testmode':e.testmode} for e in Event.objects.all().order_by('slug')], 'products':Item.objects.count(), 'dates':SubEvent.objects.count(), 'quotas':Quota.objects.count(), 'discounts':Discount.objects.count(), 'full_day_discount_complete':full_day, 'orders':Order.objects.count(), 'web_sales_channel_valid':web==['web']}))
 """
     output = command("docker", "exec", "dd-hosted-pretix-1", "python", "-m", "pretix", "shell", "-v", "0", "-c", code)
     result["pretix"] = json.loads(next(line[len("DD_STATUS="):] for line in output.splitlines() if line.startswith("DD_STATUS=")))

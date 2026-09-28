@@ -15,11 +15,12 @@ export function submissionIdentity() {
   };
 }
 
-export async function submitWithIdentity(identity: ReturnType<typeof submissionIdentity>, url: string, init: RequestInit) {
+export async function submitWithIdentity(identity: ReturnType<typeof submissionIdentity>, url: string, init: RequestInit,
+                                         acceptOnSuccess = true) {
   const headers = new Headers(init.headers);
   headers.set("Idempotency-Key", identity.key(String(init.body)));
   const response = await fetch(url, { ...init, headers });
-  if (response.ok) {
+  if (response.ok && acceptOnSuccess) {
     const result = await response.clone().json();
     if (result.marketingRequested !== false) identity.accepted();
   }

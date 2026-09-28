@@ -148,10 +148,18 @@ def import_configuration():
                             if before['fields'][k] != after['fields'][k]))
                            for before, after in zip(records, actual) if before != after]
             raise ValueError('Imported configuration differs in model/id/fields: ' + str(differences[:5]))
+        # Sales channels are organizer prerequisites, not part of the reviewed
+        # event export. Fresh imports need Pretix's built-in web channel.
+        organizer = model('Organizer').objects.get(slug='dd-studio')
+        channel, created = model('SalesChannel').objects.get_or_create(
+            organizer=organizer, identifier='web',
+            defaults={'label': 'web', 'type': 'web', 'position': 0})
+        if channel.type != 'web':
+            raise ValueError('Existing web sales channel has an incompatible type')
         assert not model('Order').objects.exists()
         assert not model('Event').objects.filter(testmode=False).exists()
         assert not model('Event').objects.filter(live=True).exists()
-    print('PASS: configuration imported and field-for-field verified; 3 unpublished test events; no orders imported.')
+    print('PASS: configuration imported and field-for-field verified; built-in web channel present; 3 unpublished test events; no orders imported.')
     print('Configuration counts:', json.dumps(package['counts'], sort_keys=True))
 
 

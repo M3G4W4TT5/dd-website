@@ -7,6 +7,7 @@ import {
   itemSchema,
   normalizeEvent,
   quotaSchema,
+  sandboxPurchaseEligible,
   occupiesRoom,
   overlaps,
   type Occurrence,
@@ -57,6 +58,15 @@ export type Catalog = {
   organizer: string;
   shopBase: string | null;
 };
+
+// Test-mode sales are permitted only inside the explicitly activated private
+// sandbox. The occurrence still needs its own room attestation and stock.
+function sandboxCheckoutEnabled() {
+  return process.env.PRETIX_EVENTS_CHECKOUT_ENABLED === "true" &&
+    process.env.PREVIEW === "false" &&
+    process.env.PAYMENT_ENVIRONMENT === "sandbox" &&
+    process.env.PAYMENT_RELEASE_ENABLED !== "true";
+}
 export async function getCatalog(): Promise<Catalog> {
   const cfg = config();
   const empty: Catalog = {
@@ -180,7 +190,7 @@ export async function getCatalog(): Promise<Catalog> {
     const shopBase = process.env.PRETIX_SHOP_BASE?.trim() || null;
     // This flag is an operator attestation after room inventory and payment have been verified in pretix.
     const checkoutEnabled =
-      process.env.PRETIX_EVENTS_CHECKOUT_ENABLED === "true" &&
+      sandboxCheckoutEnabled() &&
       Boolean(
         shopBase &&
           new URL(shopBase).protocol === "https:" &&
@@ -188,6 +198,9 @@ export async function getCatalog(): Promise<Catalog> {
           Number.isInteger(rentalItemId) &&
           rentalItemId > 0,
       );
+    for (const occurrence of occurrences) {
+      occurrence.checkoutEligible = sandboxPurchaseEligible(occurrence, checkoutEnabled);
+    }
     return {
       state: "ready",
       occurrences: occurrences.sort(

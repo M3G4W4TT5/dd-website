@@ -31,12 +31,17 @@ export type RawQuota = z.infer<typeof quotaSchema>;
 export type RawItem = z.infer<typeof itemSchema>;
 export type Language = "da" | "en";
 export type Occurrence = {
-  key: string; slug: string; dateId: number | null; title: string; titleEn: string;
+  key: string; slug: string; dateId: number | null; live: boolean; title: string; titleEn: string;
   description: string; descriptionEn: string; image: string | null; shopUrl: string | null; location: string;
   locationEn: string; start: string; end: string; status: "available" | "sold-out" | "not-on-sale" | "test" | "room-conflict";
-  remaining: number | null; roomVerified: boolean; signupAvailable: boolean;
+  remaining: number | null; roomVerified: boolean; signupAvailable: boolean; checkoutEligible: boolean;
   tickets: { id: number; name: string; nameEn: string; price: string; remaining: number | null; minPerOrder: number; maxPerOrder: number | null; hasVariations: boolean }[];
 };
+export function sandboxPurchaseEligible(occurrence: Occurrence, sandboxEnabled: boolean): boolean {
+  return sandboxEnabled && occurrence.live && occurrence.status === "test" && occurrence.signupAvailable &&
+    occurrence.roomVerified && occurrence.tickets.some(ticket => !ticket.hasVariations &&
+      (ticket.remaining === null || ticket.remaining >= ticket.minPerOrder));
+}
 export function localized(value: z.infer<typeof translated>, language: Language): string {
   if (!value) return "";
   if (typeof value === "string") return value;
@@ -113,7 +118,7 @@ export function normalizeEvent(event: RawEvent, date: RawDate | null, items: Raw
   const metaDescriptionDa = event.meta_data?.ttd_description_da;
   const metaDescriptionEn = event.meta_data?.ttd_description_en;
   return {
-    key: `${event.slug}:${date?.id ?? "single"}`, slug: event.slug, dateId: date?.id ?? null,
+    key: `${event.slug}:${date?.id ?? "single"}`, slug: event.slug, dateId: date?.id ?? null, live: event.live,
     title: localized(date?.name || event.name, "da") || localized(event.name, "da"),
     titleEn: localized(date?.name || event.name, "en") || localized(event.name, "en"),
     description: localized(description, "da") || (typeof metaDescriptionDa === "string" ? metaDescriptionDa : "") || localized(eligible[0]?.description, "da"),
@@ -124,8 +129,9 @@ export function normalizeEvent(event: RawEvent, date: RawDate | null, items: Raw
       (date ? date.meta_data?.ttd_room_verified : event.meta_data?.ttd_room_verified) === "true",
     location: localized(date?.location || event.location, "da"),
     locationEn: localized(date?.location || event.location, "en"), start, end,
-    status: event.testmode ? "test" : !saleOpen || eligible.length === 0 ? "not-on-sale" : hasStock ? "available" : "sold-out",
+    status: !saleOpen || eligible.length === 0 ? "not-on-sale" : !hasStock ? "sold-out" : event.testmode ? "test" : "available",
     signupAvailable: saleOpen && hasStock,
+    checkoutEligible: false,
     remaining: remainingPlaces(eligible, quotas.filter(q => q.subevent === null || q.subevent === date?.id)),
     tickets: eligible.map(item => {
       const limits = quotas.filter(q => (q.subevent === null || q.subevent === date?.id) && q.items.includes(item.id))
