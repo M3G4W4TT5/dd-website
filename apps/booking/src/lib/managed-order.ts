@@ -38,6 +38,14 @@ export const managedOrderSchema = z.object({
 export type ManagedOrder = z.infer<typeof managedOrderSchema>;
 export type ManagedDate = z.infer<typeof rentalDateSchema>;
 
+/** Pretix places unpaid orders before payment. Only terminal orders belong in
+ * booking management snapshots and lifecycle messages. */
+export function parseManageableOrder(value: unknown): ManagedOrder | null {
+  const status = z.object({ status: z.string() }).parse(value).status;
+  if (status === "n" || status === "e") return null;
+  return managedOrderSchema.parse(value);
+}
+
 export function toOre(value: string) {
   if (!/^\d+(\.\d{1,2})?$/.test(value)) throw new Error("Invalid amount");
   const [whole, fraction = ""] = value.split(".");
