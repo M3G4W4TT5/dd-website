@@ -216,8 +216,7 @@ async function pretixAvailability(
     fullDayRule.condition_min_value !== "0.00" ||
     !fullDayRule.benefit_same_products ||
     fullDayRule.benefit_discount_matching_percent !== "100.00" ||
-    !fullDayRule.benefit_only_apply_to_cheapest_n_matches ||
-    fullDayRule.benefit_only_apply_to_cheapest_n_matches >= MAX_HOURS
+    fullDayRule.benefit_only_apply_to_cheapest_n_matches !== 2
   )
     throw new Error("Unsupported studio discount configuration");
   const starts = new Set<string>();

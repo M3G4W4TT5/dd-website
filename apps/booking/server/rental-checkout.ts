@@ -42,6 +42,23 @@ function sameQuote(a: Quote, b: RentalCheckoutInput["acceptedQuote"]) {
     a.slotIds.length === b.slotIds.length && a.slotIds.every((id, i) => id === b.slotIds[i]);
 }
 
+function matchesPositions(order: Order, quote: Quote, itemId: number, discountedHours: number,
+                          discountId: number | null): boolean {
+  const payableHours = quote.slotIds.length - discountedHours;
+  if (payableHours < 1 || quote.totalOre % payableHours !== 0 ||
+      order.positions.length !== quote.slotIds.length) return false;
+  const expectedPrice = quote.totalOre / payableHours;
+  const discounted = new Set(discountedHours ? quote.slotIds.slice(-discountedHours) : []);
+  const positions = new Map(order.positions.map(position => [String(position.subevent), position]));
+  return positions.size === quote.slotIds.length && quote.slotIds.every(id => {
+    const position = positions.get(id);
+    return !!position && position.item === itemId &&
+      (discounted.has(id)
+        ? position.discount === discountId && ore(position.price) === 0
+        : position.discount == null && ore(position.price) === expectedPrice);
+  });
+}
+
 function config() {
   if (process.env.PREVIEW !== "false" || process.env.PAYMENT_ENVIRONMENT !== "sandbox" ||
       process.env.PAYMENT_RELEASE_ENABLED === "true" ||
@@ -67,8 +84,11 @@ async function api(url: URL, token: string, method = "GET", body?: unknown): Pro
     body: body === undefined ? undefined : JSON.stringify(body), cache: "no-store", signal: AbortSignal.timeout(15_000) });
 }
 
-async function existingOrder(cfg: ReturnType<typeof config>, code: string): Promise<Order | null> {
-  const response = await api(new URL(`${cfg.path}${code}/`, cfg.base), cfg.readToken);
+type CheckoutDependencies = { availability: typeof getAvailability; request: typeof api };
+const checkoutDependencies: CheckoutDependencies = { availability: getAvailability, request: api };
+
+async function existingOrder(cfg: ReturnType<typeof config>, code: string, request: typeof api): Promise<Order | null> {
+  const response = await request(new URL(`${cfg.path}${code}/`, cfg.base), cfg.readToken);
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`Pretix order lookup failed: ${response.status}`);
   return orderSchema.parse(await response.json());
@@ -77,16 +97,10 @@ async function existingOrder(cfg: ReturnType<typeof config>, code: string): Prom
 function verifyOrder(order: Order, cfg: ReturnType<typeof config>, code: string, intent: string,
                      quote: RentalCheckoutInput["acceptedQuote"], email: string, discountedHours: number,
                      discountId: number | null) {
-  const selected = [...quote.slotIds].sort();
-  const reserved = order.positions.map(position => String(position.subevent)).sort();
+  if (order.api_meta?.ttd_checkout_intent !== intent) throw new RentalConflict("Submission changed");
   if (order.code !== code || order.event !== cfg.event || !order.testmode || order.status !== "n" ||
-      order.email.toLowerCase() !== email.toLowerCase() || order.api_meta?.ttd_checkout_intent !== intent ||
-      ore(order.total) !== quote.totalOre || order.positions.length !== quote.slotIds.length ||
-      order.positions.some(position => position.item !== cfg.itemId) ||
-      reserved.some((id, i) => id !== selected[i]) ||
-      order.positions.filter(position => position.discount != null).length !== discountedHours ||
-      order.positions.some(position => position.discount != null &&
-        (position.discount !== discountId || ore(position.price) !== 0)) ||
+      order.email.toLowerCase() !== email.toLowerCase() || ore(order.total) !== quote.totalOre ||
+      !matchesPositions(order, quote, cfg.itemId, discountedHours, discountId) ||
       order.payments.length < 1 || order.payments.some(payment => payment.provider !== "stripe" ||
         ore(payment.amount) !== quote.totalOre || payment.state === "confirmed"))
     throw new RentalConflict("Pretix order differs from accepted quote");
@@ -99,19 +113,20 @@ function verifyOrder(order: Order, cfg: ReturnType<typeof config>, code: string,
   return paymentUrl;
 }
 
-async function expireMismatch(cfg: ReturnType<typeof config>, code: string) {
-  const response = await api(new URL(`${cfg.path}${code}/mark_expired/`, cfg.base), cfg.writeToken, "POST", {});
+async function expireMismatch(cfg: ReturnType<typeof config>, code: string, request: typeof api) {
+  const response = await request(new URL(`${cfg.path}${code}/mark_expired/`, cfg.base), cfg.writeToken, "POST", {});
   if (!response.ok) throw new Error(`Pretix mismatch could not be expired: ${response.status}`);
 }
 
-// The pending Pretix order is the atomic reservation. Pretix calculates its
-// discount, owns payment, and automatically expires an abandoned reservation.
-export async function startRentalCheckout(input: RentalCheckoutInput, idempotencyKey: string) {
+// The pending Pretix order is the atomic reservation. Pretix validates the
+// explicit full-day discount, owns payment, and expires abandoned reservations.
+export async function startRentalCheckout(input: RentalCheckoutInput, idempotencyKey: string,
+                                          dependencies: CheckoutDependencies = checkoutDependencies) {
   const cfg = config();
   if (!/^[0-9a-fA-F-]{36}$/.test(idempotencyKey)) throw new RentalConflict("Invalid submission identity");
   const code = "R" + createHmac("sha256", cfg.writeToken).update(idempotencyKey).digest("hex").slice(0, 15).toUpperCase();
   const intent = createHmac("sha256", cfg.writeToken).update(JSON.stringify(input)).digest("hex");
-  let order = await existingOrder(cfg, code);
+  let order = await existingOrder(cfg, code, dependencies.request);
   if (order) {
     if (order.api_meta?.ttd_checkout_intent !== intent) throw new RentalConflict("Submission changed");
     const discountHours = Number(order.api_meta?.ttd_discounted_hours);
@@ -119,7 +134,7 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
     return { paymentUrl: verifyOrder(order, cfg, code, intent, input.acceptedQuote, input.details.email, discountHours, discountId),
       created: false };
   }
-  const availability = await getAvailability(input.date);
+  const availability = await dependencies.availability(input.date);
   if (availability.source !== "pretix") throw new Error("Authoritative availability required");
   const quote = quoteInterval(availability, input.startId, input.hours);
   if (!quote || !sameQuote(quote, input.acceptedQuote)) throw new RentalConflict("Selection or price changed");
@@ -151,29 +166,32 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
       ttd_terms_accepted: true, ttd_marketing_opt_in: input.marketingOptIn === true },
   };
   const endpoint = new URL(cfg.path, cfg.base);
-  const simulation = await api(endpoint, cfg.writeToken, "POST", { ...payload, simulate: true });
+  const simulation = await dependencies.request(endpoint, cfg.writeToken, "POST", { ...payload, simulate: true });
   if (simulation.status === 400 || simulation.status === 409) throw new RentalConflict("Pretix rejected the selection");
   if (!simulation.ok) throw new Error(`Pretix order simulation failed: ${simulation.status}`);
   const simulated = orderSchema.parse(await simulation.json());
-  if (ore(simulated.total) !== quote.totalOre || simulated.positions.length !== quote.slotIds.length ||
-      simulated.positions.filter(position => position.discount != null).length !== discountedHours ||
-      simulated.positions.some(position => position.discount != null &&
-        (position.discount !== discountId || ore(position.price) !== 0)))
+  if (ore(simulated.total) !== quote.totalOre ||
+      !matchesPositions(simulated, quote, cfg.itemId, discountedHours, discountId ?? null))
     throw new RentalConflict("Pretix total or discount changed");
   let response: Response | undefined;
-  try { response = await api(endpoint, cfg.writeToken, "POST", payload); }
+  try { response = await dependencies.request(endpoint, cfg.writeToken, "POST", payload); }
   catch { /* A timeout can occur after Pretix committed. Recover by deterministic code. */ }
   if (response?.ok) order = orderSchema.parse(await response.json());
-  else order = await existingOrder(cfg, code);
+  else order = await existingOrder(cfg, code, dependencies.request);
   if (!order) {
     if (response && [400, 409].includes(response.status)) throw new RentalConflict("Pretix inventory changed");
     throw new Error("Pretix order outcome uncertain; retry with the same submission identity");
   }
+  if (order.api_meta?.ttd_checkout_intent !== intent) throw new RentalConflict("Submission changed");
   try {
     return { paymentUrl: verifyOrder(order, cfg, code, intent, quote, input.details.email, discountedHours, discountId ?? null),
-      created: true };
+      created: response?.ok === true };
   } catch (error) {
-    if (order.status === "n") await expireMismatch(cfg, code);
+    // Only this intent's still-pending reservation may be cleaned up. A fresh
+    // read prevents a payment completed during verification from being expired.
+    const current = await existingOrder(cfg, code, dependencies.request);
+    if (current?.status === "n" && current.api_meta?.ttd_checkout_intent === intent)
+      await expireMismatch(cfg, code, dependencies.request);
     throw error;
   }
 }
