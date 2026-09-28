@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      release_run_id:
+        description: Successful main publication run ID to deploy without rebuilding
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -15,6 +20,7 @@ concurrency:
 
 jobs:
   checks:
+    if: github.event_name != 'workflow_dispatch' || inputs.release_run_id == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -32,9 +38,11 @@ jobs:
       - run: npm run typecheck:server
       - run: npm run build:server
       - run: python3 infra/deploy.test.py
+      - run: python3 infra/apply-hosted-release.test.py
 
   images:
     needs: checks
+    if: github.event_name != 'workflow_dispatch' || inputs.release_run_id == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -99,9 +107,15 @@ jobs:
 
   deploy:
     needs: [checks, images]
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_ENABLED == 'true'
+    if: >-
+      always() && github.ref == 'refs/heads/main' &&
+      ((needs.checks.result == 'success' && needs.images.result == 'success' && vars.DEPLOY_ENABLED == 'true') ||
+       (github.event_name == 'workflow_dispatch' && inputs.release_run_id != '' && needs.checks.result == 'skipped' && needs.images.result == 'skipped'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
     environment: hosted-sandbox
     concurrency:
       group: hosted-sandbox-deployment
@@ -110,11 +124,30 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Verify previously checked publication
+        if: inputs.release_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_RUN_ID: ${{ inputs.release_run_id }}
+        run: |
+          [[ "$RELEASE_RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RELEASE_RUN_ID" \
+            --jq '{sha:.head_sha,event:.event,status:.status,conclusion:.conclusion,name:.name}' > "$RUNNER_TEMP/source-run.json"
+          jq -e --arg sha "$GITHUB_SHA" \
+            '.sha == $sha and .event == "push" and .status == "completed" and .conclusion == "success" and .name == "Booking checks and images"' \
+            "$RUNNER_TEMP/source-run.json"
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        if: inputs.release_run_id == ''
         with:
           pattern: booking-candidate-*-${{ github.sha }}
           path: candidate
           merge-multiple: true
+      - name: Download exact published digests
+        if: inputs.release_run_id != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_RUN_ID: ${{ inputs.release_run_id }}
+        run: gh run download "$RELEASE_RUN_ID" -p "booking-candidate-*-$GITHUB_SHA" -D candidate
       - name: Assemble digest manifest
         env:
           COMMIT: ${{ github.sha }}
@@ -123,13 +156,17 @@ jobs:
           import json, os, runpy
           from pathlib import Path
           images = {}
-          for path in sorted(Path('candidate').glob('*.json')):
+          paths = sorted(Path('candidate').rglob('*.json'))
+          for path in paths:
               data = json.loads(path.read_text())
               assert data['commit'] == os.environ['COMMIT'], 'Candidate commit mismatch'
               assert data['target'] not in images, 'Duplicate candidate target'
               images[data['target']] = data['image']
-          manifest = {'commit': os.environ['COMMIT'], 'images': images}
-          runpy.run_path('infra/deploy.py')['validate_manifest'](manifest)
+          assert len(images) == 3 and len(paths) == 3, 'Expected exactly three published image artifacts'
+          deploy = runpy.run_path('infra/deploy.py')
+          manifest = {'commit': os.environ['COMMIT'], 'images': images,
+                      'config_version': deploy['config_version'](Path('infra'))}
+          deploy['validate_manifest'](manifest)
           Path('release.json').write_text(json.dumps(manifest))
           PY
       - name: Deploy using the restricted CI key

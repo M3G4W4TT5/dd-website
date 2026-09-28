@@ -196,7 +196,13 @@ services:
     logging: *logging
     ports: ["127.0.0.1:8080:8080"]
     volumes: ["./proxy.conf:/etc/nginx/conf.d/default.conf:ro"]
-    networks: [ingress, booking-internal]
+    secrets:
+      - source: pretix-webhook-header
+        target: pretix-webhook-header
+    networks:
+      ingress: {}
+      booking-internal:
+        aliases: [booking-public-proxy]
     depends_on: [booking, booking-communications, pretix]
   primary-communications:
     <<: *node
@@ -236,4 +242,5 @@ secrets:
   booking-web: {file: "${DD_SECRET_DIRECTORY}/booking-web.env"}
   booking-worker: {file: "${DD_SECRET_DIRECTORY}/booking-worker.env"}
   booking-communications: {file: "${DD_SECRET_DIRECTORY}/booking-communications.env"}
+  pretix-webhook-header: {file: "${DD_SECRET_DIRECTORY}/pretix-webhook-header.conf"}
   primary-communications: {file: "${DD_SECRET_DIRECTORY}/primary-communications.env"}

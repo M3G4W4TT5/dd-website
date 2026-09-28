@@ -1,7 +1,13 @@
 """Validate the privilege boundary without Docker or remote changes."""
 import importlib.util
+import io
+import json
 from pathlib import Path
+import subprocess
+import tempfile
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location("deploy", Path(__file__).with_name("deploy.py"))
 deploy = importlib.util.module_from_spec(spec)
@@ -9,7 +15,7 @@ spec.loader.exec_module(deploy)
 
 
 def manifest():
-    return {"commit": "a" * 40, "images": {
+    return {"commit": "a" * 40, "config_version": "c" * 64, "images": {
         target: deploy.PREFIX + target + "@sha256:" + "b" * 64 for target in deploy.TARGETS}}
 
 
@@ -44,6 +50,51 @@ class ManifestTests(unittest.TestCase):
         data["compose"] = "/tmp/attacker.yaml"
         with self.assertRaises(ValueError):
             deploy.validate_manifest(data)
+
+    def test_rejects_config_version_mismatch_shape(self):
+        data = manifest()
+        data["config_version"] = "old"
+        with self.assertRaises(ValueError):
+            deploy.validate_manifest(data)
+
+    def test_post_replacement_failure_retains_success_and_records_running_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root, state = Path(directory) / "host", Path(directory) / "state"
+            root.mkdir()
+            state.mkdir()
+            for name in deploy.FILES:
+                (root / name).write_text("reviewed " + name)
+            (root / "ready").write_text("ready")
+            candidate = manifest()
+            candidate["config_version"] = deploy.config_version(root)
+            previous = {**candidate, "commit": "d" * 40}
+            (state / "current.json").write_text(json.dumps(previous))
+
+            def fake_run(command, env, capture=False):
+                if "-q" in command and "ps" in command:
+                    output = "container-id\n"
+                elif "image" in command and "inspect" in command:
+                    output = candidate["commit"] + "\n"
+                elif "inspect" in command:
+                    output = "sha256:" + "e" * 64 + "\n"
+                else:
+                    output = ""
+                return subprocess.CompletedProcess(command, 0, output)
+
+            stdin = SimpleNamespace(buffer=io.BytesIO(json.dumps(candidate).encode()))
+            with patch.object(deploy, "ROOT", root), patch.object(deploy, "STATE", state), \
+                 patch.object(deploy.os, "geteuid", return_value=0), patch.object(deploy.sys, "stdin", stdin), \
+                 patch.object(Path, "lstat", return_value=SimpleNamespace(st_uid=0, st_mode=0o100644)), \
+                 patch.object(deploy, "run", side_effect=fake_run), \
+                 patch.object(deploy, "check_readiness", side_effect=ValueError("Pretix-backed availability failed")):
+                with self.assertRaisesRegex(ValueError, "readiness failed"):
+                    deploy.main()
+            self.assertEqual(json.loads((state / "current.json").read_text()), previous)
+            failed = json.loads((state / "failed.json").read_text())
+            self.assertEqual(failed["manifest"], candidate)
+            self.assertEqual(failed["phase"], "readiness")
+            self.assertEqual(failed["running_image_ids"]["booking"], "sha256:" + "e" * 64)
+            self.assertEqual(json.loads((state / "attempt.json").read_text())["status"], "failed")
 
 
 if __name__ == "__main__":

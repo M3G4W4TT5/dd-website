@@ -1,0 +1,112 @@
+#!/usr/bin/python3
+"""Read-only, sanitized owner status for the existing private hosted installation."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+ROOT = Path("/etc/dd-hosted")
+STATE = Path("/var/lib/dd-hosted")
+CONFIGS = ("compose.production.yaml", "compose.hosted.yaml", "proxy.conf",
+           "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf")
+GATES = ("DD_MODE", "PREVIEW", "PAYMENT_ENVIRONMENT", "PAYMENT_RELEASE_ENABLED",
+         "MAIL_DELIVERY", "MAIL_RELEASE_ENABLED", "PRETIX_EVENTS_CHECKOUT_ENABLED",
+         "BOOKING_SELF_SERVICE_ENABLED")
+SAFE_VALUES = {
+    'DD_MODE': ('production',), 'PREVIEW': ('true', 'false'),
+    'PAYMENT_ENVIRONMENT': ('sandbox',), 'PAYMENT_RELEASE_ENABLED': ('true', 'false'),
+    'MAIL_DELIVERY': ('capture', 'controlled', 'enabled'),
+    'MAIL_RELEASE_ENABLED': ('true', 'false'),
+    'PRETIX_EVENTS_CHECKOUT_ENABLED': ('true', 'false'),
+    'BOOKING_SELF_SERVICE_ENABLED': ('true', 'false'),
+}
+
+
+def command(*args):
+    result = subprocess.run(args, text=True, capture_output=True, timeout=25, check=True)
+    return result.stdout.strip()
+
+
+def manifest(name):
+    path = STATE / name
+    if not path.is_file():
+        return None
+    data = json.loads(path.read_text())
+    return {"commit": data.get("commit") or data.get("manifest", {}).get("commit"),
+            "config_version": data.get("config_version") or data.get("manifest", {}).get("config_version"),
+            "phase": data.get("phase"), "status": data.get("status"), "category": data.get("category")}
+
+
+def main():
+    if os.geteuid() != 0:
+        raise ValueError("Run as dd-owner through sudo")
+    result = {"config_hashes": {}, "release": {}, "containers": {}, "gates": {}, "pretix": {}}
+    for name in (*CONFIGS, "deploy.py"):
+        path = Path("/usr/local/sbin/dd-deploy") if name == "deploy.py" else ROOT / name
+        result["config_hashes"][name] = hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
+    version = hashlib.sha256()
+    for name in (*CONFIGS, "deploy.py"):
+        path = Path("/usr/local/sbin/dd-deploy") if name == "deploy.py" else ROOT / name
+        version.update(name.encode() + b"\0")
+        version.update(path.read_bytes())
+        version.update(b"\0")
+    result["host_config_version"] = version.hexdigest()
+    for name in ("current.json", "previous.json", "attempt.json", "failed.json"):
+        result["release"][name] = manifest(name)
+    ids = command("docker", "ps", "-aq", "--filter", "label=com.docker.compose.project=dd-hosted").splitlines()
+    for cid in ids:
+        data = json.loads(command("docker", "inspect", cid))[0]
+        service = data["Config"]["Labels"].get("com.docker.compose.service", "unknown")
+        image_id = data["Image"]
+        image = json.loads(command("docker", "image", "inspect", image_id))[0]
+        result["containers"][service] = {
+            "state": data["State"]["Status"], "health": data["State"].get("Health", {}).get("Status"),
+            "restarts": data["RestartCount"], "image_id": image_id,
+            "image_reference": data["Config"]["Image"],
+            "revision": image["Config"].get("Labels", {}).get("org.opencontainers.image.revision"),
+        }
+    stats = command("docker", "stats", "--no-stream", "--format", "{{json .}}", *ids) if ids else ""
+    result["resource_pressure"] = [
+        {key: row.get(key) for key in ("Name", "CPUPerc", "MemUsage", "MemPerc", "PIDs")}
+        for row in (json.loads(line) for line in stats.splitlines())
+    ]
+    for service, filename in (("booking", "booking-web.env"),
+                              ("communications", "booking-communications.env"),
+                              ("worker", "booking-worker.env")):
+        path = ROOT / "secrets" / filename
+        values = dict(line.split("=", 1) for line in path.read_text().splitlines() if "=" in line)
+        result["gates"][service] = {key: values.get(key) if values.get(key) in SAFE_VALUES[key] else 'unexpected'
+                                     for key in GATES}
+        result["gates"][service]["stripe_signing_secret_present"] = bool(values.get("STRIPE_WEBHOOK_SIGNING_SECRET"))
+        result["gates"][service]["scoped_write_token_present"] = bool(values.get("PRETIX_MANAGE_WRITE_API_TOKEN"))
+    code = """from django_scopes import scopes_disabled
+from pretix.base.models import Event, Discount, Item, Order, Quota, SubEvent
+import json
+with scopes_disabled():
+ discounts=list(Discount.objects.filter(event__slug='studio',event__organizer__slug='dd-studio'))
+ full_day=(len(discounts)==1 and discounts[0].active and discounts[0].condition_min_count==14 and
+  str(discounts[0].benefit_discount_matching_percent)=='100.00' and
+  discounts[0].benefit_only_apply_to_cheapest_n_matches==2 and
+  list(discounts[0].condition_limit_products.values_list('id',flat=True))==[1])
+ print('DD_STATUS=' + json.dumps({'events':[{'slug':e.slug,'live':e.live,'testmode':e.testmode} for e in Event.objects.all().order_by('slug')], 'products':Item.objects.count(), 'dates':SubEvent.objects.count(), 'quotas':Quota.objects.count(), 'discounts':Discount.objects.count(), 'full_day_discount_complete':full_day, 'orders':Order.objects.count()}))
+"""
+    output = command("docker", "exec", "dd-hosted-pretix-1", "python", "-m", "pretix", "shell", "-v", "0", "-c", code)
+    result["pretix"] = json.loads(next(line[len("DD_STATUS="):] for line in output.splitlines() if line.startswith("DD_STATUS=")))
+    try:
+        supervisor = command("docker", "exec", "dd-hosted-pretix-1", "supervisorctl", "status")
+        result["pretix"]["supervisor"] = [" ".join(line.split()[:2]) for line in supervisor.splitlines()]
+    except subprocess.CalledProcessError:
+        result["pretix"]["supervisor"] = "unavailable"
+    result["host"] = {"disk_available_kib": os.statvfs("/").f_bavail * os.statvfs("/").f_frsize // 1024,
+                      "load_average": tuple(round(value, 2) for value in os.getloadavg())}
+    print(json.dumps(result, sort_keys=True, indent=2))
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception:
+        print("Hosted status failed; inspect locally without sharing secrets or raw container logs.", file=sys.stderr)
+        sys.exit(1)

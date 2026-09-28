@@ -1,6 +1,6 @@
 # Private hosted booking and sandbox testing
 
-Agreed plan, 27 September 2026. Saving this plan does not start implementation or deployment. One later approval can cover the defined hosting/sandbox phase and its necessary configuration and routine test steps. Live payments and public launch remain separate.
+Approved for implementation on 28 September 2026. The current execution checkpoint is [HOSTED_CURRENT_CHECKPOINT.md](HOSTED_CURRENT_CHECKPOINT.md). Live payments and public launch remain separate.
 
 ## Scope and preparation
 
@@ -29,11 +29,11 @@ The controlled external recipient **dev@memoryone.eu is approved**. Pretix stays
 
 ### Stripe to Pretix
 
-The proposed sole public callback exception is **POST `https://checkout.didde-mie.com/_stripe/webhook/`**. Confirm that exact path against the pinned image and the URL displayed in Pretix's Stripe settings before creating the destination. If they differ, record the actual single path before configuring ingress; never substitute a broad `/api/`, `/stripe/` or event-path wildcard.
+The sole public callback exception is **POST `https://checkout.didde-mie.com/_stripe/webhook/`**. The path was confirmed against pinned Pretix `2026.7.0`; confirm it again in its hosted Stripe settings before creating the Stripe endpoint. Never substitute a broad `/api/`, `/stripe/` or event-path wildcard.
 
 Configure a path-specific Access exception and exact host/path/method checks at ingress. Preserve the raw body and Stripe headers; enforce a suitable body bound and rate limit. This callback must not encounter interactive Access or ingress Basic authentication. Browser payment return/3-D Secure pages remain Access-protected.
 
-Do not assume native Stripe-signature verification. Upstream Pretix treats callbacks as untrusted triggers and retrieves authoritative Stripe objects using its authenticated API connection. Inspect the pinned image's behavior before exposing the endpoint. If it lacks signature verification, add a small verifier using the standard Stripe SDK and the sandbox endpoint secret before forwarding to Pretix. Invalid signatures must fail before reaching Pretix; preserve Pretix's authoritative refetch. The verifier is proposed work, not an existing implemented feature.
+Pinned Pretix does not verify the Stripe signature itself: it treats callbacks as untrusted triggers and retrieves authoritative Stripe objects using its authenticated API connection. The deployment verifier checks the signed timestamp and raw body with the Stripe SDK before forwarding to Pretix; invalid signatures stop first. Keep Pretix's authoritative refetch.
 
 Confirm a legitimate sandbox callback, rejected forged requests, repeated delivery and the resulting authoritative order/payment state. A browser return is not payment proof.
 
@@ -41,7 +41,7 @@ References: [Pretix Stripe setup](https://docs.pretix.eu/guides/payment/stripe/)
 
 ### Pretix to booking
 
-Configure **POST `http://booking:3000/api/manage/pretix-webhook`** over the private container network, with the dedicated existing webhook Basic username/password. The container port is not publicly published. Deny `/api/manage/pretix-webhook` at public ingress; it needs no Access exception or Access service token.
+Configure Pretix to POST to the credential-free internal target `http://proxy:8081/api/manage/pretix-webhook`. The unpublished proxy listener adds the existing dedicated Basic credential and forwards to `http://booking:3000/api/manage/pretix-webhook`. Pinned Pretix cannot attach that header itself, and a credential in its target URL would be retained in webhook-call diagnostics. Neither internal port is publicly published; deny the booking webhook at public ingress. No Access exception or Access service token is needed. Pretix requires its instance-wide `ALLOW_HTTP_TO_PRIVATE_NETWORKS=True` for this sandbox; reassess that setting before public launch.
 
 Booking retains bounded authenticated intake, organizer/event checks, durable notification-ID deduplication and authoritative Pretix reads. Verify wrong credentials, legitimate delivery and retries. If services are later split across hosts, replace this private-network arrangement with authenticated HTTPS as a separately reviewed configuration.
 
@@ -78,6 +78,6 @@ Set short age and size limits during initial setup and record the actual limits 
 
 One approval may authorize this hosting/sandbox run, its necessary application gates, sandbox callback configuration and agreed test transactions. Do not ask again for ordinary steps already covered by that scope. Controlled email to `dev@memoryone.eu` is included; additional recipients, live payments and public launch remain separately controlled. Owner-run sudo still applies where necessary.
 
-The backup provider, recurring frequency and long-term retention can be chosen after the stack runs. No tester list or further sandbox transaction definition is needed. Execution remains pending a request to begin; this document records the plan only.
+The backup provider, recurring frequency and long-term retention can be chosen after this sandbox run. No tester list or further sandbox transaction definition is needed. Current progress and the single owner checkpoint are tracked in [HOSTED_CURRENT_CHECKPOINT.md](HOSTED_CURRENT_CHECKPOINT.md).
 
 Related: [operations](OPERATIONS.md), [owner follow-up](OWNER_FOLLOW_UP.md), [local implementation evidence](IMPLEMENTATION_NOTES.md).

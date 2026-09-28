@@ -1,5 +1,6 @@
 import { Readable } from "node:stream";
 import { createServer } from "node:http";
+import { lookup } from "node:dns/promises";
 import { createCapture, createMailer, DeliveryError } from "@dd/mail";
 import { pollDelivery } from "../database/delivery";
 import { communicationsConfig } from "./config";
@@ -21,6 +22,19 @@ const marketingPolicy =
     : cfg.mail;
 const marketingMailer = createMailer(marketingPolicy, site, capture);
 const s = service(cfg, contactMailer);
+async function fromProxy(peer: string | undefined): Promise<boolean> {
+  if (site !== "booking" || !peer) return false;
+  try {
+    const addresses = (await Promise.all([
+      lookup("proxy", { all: true }),
+      lookup("booking-public-proxy", { all: true }),
+    ])).flat();
+    const normalized = peer.replace(/^::ffff:/, "");
+    return addresses.some(({ address }) => address === normalized);
+  } catch {
+    return false;
+  }
+}
 const server = createServer(async (req, res) => {
   const abort = new AbortController();
   req.on("aborted", () => abort.abort());
@@ -36,7 +50,7 @@ const server = createServer(async (req, res) => {
         : {}),
       signal: abort.signal,
     } as RequestInit);
-    const response = await s.handle(request, req.socket.remoteAddress);
+    const response = await s.handle(request, req.socket.remoteAddress, await fromProxy(req.socket.remoteAddress));
     res.writeHead(response.status, Object.fromEntries(response.headers));
     res.end(Buffer.from(await response.arrayBuffer()));
   } catch {
