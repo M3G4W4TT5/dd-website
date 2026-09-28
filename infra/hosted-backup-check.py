@@ -94,6 +94,62 @@ def fingerprint(db, env):
     return payload['tables'], payload['sequences'], hashlib.sha256(canonical).hexdigest()
 
 
+def table_snapshot(raw):
+    payload = json.loads(raw.strip().splitlines()[-1])
+    relations = [entry for entry in payload['relations'] or [] if entry[0] == 'table']
+    canonical = json.dumps(relations, separators=(',', ':')).encode()
+    return payload['tables'], payload['sequences'], hashlib.sha256(canonical).hexdigest()
+
+
+def source_snapshot(snapshot_query):
+    """Fingerprint the exported snapshot using only the backup role's SELECT grants."""
+    relations = json.loads(snapshot_query("""
+SELECT coalesce(json_agg(json_build_array(n.nspname,c.relname)
+                         ORDER BY n.nspname,c.relname),'[]'::json)
+FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+WHERE c.relkind='r' AND n.nspname NOT IN ('pg_catalog','information_schema')
+  AND n.nspname NOT LIKE 'pg_toast%' AND n.nspname NOT LIKE 'pg_temp%';
+"""))
+    sequences = int(snapshot_query("""
+SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+WHERE c.relkind='S' AND n.nspname NOT IN ('pg_catalog','information_schema');
+"""))
+    entries = []
+    for schema, name in relations:
+        quoted = '.'.join('"' + part.replace('"', '""') + '"' for part in (schema, name))
+        count, content_hash = json.loads(snapshot_query(
+            "SELECT json_build_array(count(*),md5(coalesce(" +
+            "string_agg(md5(to_jsonb(t)::text),'' ORDER BY md5(to_jsonb(t)::text)),''))) " +
+            "FROM " + quoted + " t;"))
+        entries.append(['table', schema + '.' + name, str(count) + ':' + content_hash])
+    canonical = json.dumps(entries, separators=(',', ':')).encode()
+    return len(entries), sequences, hashlib.sha256(canonical).hexdigest()
+
+
+def verify_database(db, directory, env):
+    """Compare the restored tables with the same MVCC snapshot used by pg_dump.
+
+    Sequence values are nontransactional in PostgreSQL. Restoring the archive
+    verifies its saved sequence state; live sequence values can change during
+    the dump and are deliberately not compared to that state.
+    """
+    sys.path.insert(0, str(TOOLS))
+    from pgtool import client
+    with client(env['BACKUP_DATABASE_URL'], env['PGTOOL_DOCKER_CONTAINER']) as pg:
+        with pg.snapshot(db) as (snapshot_id, snapshot_query):
+            source = source_snapshot(snapshot_query)
+            tool('backup.py', db, directory, env={**env, 'BACKUP_SNAPSHOT_ID': snapshot_id})
+    restore_name = 'dd_restore_' + db + '_' + secrets.token_hex(4)
+    try:
+        tool('restore.py', directory, restore_name, env=env)
+        restored = query(restore_name, FINGERPRINT, env).decode()
+        if source != table_snapshot(restored):
+            raise RuntimeError('Isolated restore differs from the exported backup snapshot')
+        return source[:2]
+    finally:
+        query('postgres', 'DROP DATABASE IF EXISTS ' + restore_name + ' WITH (FORCE);', env)
+
+
 def record_success(root, bundle, now):
     body = json.dumps({'completed_at': now.isoformat(), 'bundle': bundle.name,
                        'databases': list(DATABASES), 'isolated_restore': True}, sort_keys=True)
@@ -143,17 +199,8 @@ def main():
     bundle.mkdir(mode=0o700)
     results = []
     for db in DATABASES:
-        tool('backup.py', db, bundle / db, env=env)
-        restore_name = 'dd_restore_' + db + '_' + secrets.token_hex(4)
-        try:
-            tool('restore.py', bundle / db, restore_name, env=env)
-            source = fingerprint(db, env)
-            restored = fingerprint(restore_name, env)
-            if source != restored:
-                raise RuntimeError('Isolated restore content or sequence fingerprint mismatch')
-            results.append((db, source[0], source[1]))
-        finally:
-            query('postgres', 'DROP DATABASE IF EXISTS ' + restore_name + ' WITH (FORCE);', env)
+        tables, sequences = verify_database(db, bundle / db, env)
+        results.append((db, tables, sequences))
     if sys.argv[1:] == ['--nightly']:
         prune_old_bundles(root, bundle, now)
         record_success(root, bundle, now)
