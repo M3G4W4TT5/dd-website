@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   managedInterval,
+  parseManageableOrder,
   refundStatus,
   toOre,
   type ManagedOrder,
@@ -32,6 +33,17 @@ const dates = [
     date_to: "2026-10-24T10:00:00+02:00",
   },
 ];
+
+test("pending and expired Pretix orders never enter booking lifecycle snapshots", () => {
+  assert.equal(parseManageableOrder({ status: "n" }), null);
+  assert.equal(parseManageableOrder({ status: "e" }), null);
+  assert.deepEqual(parseManageableOrder(order), order);
+  assert.deepEqual(parseManageableOrder({ ...order, status: "c" }), {
+    ...order,
+    status: "c",
+  });
+  assert.throws(() => parseManageableOrder({ ...order, status: "unknown" }));
+});
 
 test("live rental positions are ordered by actual time for atomic rescheduling", () => {
   const interval = managedInterval(order, dates, 3);
