@@ -2,6 +2,8 @@
 
 Approved for implementation on 28 September 2026. The current execution checkpoint is [HOSTED_CURRENT_CHECKPOINT.md](HOSTED_CURRENT_CHECKPOINT.md). Live payments and public launch remain separate.
 
+Execution note, 29 September: the owner has now completed the initial private three-database backup and isolated restore that step 2 below deferred. The dated sequence below records the approval and initial run, while the current checkpoint records actual later evidence and remaining recurring/recovery work.
+
 ## Scope and preparation
 
 - Deploy only booking, booking communications, its worker, Pretix, PostgreSQL, Redis and the necessary ingress. Exclude the personal site and primary communications service.

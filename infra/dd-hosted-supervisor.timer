@@ -1,0 +1,10 @@
+[Unit]
+Description=Monitor DD hosted Pretix Supervisor every five minutes
+
+[Timer]
+OnBootSec=2m
+OnUnitActiveSec=5m
+Unit=dd-hosted-supervisor.service
+
+[Install]
+WantedBy=timers.target

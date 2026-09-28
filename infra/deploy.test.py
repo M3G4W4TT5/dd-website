@@ -20,6 +20,19 @@ def manifest():
 
 
 class ManifestTests(unittest.TestCase):
+    def test_pretix_supervisor_requires_all_three_running_processes(self):
+        good = 'nginx RUNNING pid 1\npretixtask RUNNING pid 2\npretixweb RUNNING pid 3\n'
+        with patch.object(deploy, 'run', return_value=subprocess.CompletedProcess([], 0, good)) as command:
+            deploy.check_pretix_supervisor({})
+            self.assertEqual(command.call_args.args[0][1:5],
+                             ['exec', '-u', '0', 'dd-hosted-pretix-1'])
+        for status in (good.replace('pretixtask RUNNING', 'pretixtask FATAL'),
+                       good.replace('pretixweb RUNNING pid 3\n', '')):
+            with self.subTest(status=status), patch.object(
+                    deploy, 'run', return_value=subprocess.CompletedProcess([], 0, status)):
+                with self.assertRaisesRegex(ValueError, 'Pretix supervised process'):
+                    deploy.check_pretix_supervisor({})
+
     def test_installed_deployer_is_hashed_from_its_actual_location(self):
         self.assertEqual(deploy.config_path(Path('/etc/dd-hosted'), 'deploy.py'),
                          Path('/usr/local/sbin/dd-deploy'))

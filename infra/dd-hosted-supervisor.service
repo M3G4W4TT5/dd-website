@@ -1,0 +1,10 @@
+[Unit]
+Description=Check DD hosted Pretix supervised processes
+ConditionPathExists=/etc/dd-hosted/ready
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+ExecStart=/usr/bin/python3 /usr/local/lib/dd-hosted/hosted-supervisor-check.py
+NoNewPrivileges=true

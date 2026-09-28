@@ -1,13 +1,18 @@
 """Use installed PostgreSQL clients or the local postgres container, without leaking credentials."""
-import os,secrets,subprocess,shutil
+import os,re,secrets,subprocess,shutil
 from contextlib import contextmanager
 from urllib.parse import urlparse,unquote
 def pgpass(value):return value.replace("\\","\\\\").replace(":","\\:")
 @contextmanager
-def client(url):
+def client(url,docker_container=None):
  u=urlparse(url);user=unquote(u.username or '');docker=shutil.which('pg_dump') is None
  if docker:
-  path='/tmp/dd-operator-'+secrets.token_hex(12);base=['docker','compose','exec','-T','postgres']
+  path='/tmp/dd-operator-'+secrets.token_hex(12)
+  container=docker_container or os.environ.get('PGTOOL_DOCKER_CONTAINER')
+  if container and container!='dd-hosted-postgres-1' and not re.fullmatch(r'dd-step10-test-[a-f0-9]{12}',container):
+   raise ValueError('Unrecognized PostgreSQL container')
+  base=([*(['sudo','-n'] if os.geteuid()!=0 else []),'docker','exec','-i',container]
+        if container else ['docker','compose','exec','-T','postgres'])
   data=f'127.0.0.1:5432:*:{pgpass(user)}:{pgpass(unquote(u.password or ""))}\n'
   subprocess.run(base+['sh','-c',f'umask 077; cat > {path}'],input=data.encode(),check=True,stdout=subprocess.DEVNULL)
   def run(tool,args,stdin=None):

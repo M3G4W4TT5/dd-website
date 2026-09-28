@@ -9,7 +9,6 @@ import fcntl
 import getpass
 import grp
 import hashlib
-import ipaddress
 import json
 import os
 from pathlib import Path
@@ -17,6 +16,8 @@ import pwd
 import re
 import runpy
 import secrets
+import smtplib
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -41,12 +42,16 @@ BASELINE = {
 TARGET = {
     'compose.production.yaml': 'ac6604d93feddc7d1ad7ada13fbe1089766e4f4f15447cf0f4f84e95b144abfb',
     'compose.hosted.yaml': '21b6df7f428132e39519db26b16aa28b7e85e4f597bbd896cc739f5f6caa8ba1',
-    'proxy.conf': '70b66a2c1635bf1cb5485dc57d03576cf801b8d36d4d569ade0e30d07f549609',
+    'proxy.conf': 'dc8a94afec5e67a49b23f41e83940aa04c8e23177d8736aa04b9ce545216022c',
     'pretix-nginx.conf': 'bdac328919966debe72e2f86cd4eba1442fc452cd43eb35a3fc7b41ef1e3a563',
-    'pretix-settings.py': '139ee2020dabbd2aac1a230c682d994197f6b0831a6767a432f4bd470fce7df2',
+    'pretix-settings.py': 'e1b875ac535b52a69f3be42f64c873de6294642ca889e930652b1a52c6cad983',
     'pretix-task.conf': '3e3036710bd4a0135c3f2743345fb4b5e6ad952aec1395859a516291fbc7abbb',
-    'deploy.py': 'cf8068a74e877d7f0acb7b365365417d59a8f14147cdfd763cac7f45692f0dbb',
+    'deploy.py': 'a152ad882f61a3c8ceb0f15a58b1cbfc37ec6f621aaf2117fa47d0f2c6168f35',
 }
+CURRENT_INSTALLED = {**TARGET,
+    'proxy.conf': '70b66a2c1635bf1cb5485dc57d03576cf801b8d36d4d569ade0e30d07f549609',
+    'pretix-settings.py': '139ee2020dabbd2aac1a230c682d994197f6b0831a6767a432f4bd470fce7df2',
+    'deploy.py': 'cf8068a74e877d7f0acb7b365365417d59a8f14147cdfd763cac7f45692f0dbb'}
 PREVIOUS_TARGET = {**TARGET,
     'proxy.conf': 'a1eedce6172a288612db007942a15b110d847d3db29b33d8023ae360302b8f6d',
     'pretix-nginx.conf': '479478ac117a25c9fcedbe02346885f3a874ef7051dd14942b3060a800a24bf6'}
@@ -327,8 +332,8 @@ with scopes_disabled():
 def verify_bridge():
     data = json.loads(safe_run(['docker', 'network', 'inspect', 'dd-hosted_ingress'], capture=True))[0]
     gateways = [item.get('Gateway') for item in data['IPAM']['Config'] if item.get('Gateway')]
-    if not gateways or any(ipaddress.ip_address(ip) not in ipaddress.ip_network('172.16.0.0/12') for ip in gateways):
-        raise ValueError('Ingress bridge gateway differs from reviewed client-IP trust range')
+    if gateways != ['172.20.0.1']:
+        raise ValueError('Ingress bridge gateway differs from reviewed client-IP trust peer')
 
 
 def verify_proxy_group():
@@ -358,7 +363,8 @@ def install(source):
         trusted(destination)
         if sha(candidate) != TARGET[name]:
             raise ValueError('Staged file differs from reviewed release: ' + name)
-        if sha(destination) not in (BASELINE[name], PARTIAL[name], PREVIOUS_TARGET[name], TARGET[name]):
+        if sha(destination) not in (BASELINE[name], PARTIAL[name], PREVIOUS_TARGET[name],
+                                    CURRENT_INSTALLED[name], TARGET[name]):
             raise ValueError('Installed configuration version differs: ' + name)
     verify_bridge()
     verify_proxy_group()
@@ -602,6 +608,60 @@ def controlled_mail(commit):
     print('PASS: controlled-mail files mounted by recreated communications and worker; only dev@memoryone.eu configured. Delivery remains to be verified; Pretix remains on Mailpit.')
 
 
+def rotate_mail_credentials(commit):
+    action = 'mail-gates'
+    record(action, 'preflight', 'running', commit=commit)
+    _, args, env = verify_release(commit)
+    files = {name: gates(name) for name in ('booking-communications.env', 'booking-worker.env')}
+    hosts = set()
+    old_passwords = set()
+    for _, values in files.values():
+        if (values.get('DD_MODE'), values.get('PREVIEW'), values.get('PAYMENT_ENVIRONMENT'),
+            values.get('PAYMENT_RELEASE_ENABLED'), values.get('MAIL_DELIVERY'),
+            values.get('MAIL_RELEASE_ENABLED'), values.get('MAIL_RECIPIENT_ALLOWLIST'),
+            values.get('SMTP_USER'), values.get('SMTP_PORT')) != (
+                'production', 'false', 'sandbox', 'false', 'controlled', 'false',
+                'dev@memoryone.eu', 'booking@didde-mie.com', '465'):
+            raise ValueError('Controlled mail gates differ from reviewed state')
+        hosts.add(values.get('SMTP_HOST'))
+        old_passwords.add(values.get('SMTP_PASSWORD'))
+    if len(hosts) != 1 or not next(iter(hosts)):
+        raise ValueError('Controlled mail hosts differ')
+    host = next(iter(hosts))
+    passwords = {
+        'booking-communications.env': getpass.getpass('Communications app password (hidden): ').strip(),
+        'booking-worker.env': getpass.getpass('Worker app password (hidden): ').strip(),
+    }
+    if (len(set(passwords.values())) != 2 or
+            any(len(value) < 12 or '\n' in value or
+                (value in old_passwords and value != files[name][1]['SMTP_PASSWORD'])
+                for name, value in passwords.items())):
+        raise ValueError('New per-process app passwords must be distinct')
+    record(action, 'authentication', 'running', commit=commit)
+    for password in passwords.values():
+        try:
+            with smtplib.SMTP_SSL(host, 465, timeout=15, context=ssl.create_default_context()) as smtp:
+                smtp.login('booking@didde-mie.com', password)
+        except (OSError, smtplib.SMTPException):
+            raise ValueError('New SMTP app password failed authentication') from None
+    record(action, 'runtime_files', 'running', commit=commit)
+    for name, (path, values) in files.items():
+        values['SMTP_PASSWORD'] = passwords[name]
+        save_gates(path, values)
+    record(action, 'runtime_recreation', 'running', commit=commit)
+    safe_run(args + ['up', '-d', '--no-deps', '--force-recreate', '--no-build', '--pull', 'never',
+                     '--wait', '--wait-timeout', '240', 'booking-communications', 'booking-worker'], env=env)
+    record(action, 'verification', 'running', commit=commit)
+    for service, filename in (('booking-communications', 'booking-communications.env'),
+                              ('booking-worker', 'booking-worker.env')):
+        verify_runtime_mount(service, filename)
+    ACTIVE['operation'] = 'readiness'
+    runpy.run_path(str(installed('deploy.py')))['check_readiness'](args, env)
+    record(action, 'complete', 'configured_pending_sender_scope_check', commit=commit,
+           recipient='dev@memoryone.eu', mail_release=False, distinct_credentials=True)
+    print('PASS: distinct booking app passwords mounted; controlled recipient and mail release gates retained.')
+
+
 def main():
     if os.geteuid() != 0:
         raise ValueError('Run as dd-owner through sudo')
@@ -616,8 +676,10 @@ def main():
             activate_sandbox(sys.argv[2])
         elif action == 'controlled-mail' and len(sys.argv) == 3:
             controlled_mail(sys.argv[2])
+        elif action == 'rotate-mail-credentials' and len(sys.argv) == 3:
+            rotate_mail_credentials(sys.argv[2])
         else:
-            raise ValueError('Expected install, activate-sandbox COMMIT or controlled-mail COMMIT')
+            raise ValueError('Expected install, activate-sandbox COMMIT, controlled-mail COMMIT or rotate-mail-credentials COMMIT')
 
 
 def run_owner_action():

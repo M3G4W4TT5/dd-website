@@ -83,6 +83,15 @@ def endpoint(host, path):
         return body
 
 
+def check_pretix_supervisor(env):
+    status = run(["/usr/bin/docker", "exec", "-u", "0", "dd-hosted-pretix-1",
+                  "supervisorctl", "-s", "unix:///tmp/supervisor.sock", "status"], env, True).stdout
+    processes = [line.split()[:2] for line in status.splitlines()]
+    if {name: state for name, state in processes} != {
+            "nginx": "RUNNING", "pretixtask": "RUNNING", "pretixweb": "RUNNING"}:
+        raise ValueError("Pretix supervised process is not running")
+
+
 def check_readiness(compose, env):
     for service in SERVICES:
         cid = run(compose + ["ps", "-q", service], env, True).stdout.strip()
@@ -92,6 +101,7 @@ def check_readiness(compose, env):
                       "{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}", cid], env, True).stdout.strip()
         if not status.startswith("running") or "unhealthy" in status or "starting" in status:
             raise ValueError("Service not ready: " + service)
+    check_pretix_supervisor(env)
     endpoint("booking.didde-mie.com", "/")
     health = json.loads(endpoint("booking.didde-mie.com", "/api/health"))
     if health.get("ok") is not True:

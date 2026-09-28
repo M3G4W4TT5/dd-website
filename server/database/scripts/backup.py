@@ -6,7 +6,7 @@ from pgtool import client
 sys.excepthook=lambda kind,value,tb:print(str(value),file=sys.stderr)
 if len(sys.argv)!=3:raise SystemExit('Usage: backup.py database /private/output-directory')
 if sys.argv[1] not in ['marketing','booking_management','pretix'] and not (os.environ.get('BACKUP_FIXTURE_MODE')=='true' and sys.argv[1].startswith('dd_backup_fixture_') and sys.argv[1].replace('_','').isalnum()):raise SystemExit('Explicit scoped database required')
-db,directory=sys.argv[1:];out=Path(directory).resolve();root=Path(__file__).resolve().parents[3]
+db,directory=sys.argv[1:];out=Path(directory).resolve();root=Path(os.environ.get('BACKUP_REPOSITORY_ROOT',Path(__file__).resolve().parents[3])).resolve()
 if out.is_relative_to(root):raise SystemExit('Backup output must be outside Git repository')
 if urlparse(os.environ['BACKUP_DATABASE_URL']).username!='dd_backup':raise SystemExit('Explicit scoped backup identity required')
 out.mkdir(mode=0o700,parents=True,exist_ok=False)
