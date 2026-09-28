@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     if (catalog.state !== "ready") return json({ error: "Availability unavailable" }, 503);
     const occurrence = catalog.occurrences.find(item => item.slug === input.slug && item.dateId === input.dateId);
     if (!occurrence || !registrationTicket(occurrence, input)) return json({ error: "Tickets or price changed" }, 409);
-    if (!catalog.checkoutEnabled || !catalog.shopBase || occurrence.status !== "available" || !occurrence.roomVerified) {
+    if (!catalog.checkoutEnabled || !catalog.shopBase || !occurrence.checkoutEligible) {
       return json({ error: "Checkout is temporarily unavailable" }, 503);
     }
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

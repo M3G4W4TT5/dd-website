@@ -41,12 +41,15 @@ BASELINE = {
 TARGET = {
     'compose.production.yaml': 'ac6604d93feddc7d1ad7ada13fbe1089766e4f4f15447cf0f4f84e95b144abfb',
     'compose.hosted.yaml': '21b6df7f428132e39519db26b16aa28b7e85e4f597bbd896cc739f5f6caa8ba1',
-    'proxy.conf': 'a1eedce6172a288612db007942a15b110d847d3db29b33d8023ae360302b8f6d',
-    'pretix-nginx.conf': '479478ac117a25c9fcedbe02346885f3a874ef7051dd14942b3060a800a24bf6',
+    'proxy.conf': '70b66a2c1635bf1cb5485dc57d03576cf801b8d36d4d569ade0e30d07f549609',
+    'pretix-nginx.conf': 'bdac328919966debe72e2f86cd4eba1442fc452cd43eb35a3fc7b41ef1e3a563',
     'pretix-settings.py': '139ee2020dabbd2aac1a230c682d994197f6b0831a6767a432f4bd470fce7df2',
     'pretix-task.conf': '3e3036710bd4a0135c3f2743345fb4b5e6ad952aec1395859a516291fbc7abbb',
     'deploy.py': 'cf8068a74e877d7f0acb7b365365417d59a8f14147cdfd763cac7f45692f0dbb',
 }
+PREVIOUS_TARGET = {**TARGET,
+    'proxy.conf': 'a1eedce6172a288612db007942a15b110d847d3db29b33d8023ae360302b8f6d',
+    'pretix-nginx.conf': '479478ac117a25c9fcedbe02346885f3a874ef7051dd14942b3060a800a24bf6'}
 # The failed owner run replaced all seven installed files before stopping.
 # Accept both its reviewed bytes and the earlier installed baseline on retry.
 PARTIAL = {**TARGET,
@@ -354,7 +357,7 @@ def install(source):
         trusted(destination)
         if sha(candidate) != TARGET[name]:
             raise ValueError('Staged file differs from reviewed release: ' + name)
-        if sha(destination) not in (BASELINE[name], PARTIAL[name], TARGET[name]):
+        if sha(destination) not in (BASELINE[name], PARTIAL[name], PREVIOUS_TARGET[name], TARGET[name]):
             raise ValueError('Installed configuration version differs: ' + name)
     verify_bridge()
     verify_proxy_group()
@@ -384,6 +387,23 @@ def install(source):
                            '--pull', 'never', '--wait', '--wait-timeout', '240']
     record(action, 'pretix_recreation', 'running', running_revisions=running['revisions'])
     safe_run(command + ['pretix', 'pretix-cron'], env=env)
+    # The initial organizer import omitted Pretix's built-in web sales
+    # channel. This prerequisite can be safely checked on a populated host;
+    # it never replays the configuration import or alters existing channels.
+    channel_check = '''from django.db import transaction
+from django_scopes import scopes_disabled
+from pretix.base.models import Organizer, SalesChannel
+with scopes_disabled(), transaction.atomic():
+ organizer=Organizer.objects.select_for_update().get(slug='dd-studio')
+ channel, created=SalesChannel.objects.get_or_create(
+  organizer=organizer, identifier='web',
+  defaults={'label':'web','type':'web','position':0})
+ assert channel.type=='web'
+ assert SalesChannel.objects.filter(organizer=organizer,identifier='web').count()==1
+ print('PASS: built-in web sales channel present; created=' + str(created))
+'''
+    safe_run(['docker', 'exec', '-i', PROJECT + '-pretix-1', 'python', '-m', 'pretix', 'shell', '-v', '0',
+              '-c', 'exec(__import__("sys").stdin.read())'], input=channel_check)
     if rotation_pending:
         record(action, 'booking_recreation', 'running', running_revisions=running['revisions'])
         safe_run(command + ['booking'], env=env)

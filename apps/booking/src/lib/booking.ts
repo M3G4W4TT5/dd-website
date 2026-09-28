@@ -16,7 +16,7 @@ export type Availability = {
   source: "demo" | "pretix";
   currency: "DKK";
   slots: Slot[];
-  fullDayDiscount?: { discountedHours: number };
+  fullDayDiscount?: { discountedHours: number; id?: number };
   checkedAt: string;
 };
 

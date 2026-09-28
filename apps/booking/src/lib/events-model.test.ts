@@ -1,13 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DateTime } from "luxon";
-import { checkoutPath, remainingPlaces, normalizeEvent, occupiesRoom, overlaps, type RawEvent, type RawDate, type RawItem, type RawQuota } from "./events-model";
+import { checkoutPath, remainingPlaces, normalizeEvent, occupiesRoom, overlaps, sandboxPurchaseEligible, type RawEvent, type RawDate, type RawItem, type RawQuota } from "./events-model";
 
 const now = DateTime.fromISO("2026-10-01T12:00:00Z");
 const event: RawEvent = { slug: "dance", name: { da: "Dans", en: "Dance" }, live: true, is_public: true, has_subevents: true, date_from: "2026-10-01T19:00:00+02:00", date_to: null, location: { da: "TTD Studio" }, meta_data: {} };
 const date: RawDate = { id: 42, name: { da: "Dans", en: "Dance" }, active: true, is_public: true, date_from: "2026-10-28T19:00:00+01:00", date_to: "2026-10-28T22:00:00+01:00", location: null, frontpage_text: { da: "Beskrivelse", en: "Description" } };
 const item: RawItem = { id: 7, name: { da: "Billet", en: "Ticket" }, active: true, default_price: "125.00" };
 const quota: RawQuota = { subevent: 42, items: [7], closed: false, available: true, available_number: 4 };
+
+test("test-mode checkout requires the sandbox, verified room and saleable stock", () => {
+  const verified = normalizeEvent({ ...event, testmode: true },
+    { ...date, meta_data: { ttd_room_verified: true } }, [item], [quota], now)!;
+  assert.equal(sandboxPurchaseEligible(verified, true), true);
+  assert.equal(sandboxPurchaseEligible(verified, false), false);
+  assert.equal(sandboxPurchaseEligible({ ...verified, roomVerified: false }, true), false);
+  assert.equal(sandboxPurchaseEligible({ ...verified, status: "room-conflict" }, true), false);
+  assert.equal(sandboxPurchaseEligible({ ...verified, tickets: [{ ...verified.tickets[0], remaining: 0 }] }, true), false);
+  assert.equal(sandboxPurchaseEligible({ ...verified, status: "not-on-sale" }, true), false);
+});
 
 test("series dates normalize individually with Copenhagen winter time and exact checkout target", () => {
   const occurrence = normalizeEvent(event, date, [item], [quota], now)!;

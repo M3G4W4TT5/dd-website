@@ -57,7 +57,7 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
     }
     return map;
   }, [catalog.occurrences]);
-  const canSignUp = selected && selected.signupAvailable && selected.status !== "room-conflict" &&
+  const canSignUp = selected && selected.checkoutEligible &&
     selected.tickets.some(ticket => !ticket.hasVariations && ticketLimit(ticket, selected.remaining) >= ticket.minPerOrder);
   function closeSignup() {
     setShowSignup(false);

@@ -3,10 +3,12 @@
 import { submissionIdentity, submitWithIdentity } from "../lib/submission";
 
 import { ArrowLeft, ArrowUpRight, ShieldCheck } from "lucide-react";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BuyerDetailsFields, DetailsConsent, invalidDetailFields } from "./BookingFormFields";
+import type { Quote } from "../lib/booking";
 
 type Language = "da" | "en";
+export type BookingDetailsDraft = { fields: Record<string, string>; termsAccepted: boolean; marketingOptIn: boolean };
 
 const copy = {
   da: {
@@ -86,6 +88,8 @@ export function CustomerDetailsPreview({
   date,
   startId,
   hours,
+  acceptedQuote,
+  draft,
   onBack,
   onConflict,
 }: {
@@ -93,19 +97,37 @@ export function CustomerDetailsPreview({
   date: string;
   startId: string;
   hours: number;
+  acceptedQuote: Quote;
+  draft: BookingDetailsDraft;
   onBack: () => void;
   onConflict: () => Promise<void>;
 }) {
   const t = copy[language];
   const submission = useRef<ReturnType<typeof submissionIdentity> | null>(null);
   submission.current ??= submissionIdentity();
-  const [customerType, setCustomerType] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [customerType, setCustomerType] = useState(draft.fields.customerType || "");
+  const [termsAccepted, setTermsAccepted] = useState(draft.termsAccepted);
+  const [marketingOptIn, setMarketingOptIn] = useState(draft.marketingOptIn);
   const [marketingResult, setMarketingResult] = useState<boolean | null>(null);
   const [showTermsError, setShowTermsError] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "working" | "success" | "invalid" | "changed" | "error">("idle");
+
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+    for (const [name, value] of Object.entries(draft.fields)) {
+      const field = form.elements.namedItem(name);
+      if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement || field instanceof HTMLSelectElement)
+        field.value = value;
+    }
+  }, [draft]);
+
+  function remember(form: HTMLFormElement) {
+    for (const [name, value] of new FormData(form))
+      if (typeof value === "string") draft.fields[name] = value;
+  }
 
   async function review(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,16 +140,18 @@ export function CustomerDetailsPreview({
       return;
     }
     const values = new FormData(form);
+    remember(form);
     setStatus("working");
     setMarketingResult(null);
     try {
-      const response = await submitWithIdentity(submission.current!, "/api/preflight", {
+      const response = await submitWithIdentity(submission.current!, "/api/rental/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           date,
           startId,
           hours,
+          acceptedQuote,
           termsAccepted,
           marketingOptIn,
           marketingLanguage: language,
@@ -142,7 +166,7 @@ export function CustomerDetailsPreview({
             comment: values.get("comment") || "",
           },
         }),
-      });
+      }, false);
       if (response.status === 409) {
         setStatus("changed");
         await onConflict();
@@ -156,9 +180,12 @@ export function CustomerDetailsPreview({
           reservationCreated: boolean;
           paymentStarted: boolean;
           marketingRequested: boolean | null;
+          paymentUrl: string;
         };
         setMarketingResult(result.marketingRequested);
-        setStatus(result.detailsAccepted && !result.reservationCreated && !result.paymentStarted ? "success" : "error");
+        if (result.reservationCreated && result.paymentUrl) {
+          window.location.assign(result.paymentUrl);
+        } else setStatus("error");
       }
     } catch {
       setStatus("error");
@@ -168,7 +195,7 @@ export function CustomerDetailsPreview({
   return (
     <section className="details-preview" id="booking-details" aria-labelledby="details-title">
       <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{t.back}</button><span className="section-kicker">{t.eyebrow}</span><h3 id="details-title" tabIndex={-1}>{t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
-      <form className="details-form" noValidate onInput={(event) => { if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
+      <form ref={formRef} className="details-form" noValidate onInput={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
         <div className="details-fields">
           <BuyerDetailsFields labels={t} invalidFields={invalidFields} />
           <label>{t.type}<select name="customerType" value={customerType} onChange={(event) => setCustomerType(event.target.value)} required aria-invalid={invalidFields.includes("customerType")}><option value="" disabled>{t.placeholderType}</option><option value="private">{t.private}</option><option value="instructor">{t.instructor}</option><option value="business">{t.business}</option></select></label>
@@ -178,7 +205,7 @@ export function CustomerDetailsPreview({
           <label className="details-wide">{t.comment} <span>({t.optional})</span><textarea name="comment" rows={3} maxLength={2000} /></label>
         </div>
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
-        <DetailsConsent idPrefix="accept-booking" marketingId="accept-marketing" termsErrorId="terms-acceptance-error" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={setMarketingOptIn} onTermsChange={checked => { setTermsAccepted(checked); if (checked) setShowTermsError(false); }} />
+        <DetailsConsent idPrefix="accept-booking" marketingId="accept-marketing" termsErrorId="terms-acceptance-error" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={checked => { draft.marketingOptIn = checked; setMarketingOptIn(checked); }} onTermsChange={checked => { draft.termsAccepted = checked; setTermsAccepted(checked); if (checked) setShowTermsError(false); }} />
         <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}{marketingResult !== null && <p className="marketing-result" role="status">{marketingResult ? t.marketingSent : t.marketingFailed}</p>}</div>
       </form>
     </section>
