@@ -191,10 +191,11 @@ def verify_release(commit):
 
 PRETIX_ACTIVATION = '''
 from django_scopes import scopes_disabled
+from django.db import transaction
 from pretix.base.models import Event, Organizer
 from pretix.api.models import WebHook, WebHookEventListener
 from pretix.plugins.stripe.payment import StripeCC
-with scopes_disabled():
+with scopes_disabled(), transaction.atomic():
  organizer=Organizer.objects.get(slug='dd-studio')
  events=list(Event.objects.filter(organizer=organizer).order_by('slug'))
  assert len(events)==3 and all(e.testmode for e in events)
