@@ -189,6 +189,9 @@ services:
       retries: 6
   proxy:
     image: nginxinc/nginx-unprivileged:1.29-alpine
+    # Compose bind-mounts local secrets with their host ownership and mode.
+    # The dedicated group reads only the internal webhook header, not other secrets.
+    group_add: ["10006"]
     restart: unless-stopped
     mem_limit: 64m
     cpus: 0.25

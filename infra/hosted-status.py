@@ -6,6 +6,8 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 
 ROOT = Path("/etc/dd-hosted")
 STATE = Path("/var/lib/dd-hosted")
@@ -36,7 +38,37 @@ def manifest(name):
     data = json.loads(path.read_text())
     return {"commit": data.get("commit") or data.get("manifest", {}).get("commit"),
             "config_version": data.get("config_version") or data.get("manifest", {}).get("config_version"),
-            "phase": data.get("phase"), "status": data.get("status"), "category": data.get("category")}
+            "phase": data.get("phase"), "status": data.get("status"), "category": data.get("category"),
+            "operation": data.get("operation"), "diagnostic": data.get("diagnostic"),
+            "running_revisions": data.get("running_revisions"), "recorded_revision": data.get("recorded_revision"),
+            "release_record_stale": data.get("release_record_stale")}
+
+
+def mounted_runtime(service, filename):
+    script = "const fs=require('fs'),crypto=require('crypto');process.stdout.write(crypto.createHash('sha256').update(fs.readFileSync('/run/secrets/runtime')).digest('hex'))"
+    try:
+        mounted_hash = command('docker', 'exec', 'dd-hosted-' + service + '-1', 'node', '-e', script)
+        host_hash = hashlib.sha256((ROOT / 'secrets' / filename).read_bytes()).hexdigest()
+        return mounted_hash == host_hash
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return False
+
+
+def probe(host, path):
+    request = urllib.request.Request('http://127.0.0.1:8080' + path, headers={'Host': host})
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:
+            body = response.read(524289)
+            if len(body) > 524288:
+                return {'status': response.status, 'category': 'oversized'}
+            if path == '/api/availability' and response.status == 200:
+                data = json.loads(body)
+                return {'status': 200, 'source': data.get('source'), 'slots': len(data.get('slots', []))}
+            return {'status': response.status}
+    except urllib.error.HTTPError as error:
+        return {'status': error.code}
+    except (OSError, ValueError, json.JSONDecodeError):
+        return {'status': 'probe_failed'}
 
 
 def main():
@@ -53,7 +85,8 @@ def main():
         version.update(path.read_bytes())
         version.update(b"\0")
     result["host_config_version"] = version.hexdigest()
-    for name in ("current.json", "previous.json", "attempt.json", "failed.json"):
+    for name in ("current.json", "previous.json", "attempt.json", "failed.json",
+                 "config-install.json", "sandbox-gates.json", "mail-gates.json", "webhook-rotation.json"):
         result["release"][name] = manifest(name)
     ids = command("docker", "ps", "-aq", "--filter", "label=com.docker.compose.project=dd-hosted").splitlines()
     for cid in ids:
@@ -66,6 +99,7 @@ def main():
             "restarts": data["RestartCount"], "image_id": image_id,
             "image_reference": data["Config"]["Image"],
             "revision": image["Config"].get("Labels", {}).get("org.opencontainers.image.revision"),
+            "runtime_file_startup": '--env-file=/run/secrets/runtime' in (data['Config'].get('Cmd') or []),
         }
     stats = command("docker", "stats", "--no-stream", "--format", "{{json .}}", *ids) if ids else ""
     result["resource_pressure"] = [
@@ -77,10 +111,33 @@ def main():
                               ("worker", "booking-worker.env")):
         path = ROOT / "secrets" / filename
         values = dict(line.split("=", 1) for line in path.read_text().splitlines() if "=" in line)
-        result["gates"][service] = {key: values.get(key) if values.get(key) in SAFE_VALUES[key] else 'unexpected'
+        result["gates"][service] = {key: ('not_applicable' if key not in values else
+                                         values[key] if values[key] in SAFE_VALUES[key] else 'unexpected')
                                      for key in GATES}
         result["gates"][service]["stripe_signing_secret_present"] = bool(values.get("STRIPE_WEBHOOK_SIGNING_SECRET"))
         result["gates"][service]["scoped_write_token_present"] = bool(values.get("PRETIX_MANAGE_WRITE_API_TOKEN"))
+        container_service = {'booking': 'booking', 'communications': 'booking-communications',
+                             'worker': 'booking-worker'}[service]
+        result["gates"][service]["mounted_runtime_matches_host"] = mounted_runtime(container_service, filename)
+        details = result['containers'].get(container_service, {})
+        result["gates"][service]["startup_uses_runtime_file"] = details.get('runtime_file_startup', False)
+    header = ROOT / 'secrets' / 'pretix-webhook-header.conf'
+    if header.exists():
+        metadata = header.stat()
+        result['webhook_header'] = {'mode': oct(metadata.st_mode & 0o777), 'uid': metadata.st_uid,
+                                    'gid': metadata.st_gid}
+        try:
+            denied = subprocess.run(['runuser', '-u', 'dd-setup', '--', 'test', '-r', str(header)],
+                                    capture_output=True, timeout=5).returncode != 0
+            result['webhook_header']['dd_setup_read_denied'] = denied
+        except (OSError, subprocess.TimeoutExpired):
+            result['webhook_header']['dd_setup_read_denied'] = 'probe_failed'
+    result['probes'] = {
+        'booking_root': probe('booking.didde-mie.com', '/'),
+        'booking_health': probe('booking.didde-mie.com', '/api/health'),
+        'booking_availability': probe('booking.didde-mie.com', '/api/availability'),
+        'checkout_root': probe('checkout.didde-mie.com', '/'),
+    }
     code = """from django_scopes import scopes_disabled
 from pretix.base.models import Event, Discount, Item, Order, Quota, SubEvent
 import json
@@ -96,9 +153,10 @@ with scopes_disabled():
     result["pretix"] = json.loads(next(line[len("DD_STATUS="):] for line in output.splitlines() if line.startswith("DD_STATUS=")))
     try:
         supervisor = command("docker", "exec", "dd-hosted-pretix-1", "supervisorctl", "status")
+        result["pretix"]["supervisor_probe"] = "ok"
         result["pretix"]["supervisor"] = [" ".join(line.split()[:2]) for line in supervisor.splitlines()]
     except subprocess.CalledProcessError:
-        result["pretix"]["supervisor"] = "unavailable"
+        result["pretix"]["supervisor_probe"] = "failed"
     result["host"] = {"disk_available_kib": os.statvfs("/").f_bavail * os.statvfs("/").f_frsize // 1024,
                       "load_average": tuple(round(value, 2) for value in os.getloadavg())}
     print(json.dumps(result, sort_keys=True, indent=2))
