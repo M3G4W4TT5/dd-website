@@ -8,6 +8,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 
 ROOT = Path("/etc/dd-hosted")
 STATE = Path("/var/lib/dd-hosted")
@@ -69,6 +70,35 @@ def probe(host, path):
         return {'status': error.code}
     except (OSError, ValueError, json.JSONDecodeError):
         return {'status': 'probe_failed'}
+
+
+def unit_status(name):
+    try:
+        active = subprocess.run(['systemctl', 'is-active', name], text=True,
+                                capture_output=True, timeout=5, check=False)
+        return active.stdout.strip() if active.stdout.strip() in ('active', 'inactive', 'failed') else 'unavailable'
+    except (OSError, subprocess.TimeoutExpired):
+        return 'unavailable'
+
+
+def backup_status():
+    latest = STATE / 'step10-backups/latest.json'
+    result = {'timer': unit_status('dd-hosted-backup.timer'),
+              'last_service': unit_status('dd-hosted-backup.service'),
+              'completed_at': None, 'age_hours': None, 'fresh': False}
+    if latest.is_file() and not latest.is_symlink():
+        try:
+            data = json.loads(latest.read_text())
+            completed = datetime.fromisoformat(data['completed_at'])
+            if completed.tzinfo is None:
+                raise ValueError('Backup completion lacks timezone')
+            age = (datetime.now(timezone.utc) - completed).total_seconds() / 3600
+            if data.get('isolated_restore') is True and data.get('databases') == list(('marketing', 'booking_management', 'pretix')):
+                result.update(completed_at=completed.astimezone(timezone.utc).isoformat(), age_hours=round(age, 1),
+                              fresh=0 <= age <= 36)
+        except (ValueError, KeyError, TypeError):
+            pass
+    return result
 
 
 def main():
@@ -154,13 +184,23 @@ with scopes_disabled():
     output = command("docker", "exec", "dd-hosted-pretix-1", "python", "-m", "pretix", "shell", "-v", "0", "-c", code)
     result["pretix"] = json.loads(next(line[len("DD_STATUS="):] for line in output.splitlines() if line.startswith("DD_STATUS=")))
     try:
-        supervisor = command("docker", "exec", "dd-hosted-pretix-1", "supervisorctl", "status")
+        # The pinned standalone image starts `all` with a Unix control socket.
+        # supervisorctl's default config points elsewhere, so name that socket.
+        supervisor = command("docker", "exec", "-u", "0", "dd-hosted-pretix-1", "supervisorctl", "-s",
+                             "unix:///tmp/supervisor.sock", "status")
+        processes = [line.split()[:2] for line in supervisor.splitlines()]
+        if {name: state for name, state in processes} != {
+                'nginx': 'RUNNING', 'pretixtask': 'RUNNING', 'pretixweb': 'RUNNING'}:
+            raise ValueError('Pretix supervised process is not running')
         result["pretix"]["supervisor_probe"] = "ok"
-        result["pretix"]["supervisor"] = [" ".join(line.split()[:2]) for line in supervisor.splitlines()]
-    except subprocess.CalledProcessError:
+        result["pretix"]["supervisor"] = [" ".join(process) for process in processes]
+    except (subprocess.CalledProcessError, ValueError):
         result["pretix"]["supervisor_probe"] = "failed"
     result["host"] = {"disk_available_kib": os.statvfs("/").f_bavail * os.statvfs("/").f_frsize // 1024,
                       "load_average": tuple(round(value, 2) for value in os.getloadavg())}
+    result['monitoring'] = {'supervisor_timer': unit_status('dd-hosted-supervisor.timer'),
+                            'supervisor_last_service': unit_status('dd-hosted-supervisor.service'),
+                            'backup': backup_status()}
     print(json.dumps(result, sort_keys=True, indent=2))
 
 

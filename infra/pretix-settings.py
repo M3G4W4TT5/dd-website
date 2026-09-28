@@ -2,16 +2,44 @@
 import logging
 import logging.config
 import re
+import socket
 from celery.signals import setup_logging
 
 from pretix.settings import *  # noqa: F403
+from pretix.helpers.apps import PretixHelpersConfig
 
 STORAGES['staticfiles']['BACKEND'] = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
-# Pinned Pretix blocks RFC1918 webhook targets by default. This owner-only
-# sandbox needs its authenticated booking callback on the private Docker network.
-# Reassess before public launch; Pretix offers only this instance-wide switch.
-ALLOW_HTTP_TO_PRIVATE_NETWORKS = True
+# Keep the pinned image's private-network protection active. Its urllib3 hook
+# checks the resolved socket address at connect time; allow only the unpublished
+# proxy webhook listener, whose sole route authenticates booking notifications.
+ALLOW_HTTP_TO_PRIVATE_NETWORKS = False
+
+
+class HostedPretixHelpersConfig(PretixHelpersConfig):
+    def ready(self):
+        # Import after Django populates apps: importing Pretix's monkeypatching
+        # module while settings load imports models before the app registry exists.
+        from pretix.helpers import monkeypatching
+        upstream_should_block_access = monkeypatching.should_block_access
+
+        def booking_webhook_private_access(address):
+            host, port = address[:2]
+            if port == 8081:
+                try:
+                    proxy_ips = {info[4][0] for info in socket.getaddrinfo('proxy', 8081,
+                                 type=socket.SOCK_STREAM)}
+                except OSError:
+                    proxy_ips = set()
+                if host in proxy_ips:
+                    return False, ''
+            return upstream_should_block_access(address)
+
+        monkeypatching.should_block_access = booking_webhook_private_access
+        super().ready()
+
+
+INSTALLED_APPS[INSTALLED_APPS.index('pretix.helpers')] = 'production_settings.HostedPretixHelpersConfig'
 
 
 class PrivateFormatter(logging.Formatter):

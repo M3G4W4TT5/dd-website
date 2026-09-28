@@ -5,7 +5,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 import urllib.error
 
 HERE = Path(__file__).resolve().parent
@@ -15,6 +15,18 @@ spec.loader.exec_module(release)
 
 
 class OwnerPackageTests(unittest.TestCase):
+    def test_only_the_reviewed_ingress_gateway_is_trusted_for_client_ip(self):
+        for gateway, accepted in [('172.20.0.1', True), ('172.20.0.2', False),
+                                  ('172.19.0.1', False)]:
+            response = json.dumps([{'IPAM': {'Config': [{'Subnet': '172.20.0.0/16',
+                                                         'Gateway': gateway}]}}])
+            with self.subTest(gateway=gateway), patch.object(release, 'safe_run', return_value=response):
+                if accepted:
+                    release.verify_bridge()
+                else:
+                    with self.assertRaisesRegex(ValueError, 'client-IP trust peer'):
+                        release.verify_bridge()
+
     def test_reviewed_target_is_the_complete_local_host_configuration(self):
         self.assertEqual(set(release.TARGET), set(release.FILES))
         for name in release.FILES:
@@ -184,6 +196,39 @@ class UpgradePathTests(unittest.TestCase):
         self.assertNotIn('SMTP_PASSWORD', (self.root / 'secrets' / 'booking-web.env').read_text())
         recreations = [cmd for cmd in self.commands if 'up' in cmd]
         self.assertTrue(all('--no-deps' in cmd and '--force-recreate' in cmd for cmd in recreations))
+
+    def test_mail_rotation_uses_distinct_authenticated_process_credentials(self):
+        for name in ('booking-communications.env', 'booking-worker.env'):
+            path = self.root / 'secrets' / name
+            values = dict(line.split('=', 1) for line in path.read_text().splitlines())
+            values.update({'PREVIEW': 'false', 'MAIL_DELIVERY': 'controlled',
+                           'MAIL_RECIPIENT_ALLOWLIST': 'dev@memoryone.eu',
+                           'SMTP_HOST': 'smtp.example.test', 'SMTP_PORT': '465',
+                           'SMTP_USER': 'booking@didde-mie.com', 'SMTP_PASSWORD': 'old-password-123'})
+            path.write_text(''.join(key + '=' + value + '\n' for key, value in values.items()))
+        smtp = MagicMock()
+        smtp.__enter__.return_value = smtp
+        with self.context(), patch.object(release, 'verify_release', return_value=(self.manifest, [], {})), \
+             patch.object(release.getpass, 'getpass', side_effect=['new-communications-123', 'new-worker-456']), \
+             patch.object(release.smtplib, 'SMTP_SSL', return_value=smtp):
+            release.rotate_mail_credentials(self.manifest['commit'])
+        self.assertEqual(smtp.login.call_count, 2)
+        # A failed recreation may leave the new files in place. Retrying the
+        # same verified credentials must remain possible without minting more.
+        with self.context(), patch.object(release, 'verify_release', return_value=(self.manifest, [], {})), \
+             patch.object(release.getpass, 'getpass', side_effect=['new-communications-123', 'new-worker-456']), \
+             patch.object(release.smtplib, 'SMTP_SSL', return_value=smtp):
+            release.rotate_mail_credentials(self.manifest['commit'])
+        self.assertEqual(smtp.login.call_count, 4)
+        passwords = []
+        for name in ('booking-communications.env', 'booking-worker.env'):
+            values = dict(line.split('=', 1) for line in (self.root / 'secrets' / name).read_text().splitlines())
+            passwords.append(values['SMTP_PASSWORD'])
+            self.assertEqual(values['MAIL_RECIPIENT_ALLOWLIST'], 'dev@memoryone.eu')
+            self.assertEqual(values['MAIL_RELEASE_ENABLED'], 'false')
+        self.assertEqual(passwords, ['new-communications-123', 'new-worker-456'])
+        self.assertEqual(json.loads((self.state / 'mail-gates.json').read_text())['status'],
+                         'configured_pending_sender_scope_check')
 
     def test_known_mixed_revision_availability_503_is_recorded_as_pending(self):
         import runpy

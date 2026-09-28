@@ -1,0 +1,11 @@
+[Unit]
+Description=DD hosted private database backup and isolated restore check
+ConditionPathExists=/etc/dd-hosted/ready
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+ExecStart=/usr/bin/python3 /usr/local/lib/dd-hosted/hosted-backup-check.py --nightly
+NoNewPrivileges=true

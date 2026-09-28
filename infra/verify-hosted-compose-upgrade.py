@@ -28,6 +28,7 @@ http.createServer((req,res)=>{
  if(path==='/api/health'){res.writeHead(200,{'content-type':'application/json'});res.end('{"ok":true}');return;}
  if(path==='/api/availability'&&version==='old'){res.writeHead(503);res.end();return;}
  if(path==='/api/availability'){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({source:'pretix',slots:Array(14).fill({})}));return;}
+ if(path==='/ip'){res.writeHead(200,{'x-observed-ip':req.headers['x-real-ip']||''});res.end();return;}
  if(path==='/'){res.writeHead(200,{'x-runtime-version':version});res.end('booking');return;}
  res.writeHead(404);res.end();
 }).listen(3000,'0.0.0.0');
@@ -112,16 +113,18 @@ def mounted_hash(container, path):
     return run('docker', 'exec', container, 'sha256sum', path).stdout.split()[0]
 
 
-def request(project, url, method='GET', host='booking.didde-mie.com'):
+def request(project, url, method='GET', host='booking.didde-mie.com', claimed_ip=''):
     script = '''import urllib.request,urllib.error,sys
-request=urllib.request.Request(sys.argv[1],data=(b'{}' if sys.argv[2]=='POST' else None),method=sys.argv[2],headers={'Host':sys.argv[3],'Content-Type':'application/json'})
+headers={'Host':sys.argv[3],'Content-Type':'application/json'}
+if sys.argv[4]: headers['CF-Connecting-IP']=sys.argv[4]
+request=urllib.request.Request(sys.argv[1],data=(b'{}' if sys.argv[2]=='POST' else None),method=sys.argv[2],headers=headers)
 try:
  response=urllib.request.urlopen(request,timeout=8)
- print(response.status, response.headers.get('X-Runtime-Version',''))
+ print(response.status, response.headers.get('X-Observed-IP',response.headers.get('X-Runtime-Version','')))
 except urllib.error.HTTPError as error:
  print(error.code,'')
 '''
-    result = run('docker', 'exec', project + '-pretix-1', 'python3', '-c', script, url, method, host)
+    result = run('docker', 'exec', project + '-pretix-1', 'python3', '-c', script, url, method, host, claimed_ip)
     pieces = result.stdout.strip().split(' ', 1)
     return int(pieces[0]), pieces[1] if len(pieces) > 1 else ''
 
@@ -148,7 +151,7 @@ def main():
         secret.mkdir(mode=0o711)
         (root / 'booking.mjs').write_text(BOOKING)
         (root / 'proxy.conf').write_bytes((HERE / 'proxy.conf').read_bytes())
-        (root / 'pretix-settings.py').write_text('SETTING="old"\n')
+        (root / 'pretix-settings.py').write_bytes((HERE / 'pretix-settings.py').read_bytes())
         old, new = 'a' * 64, 'b' * 64
         write_atomic(secret / 'booking.env', ('VERSION=old\nWEBHOOK_PASSWORD=' + old + '\n').encode())
         write_atomic(secret / 'webhook-header.conf', header(old), 0o440, 10006)
@@ -159,6 +162,26 @@ def main():
             before = {service: cid(compose, service) for service in ('booking', 'pretix', 'proxy')}
             images = {service: image_id(container) for service, container in before.items()}
             wait_request(project, 'http://proxy:8080/', 200)
+            private_access = '''import os,requests,urllib3
+os.environ['DJANGO_SETTINGS_MODULE']='production_settings'
+import django
+django.setup()
+from django.conf import settings
+assert settings.ALLOW_HTTP_TO_PRIVATE_NETWORKS is False
+session=requests.Session(); session.trust_env=False
+assert session.post('http://proxy:8081/api/manage/pretix-webhook',data=b'{}',timeout=5).status_code==400
+try: session.get('http://booking:3000/api/health',timeout=5)
+except (requests.exceptions.RequestException, urllib3.exceptions.HTTPError) as error: assert 'blocked' in str(error)
+else: raise AssertionError('Unrelated private HTTP target was accepted')
+print('PASS pinned Pretix private HTTP exception')
+'''
+            assert 'PASS pinned Pretix private HTTP exception' in run(
+                'docker', 'exec', project + '-pretix-1', 'python3', '-c', private_access).stdout
+            actual_ip = run('docker', 'inspect', '--format',
+                            '{{(index .NetworkSettings.Networks "' + project + '_booking-internal").IPAddress}}',
+                            project + '-pretix-1').stdout.strip()
+            observed = request(project, 'http://proxy:8080/ip', claimed_ip='203.0.113.9')
+            assert observed == (200, actual_ip), (observed, actual_ip)
             assert request(project, 'http://proxy:8080/api/availability')[0] == 503
             wait_request(project, 'http://proxy:8080/', 200, host='checkout.didde-mie.com')
             assert request(project, 'http://proxy:8081/api/manage/pretix-webhook', 'POST')[0] == 400
@@ -169,7 +192,7 @@ def main():
             assert denied.returncode != 0
             write_atomic(secret / 'booking.env', ('VERSION=new\nWEBHOOK_PASSWORD=' + new + '\n').encode())
             write_atomic(secret / 'webhook-header.conf', header(new), 0o440, 10006)
-            write_atomic(root / 'pretix-settings.py', b'SETTING="new"\n')
+            write_atomic(root / 'pretix-settings.py', (HERE / 'pretix-settings.py').read_bytes() + b'\n# recreated\n')
             # Ordinary up has an unchanged Compose hash and retains old mounts.
             run(*compose, 'up', '-d', '--no-deps', 'booking', 'pretix', 'proxy')
             assert all(cid(compose, service) == before[service] for service in before)
@@ -182,7 +205,8 @@ def main():
             after = {service: cid(compose, service) for service in before}
             assert all(after[service] != before[service] for service in before)
             assert all(image_id(after[service]) == images[service] for service in before)
-            assert mounted_hash(after['pretix'], '/pretix/src/production_settings.py') == hashlib.sha256(b'SETTING="new"\n').hexdigest()
+            assert mounted_hash(after['pretix'], '/pretix/src/production_settings.py') == hashlib.sha256(
+                (HERE / 'pretix-settings.py').read_bytes() + b'\n# recreated\n').hexdigest()
             wait_request(project, 'http://proxy:8080/api/availability', 200)
             wait_request(project, 'http://proxy:8081/api/manage/pretix-webhook', 400, 'POST')
             print('PASS isolated Compose: pinned Pretix, atomic mounts, explicit recreation, credential denial and retry, image preservation, proxy routing')

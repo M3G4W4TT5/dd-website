@@ -1,0 +1,11 @@
+[Unit]
+Description=Run DD hosted private backup nightly
+
+[Timer]
+OnCalendar=*-*-* 02:30:00 UTC
+RandomizedDelaySec=10m
+Persistent=true
+Unit=dd-hosted-backup.service
+
+[Install]
+WantedBy=timers.target
