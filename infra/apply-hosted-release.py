@@ -300,6 +300,7 @@ except urllib.error.HTTPError as error:
 def verify_mounts():
     for service, destination, source in (
         ('pretix', '/pretix/src/production_settings.py', ROOT / 'pretix-settings.py'),
+        ('pretix', '/etc/nginx/nginx.conf', ROOT / 'pretix-nginx.conf'),
         ('pretix-cron', '/pretix/src/production_settings.py', ROOT / 'pretix-settings.py'),
         ('proxy', '/etc/nginx/conf.d/default.conf', ROOT / 'proxy.conf'),
     ):
