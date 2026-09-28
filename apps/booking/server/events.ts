@@ -8,6 +8,7 @@ import {
   normalizeEvent,
   quotaSchema,
   sandboxPurchaseEligible,
+  rentalDateBlocksEvent,
   occupiesRoom,
   overlaps,
   type Occurrence,
@@ -16,6 +17,13 @@ import {
 } from "../src/lib/events-model";
 
 const LIMIT = 2000;
+const rentalOrderSchema = z.object({
+  status: z.enum(["n", "p", "e", "c"]),
+  expires: z.string().nullable(),
+  positions: z.array(z.object({
+    item: z.number(), subevent: z.number().nullable(), canceled: z.boolean().optional(),
+  })),
+});
 function config() {
   const organizer = process.env.PRETIX_ORGANIZER_SLUG?.trim();
   const token = process.env.PRETIX_API_TOKEN?.trim();
@@ -29,12 +37,13 @@ async function list<T>(
   path: string,
   schema: z.ZodType<T>,
   cfg: NonNullable<ReturnType<typeof config>>,
+  token = cfg.token,
 ): Promise<T[]> {
   let url: URL | null = new URL(path, cfg.base);
   const output: T[] = [];
   while (url) {
     const response = await pretixFetch(url, {
-      headers: pretixHeaders(url, cfg.token),
+      headers: pretixHeaders(url, token),
       cache: "no-store",
       signal: AbortSignal.timeout(10000),
     });
@@ -132,8 +141,9 @@ export async function getCatalog(): Promise<Catalog> {
     );
     const rentalEvent = rawEvents.find((e) => e.slug === rentalSlug);
     const rentalItemId = Number(process.env.PRETIX_ITEM_ID);
-    // Unavailable rental inventory may represent a paid order or an administrative block.
-    // Either way, an overlapping event must not gain a purchase link.
+    // The room attestation requires closed rental quotas for event hours. Read
+    // active orders independently so a quota closed after a sale cannot mask a
+    // real collision. The scoped management read token sees rental orders only.
     const rentalConflicts: { start: string; end: string }[] = [];
     if (
       rentalEvent?.has_subevents &&
@@ -145,21 +155,23 @@ export async function getCatalog(): Promise<Catalog> {
         list(`${path}subevents/`, dateSchema, cfg),
         list(`${path}quotas/?with_availability=true`, quotaSchema, cfg),
       ]);
+      const orderToken = process.env.PRETIX_MANAGE_API_TOKEN?.trim();
+      const occupiedIds = new Set<number>();
+      if (sandboxCheckoutEnabled() && orderToken) {
+        const orders = await Promise.all(["n", "p"].map(status =>
+          list(`${path}orders/?status=${status}&item=${rentalItemId}`, rentalOrderSchema, cfg, orderToken)));
+        const now = Date.now();
+        for (const order of orders.flat()) {
+          if (order.status === "n" && order.expires && Date.parse(order.expires) <= now) continue;
+          for (const position of order.positions) {
+            if (position.item === rentalItemId && !position.canceled && position.subevent !== null)
+              occupiedIds.add(position.subevent);
+          }
+        }
+      }
       for (const date of rentalDates) {
         if (!date.date_to) throw new Error("Rental slot without end time");
-        const applicable = rentalQuotas.filter(
-          (q) =>
-            (q.subevent === date.id || q.subevent === null) &&
-            q.items.includes(rentalItemId),
-        );
-        if (
-          applicable.some(
-            (q) =>
-              q.closed ||
-              q.available !== true ||
-              (q.available_number !== null && (q.available_number ?? 0) < 1),
-          )
-        ) {
+        if (rentalDateBlocksEvent(date.id, rentalQuotas, rentalItemId, occupiedIds)) {
           rentalConflicts.push({ start: date.date_from, end: date.date_to });
         }
       }
@@ -193,6 +205,7 @@ export async function getCatalog(): Promise<Catalog> {
       sandboxCheckoutEnabled() &&
       Boolean(
         shopBase &&
+          process.env.PRETIX_MANAGE_API_TOKEN?.trim() &&
           new URL(shopBase).protocol === "https:" &&
           rentalEvent?.has_subevents &&
           Number.isInteger(rentalItemId) &&

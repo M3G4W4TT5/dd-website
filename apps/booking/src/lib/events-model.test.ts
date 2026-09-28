@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DateTime } from "luxon";
-import { checkoutPath, remainingPlaces, normalizeEvent, occupiesRoom, overlaps, sandboxPurchaseEligible, type RawEvent, type RawDate, type RawItem, type RawQuota } from "./events-model";
+import { checkoutPath, remainingPlaces, normalizeEvent, occupiesRoom, overlaps, rentalDateBlocksEvent, sandboxPurchaseEligible, type RawEvent, type RawDate, type RawItem, type RawQuota } from "./events-model";
 
 const now = DateTime.fromISO("2026-10-01T12:00:00Z");
 const event: RawEvent = { slug: "dance", name: { da: "Dans", en: "Dance" }, live: true, is_public: true, has_subevents: true, date_from: "2026-10-01T19:00:00+02:00", date_to: null, location: { da: "TTD Studio" }, meta_data: {} };
@@ -52,6 +52,14 @@ test("room blocking includes unpublished and sold out dates, and only explicit c
   assert.equal(occupiesRoom(event, hidden, "2026-10-28T18:30:00+01:00", "2026-10-28T19:30:00+01:00"), true);
   assert.equal(occupiesRoom(event, { ...hidden, meta_data: { ttd_cancelled: true } }, "2026-10-28T18:30:00+01:00", "2026-10-28T19:30:00+01:00"), false);
   assert.equal(overlaps("2026-10-28T22:00:00+01:00", "2026-10-28T23:00:00+01:00", date.date_from, date.date_to!), false);
+});
+test("event room verification requires closed rental quotas and no active rental order", () => {
+  const rentalQuota = { subevent: 42, items: [1], closed: false };
+  assert.equal(rentalDateBlocksEvent(42, [rentalQuota], 1, new Set()), true);
+  assert.equal(rentalDateBlocksEvent(42, [{ ...rentalQuota, closed: true }], 1, new Set()), false);
+  assert.equal(rentalDateBlocksEvent(42, [{ ...rentalQuota, closed: true }], 1, new Set([42])), true);
+  assert.equal(rentalDateBlocksEvent(42, [{ ...rentalQuota, closed: true }, { ...rentalQuota, subevent: null }], 1, new Set()), true);
+  assert.equal(rentalDateBlocksEvent(42, [], 1, new Set()), true);
 });
 test("DST start offsets define real instant overlap", () => {
   assert.equal(overlaps("2027-03-28T01:00:00+01:00", "2027-03-28T03:00:00+02:00", "2027-03-28T03:00:00+02:00", "2027-03-28T04:00:00+02:00"), false);

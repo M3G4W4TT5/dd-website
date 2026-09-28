@@ -50,6 +50,17 @@ export function localized(value: z.infer<typeof translated>, language: Language)
 export function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
   return Date.parse(aStart) < Date.parse(bEnd) && Date.parse(bStart) < Date.parse(aEnd);
 }
+export function rentalDateBlocksEvent(
+  dateId: number,
+  quotas: { subevent: number | null; items: number[]; closed: boolean }[],
+  itemId: number,
+  occupiedIds: ReadonlySet<number>,
+): boolean {
+  const applicable = quotas.filter(q => (q.subevent === dateId || q.subevent === null) && q.items.includes(itemId));
+  // Every overlapping rental route must be administratively closed. A closed
+  // quota does not itself prove a sale; active Pretix orders are checked apart.
+  return applicable.length === 0 || applicable.some(q => !q.closed) || occupiedIds.has(dateId);
+}
 export function occupiesRoom(event: RawEvent, date: RawDate | null, start: string, end: string): boolean {
   const cancelled = date?.meta_data?.ttd_cancelled ?? event.meta_data?.ttd_cancelled;
   if (cancelled === true || cancelled === "true") return false;
