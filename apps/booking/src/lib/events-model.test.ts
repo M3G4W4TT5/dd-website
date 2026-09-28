@@ -14,6 +14,7 @@ test("test-mode checkout requires the sandbox, verified room and saleable stock"
     { ...date, meta_data: { ttd_room_verified: true } }, [item], [quota], now)!;
   assert.equal(sandboxPurchaseEligible(verified, true), true);
   assert.equal(sandboxPurchaseEligible(verified, false), false);
+  assert.equal(sandboxPurchaseEligible({ ...verified, live: false }, true), false);
   assert.equal(sandboxPurchaseEligible({ ...verified, roomVerified: false }, true), false);
   assert.equal(sandboxPurchaseEligible({ ...verified, status: "room-conflict" }, true), false);
   assert.equal(sandboxPurchaseEligible({ ...verified, tickets: [{ ...verified.tickets[0], remaining: 0 }] }, true), false);
