@@ -106,7 +106,7 @@ class UpgradePathTests(unittest.TestCase):
         real = runpy.run_path(HERE / 'deploy.py')
         deploy = {'config_version': real['config_version'],
                   'validate_manifest': real['validate_manifest'],
-                  'check_readiness': lambda *_: None}
+                  'check_readiness': lambda *_: None, 'preserve_primary': real['preserve_primary']}
         patches = [
             patch.object(release, 'ROOT', self.root), patch.object(release, 'STATE', self.state),
             patch.object(release, 'PRIVATE', self.state / 'provisioning'),
@@ -237,6 +237,7 @@ class UpgradePathTests(unittest.TestCase):
                                        'unavailable', {}, None)
         deploy = {'config_version': actual['config_version'],
                   'check_readiness': lambda *_: (_ for _ in ()).throw(error),
+                  'preserve_primary': actual['preserve_primary'],
                   'endpoint': lambda _host, path: b'{"ok":true}' if path == '/api/health' else b'OK'}
         with self.context(), patch.object(release.runpy, 'run_path', return_value=deploy), \
              patch.object(release.urllib.request, 'urlopen', side_effect=error):

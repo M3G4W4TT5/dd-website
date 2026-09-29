@@ -1,6 +1,7 @@
 """Validate the privilege boundary without Docker or remote changes."""
 import importlib.util
 import io
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -20,6 +21,24 @@ def manifest():
 
 
 class ManifestTests(unittest.TestCase):
+    def test_booking_operations_preserve_independent_primary_pin_and_reject_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in deploy.PRIMARY_FILES: (root/name).write_text("reviewed " + name)
+            primary = deploy.PREFIX + "communications@sha256:" + "f" * 64
+            data = {"image":primary,"files":{name:hashlib.sha256((root/name).read_bytes()).hexdigest() for name in deploy.PRIMARY_FILES}}
+            (root/"primary-image.json").write_text(json.dumps(data))
+            env = {"DD_COMMUNICATIONS_IMAGE":"booking-pin"}
+            with patch.object(Path,"lstat",return_value=SimpleNamespace(st_uid=0,st_mode=0o100644)):
+                args = deploy.preserve_primary(["docker","compose"],env,root)
+                self.assertEqual(args[-2:],["-f",str(root/"compose.primary.yaml")])
+                self.assertEqual(env["DD_PRIMARY_COMMUNICATIONS_IMAGE"],primary)
+                self.assertEqual(env["DD_COMMUNICATIONS_IMAGE"],"booking-pin")
+                (root/"proxy.primary.conf").write_text("unreviewed")
+                with self.assertRaisesRegex(ValueError,"differs"): deploy.preserve_primary([],{},root)
+            self.assertNotIn("primary-communications",deploy.SERVICES)
+            self.assertNotIn("primary",deploy.SERVICES)
+
     def test_pretix_supervisor_requires_all_three_running_processes(self):
         good = 'nginx RUNNING pid 1\npretixtask RUNNING pid 2\npretixweb RUNNING pid 3\n'
         with patch.object(deploy, 'run', return_value=subprocess.CompletedProcess([], 0, good)) as command:

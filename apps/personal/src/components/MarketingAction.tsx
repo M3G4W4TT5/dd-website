@@ -1,3 +1,4 @@
+import { useFormsAvailable, formEndpoint, PreviewFormsNotice } from "../lib/forms";
 import { useEffect, useState } from "react";
 
 export function MarketingAction({
@@ -11,6 +12,7 @@ export function MarketingAction({
   token: string;
   language: "da" | "en";
 }) {
+  const available = useFormsAvailable();
   const [token, setToken] = useState(initialToken);
   useEffect(() => {
     setToken(
@@ -36,13 +38,11 @@ export function MarketingAction({
         ? "Afmeld e-mails"
         : "Unsubscribe from emails";
   async function submit() {
+    if (!available) return;
     setState("working");
     try {
       const response = await fetch(
-        new URL(
-          "/api/marketing/action",
-          import.meta.env.PUBLIC_SERVICES_URL || "http://127.0.0.1:3011",
-        ),
+        formEndpoint("/api/marketing/action"),
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -60,6 +60,7 @@ export function MarketingAction({
     <main className="marketing-page">
       <span>{isPersonal ? "DD PRODUCTION" : "TTD STUDIO"}</span>
       <h1>{title}</h1>
+      <PreviewFormsNotice available={available} />
       <p>
         {purpose === "confirm"
           ? da
@@ -70,7 +71,7 @@ export function MarketingAction({
             : `Stop ${isPersonal ? "DD newsletter" : "TTD Studio promotional"} emails to this address.`}
       </p>
       {state === "ready" && /^[A-Za-z0-9_-]{43}$/.test(token) && (
-        <button type="button" onClick={() => void submit()}>
+        <button type="button" disabled={!available} onClick={() => void submit()}>
           {purpose === "confirm"
             ? da
               ? "Bekræft tilmelding"

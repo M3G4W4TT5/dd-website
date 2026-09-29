@@ -11,6 +11,7 @@ import {
 import type { Mailer } from "@dd/mail";
 import { communicationsConfig } from "./config";
 import { boundedJson, equal, HttpError, json } from "./http";
+import { verifyPrimaryIp } from "../contracts/primary-proxy";
 export { communicationsConfig, mailConfig, mode } from "./config";
 export { boundedJson, equal, HttpError, json } from "./http";
 export function service(
@@ -68,7 +69,11 @@ export function service(
         path === "/api/contact" ? 8192 : 2048,
       );
       let ip = peer;
-      if (verifiedProxy || cfg.trustedProxies.includes(peer)) {
+      if (cfg.primaryProxyKey && !internal) {
+        const signedIp = verifiedProxy ? await verifyPrimaryIp(cfg.primaryProxyKey, request) : null;
+        if (!signedIp) throw new HttpError(403, "Untrusted primary proxy");
+        ip = signedIp;
+      } else if (verifiedProxy || cfg.trustedProxies.includes(peer)) {
         const header = request.headers.get("x-real-ip");
         if (header && /^[a-fA-F0-9:.]{3,64}$/.test(header)) ip = header;
       }

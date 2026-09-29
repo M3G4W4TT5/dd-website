@@ -1,8 +1,32 @@
-# Hosted booking: current execution checkpoint
+# Hosted private sites: current execution checkpoint
 
 Updated 29 September 2026. The first section records the latest verified state. The earlier purchase and PR #11 narratives remain below as dated evidence; their payment tests must not be counted as acceptance of later changes. The targeted purchase log is [BOOKING_SITE_SANDBOX_ACCEPTANCE.md](BOOKING_SITE_SANDBOX_ACCEPTANCE.md).
 
-## Latest verified private-sandbox state
+## Personal Pages setup checkpoint — 29 September 2026
+
+Owner status verified booking/communications/worker running at PR #21 merge `c02936abeb36705a0823a6c25887065d831661c7`, healthy with zero restarts, successful current/attempt records, host config `618cc2ec44c214de57e68e82ae4179f488e80b8512ad221f6c1050ad3aa9aae1`. Their observed digests are respectively `sha256:270ff79aa7ca04119bbaecbab2f296556a76e69af3179eeddfd8c9119ca62a19`, `sha256:af58f30cff91f65cd66e08a08805a0ed58992e51413129209660d51b0195b714`, `sha256:0cb16cc3605d975fe892ab4d2e62862ddc6c54475074e369d7f6d3e3e09530dd`. Booking root/health/14-slot Pretix availability and checkout root returned 200; sandbox/payment/mail gates remained restricted. Backup and supervisor timers were active and the latest backup fresh.
+
+Pages project `dd-personal-private` is Git-integrated on current account `b259f8a4a84c2435819ed369102f3724`. First deployment `5287ac4d-a0f2-499e-9fb7-06fd1427c487` contains only the placeholder at the current booking commit; its build installed Node `24.20.0`. Automatic production and branch deployments are disabled. Apex attachment and TLS are active. Signed-out probes on apex, production Pages hostname and the deployment preview hostname each returned an Access redirect before backend credentials were attached. Forms root returned 401 without credentials. No real personal deployment or hosted primary acceptance is claimed at this checkpoint.
+
+Production has encrypted Access token ID/secret and signed-IP key; preview has no secrets. Forms remain disabled. Primary database inspection, reviewed image deployment, capture/restart/backup acceptance, signed-in canonical journeys and controlled SMTP inbox/authentication proof remain pending. Follow [OPERATIONS.md](OPERATIONS.md#private-personal-pages-and-independent-communications) for release/rollback.
+
+### Later Cloudflare account-migration inventory
+
+Keep these resources in the current account until the separately planned migration:
+
+| Resource | Identity |
+| --- | --- |
+| Pages Git project / custom domain | `dd-personal-private` / `didde-mie.com` / production `main` |
+| Production Pages runtime secrets | `FORMS_ACCESS_CLIENT_ID`, `FORMS_ACCESS_CLIENT_SECRET`, `PRIMARY_PROXY_KEY` (values never recorded) |
+| Production Pages Access | `073de529-eaf1-431f-9fbe-bb37889936a1` |
+| Wildcard previews Access | `2ce959ac-6d50-44d0-97cf-76a9f91acab9` |
+| Apex Access | `3737cbd6-9f1c-47ae-a5a6-8d835aa6ea94` |
+| Forms Service Auth application / policy | `446e3250-22cb-4746-8a59-a4db656f7c8d` / `e9e47b57-020d-4b06-9f9d-54bc4537f025` |
+| Dedicated token ownership / expiry | MemoryOne owner, DD personal Pages production; token record `81de2e90-fb7a-4cb5-b14e-53fccf4b54c2`; expires `2027-09-29T19:24:10Z` |
+| Forms Tunnel route | `forms.didde-mie.com`, Tunnel `7c39829f-b117-4294-9424-bf422d88966f`, Service Auth audience enforced |
+| Web DNS only | Apex Pages CNAME and forms Tunnel CNAME; mail records preserved |
+
+## Historical checkout release checkpoint before PR #21
 
 | Area | Verified evidence | Limit or next action |
 | --- | --- | --- |

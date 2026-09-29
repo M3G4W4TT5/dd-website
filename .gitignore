@@ -13,4 +13,5 @@ coverage/
 
 infra/local/
 artifacts/private/
+artifacts/pages-functions/
 __pycache__/

@@ -1,0 +1,16 @@
+# Included only after owner provisioning. Pages hosts the frontend.
+services:
+  primary-communications:
+    build: !reset null
+    image: ${DD_PRIMARY_COMMUNICATIONS_IMAGE:?Supply the independent primary digest}
+    volumes:
+      - /var/lib/dd-hosted/primary-capture:/capture
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3011/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+  proxy:
+    volumes:
+      - ./proxy.primary.conf:/etc/nginx/conf.d/primary.conf:ro
+      - ./primary-routes.inc:/etc/nginx/conf.d/primary-routes.inc:ro

@@ -23,11 +23,11 @@ const marketingPolicy =
 const marketingMailer = createMailer(marketingPolicy, site, capture);
 const s = service(cfg, contactMailer);
 async function fromProxy(peer: string | undefined): Promise<boolean> {
-  if (site !== "booking" || !peer) return false;
+  if (!peer) return false;
   try {
     const addresses = (await Promise.all([
       lookup("proxy", { all: true }),
-      lookup("booking-public-proxy", { all: true }),
+      ...(site === "booking" ? [lookup("booking-public-proxy", { all: true })] : []),
     ])).flat();
     const normalized = peer.replace(/^::ffff:/, "");
     return addresses.some(({ address }) => address === normalized);
