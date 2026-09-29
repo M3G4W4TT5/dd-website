@@ -18,6 +18,17 @@ RECIPIENT = "dev@memoryone.eu"
 HOST = "smtp.purelymail.com"
 
 
+def sender_policy_rejection(exc):
+    response = exc.smtp_error
+    if isinstance(response, bytes):
+        response = response.decode("utf-8", errors="replace")
+    return exc.smtp_code in (501, 530) and "not authorized to send mail as" in str(response).lower()
+
+
+def invalid_credential_rejection(exc):
+    return exc.smtp_code == 535
+
+
 def cases(identity):
     own = f"{identity}@{DOMAIN}"
     if identity == "booking":
@@ -74,7 +85,9 @@ def probe(username, password, label, envelope, visible):
     except smtplib.SMTPAuthenticationError:
         return "inconclusive-auth", None
     except smtplib.SMTPResponseException as exc:
-        return "rejected", exc.smtp_code
+        if sender_policy_rejection(exc):
+            return "sender-policy-rejected", exc.smtp_code
+        return "inconclusive", exc.smtp_code
     except smtplib.SMTPRecipientsRefused:
         return "recipient-refused", None
     except (OSError, smtplib.SMTPException):
@@ -97,8 +110,11 @@ def main():
         try:
             authenticate(username, password)
         except smtplib.SMTPAuthenticationError as exc:
-            print(f"PASS {args.credential} authentication rejected ({exc.smtp_code})")
-            return 0
+            if invalid_credential_rejection(exc):
+                print(f"PASS {args.credential} authentication rejected ({exc.smtp_code})")
+                return 0
+            print(f"INCONCLUSIVE {args.credential} authentication probe ({exc.smtp_code})")
+            return 2
         except (OSError, smtplib.SMTPException):
             print(f"INCONCLUSIVE {args.credential} authentication probe")
             return 2
@@ -108,8 +124,11 @@ def main():
         try:
             authenticate(username, password)
         except smtplib.SMTPAuthenticationError as exc:
-            print(f"FAIL {args.credential} authentication rejected ({exc.smtp_code})")
-            return 1
+            if invalid_credential_rejection(exc):
+                print(f"FAIL {args.credential} authentication rejected ({exc.smtp_code})")
+                return 1
+            print(f"INCONCLUSIVE {args.credential} authentication probe ({exc.smtp_code})")
+            return 2
         except (OSError, smtplib.SMTPException):
             print(f"INCONCLUSIVE {args.credential} authentication probe")
             return 2
@@ -121,13 +140,17 @@ def main():
         print(f"INCONCLUSIVE {args.credential} authentication failed")
         return 2
     failures = 0
+    inconclusive = 0
     for label, envelope, visible, expected in cases(args.identity):
         result, code = probe(username, password, label, envelope, visible)
-        passed = (result == "accepted") == expected and result in ("accepted", "rejected")
-        failures += not passed
-        print(f"{'PASS' if passed else 'FAIL'} {args.credential} {label}: {result}" +
+        passed = result == ("accepted" if expected else "sender-policy-rejected")
+        uncertain = result.startswith("inconclusive") or result == "recipient-refused"
+        inconclusive += uncertain
+        failures += not passed and not uncertain
+        status = "PASS" if passed else "INCONCLUSIVE" if uncertain else "FAIL"
+        print(f"{status} {args.credential} {label}: {result}" +
               (f" ({code})" if code is not None else ""))
-    return 1 if failures else 0
+    return 1 if failures else 2 if inconclusive else 0
 
 
 if __name__ == "__main__":
