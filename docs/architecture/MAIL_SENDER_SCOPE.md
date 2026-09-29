@@ -11,11 +11,11 @@ Updated 29 September 2026. This is a current, bounded mail task record. Do not t
 - A read-only 29 September host probe found both operational timers active and booking root/health/availability plus checkout root returning HTTP 200 through the configured loopback vhosts. Public DNS currently publishes Purelymail SPF, DKIM and DMARC records and its MX. These checks do not establish current sender authorization or message delivery.
 - The owner assigned daily booking, no-reply, contact and newsletter mailbox monitoring to Didde-Mie. Forwarding to her mailbox and direct account access are planned but not yet configured or verified. Bounce and reply handling remain an open operational gate until she can observe and act on them.
 
-## Exact outbound policy applied; SMTP proof pending
+## Exact outbound policy applied; SMTP scope verified
 
 The owner confirmed no intentional tagged or alias sending and approved replacing the all-users default outbound allowance. The portal now has exact own-address allow rules for its six users, plus the booking user's exact `noreply+booking@didde-mie.com` exception. The broad default rule was removed, and a reload confirmed seven exact allow rules with prefix matching off. Inbound symbolic subaddressing was left enabled. If SMTP still accepts an unapproved tag under this policy, the fallback is to disable symbolic subaddressing for `didde-mie.com` and add an explicit inbound route for `noreply+booking@` to the monitored no-reply mailbox; that fallback requires an inventory of all other tagged recipients because they would otherwise bounce. The fallback is not approved or applied.
 
-After a policy change, run the bounded positive and negative SMTP matrix below for **each** booking process credential. If any `booking+` or mixed header/envelope probe is accepted, the exact sender-scope requirement is still unmet. Preserve capture/controlled delivery and the single approved recipient; do not enable unrestricted mail to test this.
+On 29 September the owner ran the bounded SMTP matrix privately with both new booking app passwords. For each credential, `booking@` and exact `noreply+booking@` envelope/visible pairs were accepted. Ten unapproved pairs were rejected with SMTP 530: own symbolic tag, base no-reply, another no-reply tag, contact, newsletter, mixed envelope/visible contact, mixed envelope/visible own tag, and an external domain. The owner supplied only sanitized PASS results. This verifies the tested provider sender combinations; it does not establish arrival, header authentication, replies, bounce handling, or any untested sender form. Preserve capture/controlled delivery and the single approved recipient.
 
 ## Private owner sequence
 
