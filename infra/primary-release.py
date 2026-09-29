@@ -68,6 +68,7 @@ def psql(sql):
         code = re.search(r'ERROR:\s+([A-Z0-9]{5})(?:\s|$)', result.stderr)
         phase('database-sqlstate-'+code.group(1) if code else 'database-connection-failed')
         raise ValueError('Private database query failed')
+    phase('database-query-complete')
     return result.stdout.strip()
 
 def applications():
@@ -123,6 +124,7 @@ def arguments(current, image):
     return args, env
 
 def setup_runtime(image):
+    phase('existing-primary-credential-registry')
     # The initial bootstrap already created primary schema/roles, then disabled their logins.
     # Adopt only those exact primary credentials; never run the shared provision job.
     registry = STATE / 'provisioning/provisioning-private.json'
@@ -132,10 +134,12 @@ def setup_runtime(image):
         if not re.fullmatch('[a-f0-9]{64}', passwords.get(role, '')):
             raise ValueError('Existing primary credential registry is incomplete')
     expected = psql("SELECT count(*) FROM pg_roles WHERE rolname IN ('primary_marketing_runtime','primary_marketing_migrator','primary_marketing_operator') AND NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolbypassrls; SELECT pg_get_userbyid(nspowner) FROM pg_namespace WHERE nspname='primary_marketing';")
+    phase('existing-primary-role-ownership')
     if expected != '3\nprimary_marketing_migrator':
         raise ValueError('Inspect existing primary provisioning before applying setup')
     # Credentials remain the original primary values; only their LOGIN flag is enabled.
     psql('BEGIN;\n' + '\n'.join("ALTER ROLE " + role + " LOGIN PASSWORD '" + passwords[role] + "';" for role in ROLES) + '\nCOMMIT;')
+    phase('primary-private-runtime-configuration')
     capture = STATE / 'primary-capture'
     capture.mkdir(mode=0o700, exist_ok=True)
     if capture.is_symlink(): raise ValueError('Unsafe capture directory')
@@ -165,6 +169,7 @@ def setup_runtime(image):
     migrate = STATE / 'primary-migration.env'
     put(migrate, 'MIGRATION_DATABASE_URL=postgresql://primary_marketing_migrator:' + passwords['primary_marketing_migrator'] + '@postgres/marketing\n', 10004, 0o400)
     try:
+        phase('primary-schema-migrations')
         run(['docker','run','--rm','--user','10004:10004','--network','dd-hosted_database','--mount','type=bind,src='+str(migrate)+',dst=/run/primary-migration,readonly',
              '--entrypoint','node',image,'--env-file=/run/primary-migration','--import','tsx','server/database/scripts/migrate.ts','primary'])
     finally:
@@ -181,11 +186,13 @@ def check_isolation():
         (CASE WHEN c.relkind='S' THEN NOT has_sequence_privilege('dd_backup',c.oid,'SELECT') ELSE false END));
       SELECT count(*) FROM primary_marketing.schema_migrations;"""
     output = psql(sql).splitlines()
+    phase('primary-isolation-and-backup-grants')
     if len(output) != 3 or output[0:2] != ['f','0'] or int(output[2]) < 1:
         raise ValueError('Primary isolation or backup coverage failed')
     for role, forbidden in [('primary_marketing_runtime','booking_marketing'),('booking_marketing_runtime','primary_marketing')]:
         result = psql_result('SET ROLE '+role+'; SELECT 1 FROM '+forbidden+'.marketing_subscriptions LIMIT 1;')
-        if result.returncode == 0 or 'permission denied' not in result.stderr:
+        phase('primary-negative-schema-read')
+        if result.returncode == 0 or not re.search(r'ERROR:\s+42501(?:\s|$)', result.stderr):
             raise ValueError('Negative cross-schema read failed')
     print('PASS primary schema migrations, negative cross-schema/database privileges and backup table/sequence coverage')
 
