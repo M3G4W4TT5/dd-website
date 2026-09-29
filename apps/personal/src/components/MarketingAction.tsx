@@ -15,9 +15,8 @@ export function MarketingAction({
   const available = useFormsAvailable();
   const [token, setToken] = useState(initialToken);
   useEffect(() => {
-    setToken(
-      new URLSearchParams(window.location.hash.slice(1)).get("token") || "",
-    );
+    const value = new URLSearchParams(window.location.hash.slice(1)).get("token");
+    if (value) setToken(value);
     history.replaceState(
       null,
       "",
@@ -80,6 +79,12 @@ export function MarketingAction({
               ? "Afmeld"
               : "Unsubscribe"}
         </button>
+      )}
+      {state === "ready" && !/^[A-Za-z0-9_-]{43}$/.test(token) && (
+        <p role="status">
+          Open the {purpose === "confirm" ? "confirmation" : "unsubscribe"} link
+          from your email. If you have just signed in, reopen that link to continue.
+        </p>
       )}
       {state === "working" && (
         <p role="status">{da ? "Arbejder…" : "Working…"}</p>
