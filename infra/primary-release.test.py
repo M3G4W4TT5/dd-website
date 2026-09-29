@@ -3,6 +3,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import subprocess
 import unittest
 from unittest.mock import patch
 
@@ -15,6 +16,14 @@ BOOKING = {'commit': 'c' * 40, 'images': {'booking': 'unchanged-booking', 'commu
 IDENTITIES = {'booking': {'id': 'stable'}, 'booking-communications': {'id': 'stable'}, 'booking-worker': {'id': 'stable'}}
 
 class ReleaseTests(unittest.TestCase):
+    def test_cross_schema_reads_require_specific_permission_denied_sqlstate(self):
+        denied=subprocess.CompletedProcess([],1,'','ERROR:  42501\n')
+        with patch.object(primary,'psql',return_value='f\n0\n1'),patch.object(primary,'psql_result',return_value=denied):
+            primary.check_isolation()
+        for result in (subprocess.CompletedProcess([],0,'1',''),subprocess.CompletedProcess([],1,'','ERROR:  42809\n')):
+            with patch.object(primary,'psql',return_value='f\n0\n1'),patch.object(primary,'psql_result',return_value=result):
+                with self.assertRaisesRegex(ValueError,'Negative'):primary.check_isolation()
+
     def test_database_inspection_uses_bootstrap_uid_and_keeps_password_out_of_argv(self):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory); (root/'secrets').mkdir()
