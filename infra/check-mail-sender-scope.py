@@ -85,7 +85,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("identity", choices=("booking", "contact", "newsletter"))
     parser.add_argument("--credential", required=True, choices=("communications", "worker", "pretix", "primary", "marketing", "old-shared"))
-    parser.add_argument("--auth-revoked", action="store_true", help="Check only that an old credential can no longer authenticate")
+    auth = parser.add_mutually_exclusive_group()
+    auth.add_argument("--auth-revoked", action="store_true", help="Check only that an old credential can no longer authenticate")
+    auth.add_argument("--auth-valid", action="store_true", help="Check only that a current credential still authenticates")
     args = parser.parse_args()
     username = f"{args.identity}@{DOMAIN}"
     password = getpass.getpass("SMTP app password (hidden): ")
@@ -102,6 +104,17 @@ def main():
             return 2
         print(f"FAIL {args.credential} still authenticates")
         return 1
+    if args.auth_valid:
+        try:
+            authenticate(username, password)
+        except smtplib.SMTPAuthenticationError as exc:
+            print(f"FAIL {args.credential} authentication rejected ({exc.smtp_code})")
+            return 1
+        except (OSError, smtplib.SMTPException):
+            print(f"INCONCLUSIVE {args.credential} authentication probe")
+            return 2
+        print(f"PASS {args.credential} still authenticates")
+        return 0
     try:
         authenticate(username, password)
     except (OSError, smtplib.SMTPException):
