@@ -1,3 +1,4 @@
+import { useFormsAvailable, formEndpoint, PreviewFormsNotice } from "../lib/forms";
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 
@@ -7,12 +8,14 @@ function invalidContactFields(form: HTMLFormElement): string[] {
 }
 
 export function ContactPreview() {
+  const available = useFormsAvailable();
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState("");
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!available) return;
     const form = event.currentTarget;
     const invalid = invalidContactFields(form);
     setInvalidFields(invalid);
@@ -24,8 +27,7 @@ export function ContactPreview() {
     setSending(true);
     setStatus("");
     try {
-      const bookingUrl = import.meta.env.PUBLIC_SERVICES_URL || "http://127.0.0.1:3011";
-      const response = await fetch(new URL("/api/contact", bookingUrl), {
+      const response = await fetch(formEndpoint("/api/contact"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -50,6 +52,7 @@ export function ContactPreview() {
 
   return (
     <form className="contact-form" noValidate onInput={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onChange={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onSubmit={submit}>
+      <PreviewFormsNotice available={available} />
       <p className="form-disclaimer">TELL DD ABOUT YOUR PROJECT</p>
       <div className="contact-fields">
         <label>YOUR NAME<input type="text" name="name" autoComplete="name" maxLength={100} required placeholder="Name" aria-invalid={invalidFields.includes("name")} /></label>
@@ -59,7 +62,7 @@ export function ContactPreview() {
         <label className="contact-honeypot" aria-hidden="true">Website<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
       </div>
       {invalidFields.length > 0 && <p className="contact-validation-error" role="alert">Complete or correct the highlighted fields before sending.</p>}
-      <div className="contact-submit"><button type="submit" disabled={sending}>{sending ? "Sending…" : "Send inquiry"} <ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status}</p></div>
+      <div className="contact-submit"><button type="submit" disabled={sending || !available}>{sending ? "Sending…" : "Send inquiry"} <ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status}</p></div>
       <p className="form-privacy">We use your details to reply. <a href="/privacy">Read the privacy policy</a>.</p>
     </form>
   );

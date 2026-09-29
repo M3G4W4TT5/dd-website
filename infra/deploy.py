@@ -23,6 +23,26 @@ TARGETS = {"booking": "DD_BOOKING_IMAGE", "communications": "DD_COMMUNICATIONS_I
 SERVICES = ["postgres", "redis", "mail-capture", "pretix", "pretix-cron", "booking", "booking-communications", "booking-worker", "proxy"]
 FILES = ("compose.production.yaml", "compose.hosted.yaml", "proxy.conf",
          "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf", "deploy.py")
+PRIMARY_FILES = ("compose.primary.yaml", "proxy.primary.conf", "primary-routes.inc")
+
+
+def preserve_primary(compose, env, root=ROOT):
+    """Attach the independently pinned primary configuration to booking operations."""
+    pin = root / "primary-image.json"
+    if not pin.exists():
+        return compose
+    for path in (pin, *(root / name for name in PRIMARY_FILES)):
+        metadata = path.lstat()
+        if path.is_symlink() or metadata.st_uid != 0 or metadata.st_mode & 0o022:
+            raise ValueError("Unsafe primary configuration")
+    data = json.loads(pin.read_text())
+    if not re.fullmatch(re.escape(PREFIX + "communications") + r"@sha256:[0-9a-f]{64}", data.get("image", "")):
+        raise ValueError("Invalid primary image pin")
+    hashes = {name: hashlib.sha256((root / name).read_bytes()).hexdigest() for name in PRIMARY_FILES}
+    if data.get("files") != hashes:
+        raise ValueError("Primary configuration differs from independent release")
+    env["DD_PRIMARY_COMMUNICATIONS_IMAGE"] = data["image"]
+    return compose + ["-f", str(root / "compose.primary.yaml")]
 
 
 def config_path(root, name):
@@ -147,6 +167,7 @@ def main():
     env.update({TARGETS[key]: value for key, value in manifest["images"].items()})
     compose = ["/usr/bin/docker", "compose", "--project-directory", str(ROOT),
                "-f", str(ROOT / "compose.production.yaml"), "-f", str(ROOT / "compose.hosted.yaml")]
+    compose = preserve_primary(compose, env, ROOT)
     with (STATE / "deploy.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         phase = "configuration"

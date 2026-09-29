@@ -88,6 +88,9 @@ export function communicationsConfig(env: NodeJS.ProcessEnv, expected: Site) {
   );
   if (!origins.includes(actionBase))
     throw new Error("Action origin must be allowed");
+  if (expected === "primary" && production &&
+      (origins.length !== 1 || origins[0] !== "https://didde-mie.com" || actionBase !== origins[0]))
+    throw new Error("Primary production requires the canonical origin");
   const url = required(env, "MARKETING_DATABASE_URL");
   const user = new URL(url).username;
   if (user !== expected + "_marketing_runtime")
@@ -114,6 +117,9 @@ export function communicationsConfig(env: NodeJS.ProcessEnv, expected: Site) {
       : undefined;
   if (bearer && bearer.length < 32)
     throw new Error("Internal bearer too short");
+  const primaryProxyKey = expected === "primary" && production ? required(env, "PRIMARY_PROXY_KEY") : undefined;
+  if (primaryProxyKey && !/^[a-f0-9]{64}$/.test(primaryProxyKey))
+    throw new Error("Invalid primary proxy key");
   return {
     site: expected,
     key,
@@ -121,6 +127,7 @@ export function communicationsConfig(env: NodeJS.ProcessEnv, expected: Site) {
     actionBase,
     url,
     bearer,
+    primaryProxyKey,
     mail: mailConfig(env),
     port: Number(env.PORT || (expected === "primary" ? 3011 : 3012)),
     host: env.HOST || "127.0.0.1",

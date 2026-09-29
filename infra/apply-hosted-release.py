@@ -46,12 +46,13 @@ TARGET = {
     'pretix-nginx.conf': 'bdac328919966debe72e2f86cd4eba1442fc452cd43eb35a3fc7b41ef1e3a563',
     'pretix-settings.py': 'e1b875ac535b52a69f3be42f64c873de6294642ca889e930652b1a52c6cad983',
     'pretix-task.conf': '3e3036710bd4a0135c3f2743345fb4b5e6ad952aec1395859a516291fbc7abbb',
-    'deploy.py': 'a152ad882f61a3c8ceb0f15a58b1cbfc37ec6f621aaf2117fa47d0f2c6168f35',
+    'deploy.py': '78e929be92c9e808128b5f867425bbf7dd27d19482c9bac6d73442c38dc9d242',
 }
 CURRENT_INSTALLED = {**TARGET,
     'proxy.conf': '70b66a2c1635bf1cb5485dc57d03576cf801b8d36d4d569ade0e30d07f549609',
     'pretix-settings.py': '139ee2020dabbd2aac1a230c682d994197f6b0831a6767a432f4bd470fce7df2',
     'deploy.py': 'cf8068a74e877d7f0acb7b365365417d59a8f14147cdfd763cac7f45692f0dbb'}
+PRE_PAGES_TARGET = {**TARGET, 'deploy.py': 'a152ad882f61a3c8ceb0f15a58b1cbfc37ec6f621aaf2117fa47d0f2c6168f35'}
 PREVIOUS_TARGET = {**TARGET,
     'proxy.conf': 'a1eedce6172a288612db007942a15b110d847d3db29b33d8023ae360302b8f6d',
     'pretix-nginx.conf': '479478ac117a25c9fcedbe02346885f3a874ef7051dd14942b3060a800a24bf6'}
@@ -160,6 +161,11 @@ def compose(manifest):
         env[key] = manifest['images'][target]
     args = ['docker', 'compose', '--project-name', PROJECT, '--project-directory', str(ROOT), '-f', str(ROOT / 'compose.production.yaml'),
             '-f', str(ROOT / 'compose.hosted.yaml')]
+    preserve = runpy.run_path(str(installed('deploy.py'))).get('preserve_primary')
+    if preserve:
+        args = preserve(args, env, ROOT)
+    elif (ROOT / 'primary-image.json').exists():
+        raise ValueError('Installed booking helper cannot preserve primary')
     return args, env
 
 
@@ -364,7 +370,7 @@ def install(source):
         if sha(candidate) != TARGET[name]:
             raise ValueError('Staged file differs from reviewed release: ' + name)
         if sha(destination) not in (BASELINE[name], PARTIAL[name], PREVIOUS_TARGET[name],
-                                    CURRENT_INSTALLED[name], TARGET[name]):
+                                    CURRENT_INSTALLED[name], PRE_PAGES_TARGET[name], TARGET[name]):
             raise ValueError('Installed configuration version differs: ' + name)
     verify_bridge()
     verify_proxy_group()
