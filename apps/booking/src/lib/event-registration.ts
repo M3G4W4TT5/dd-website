@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { checkoutPath, type Occurrence } from "./events-model";
+import { normalizePhone } from "./phone";
 
 export const eventRegistrationSchema = z.object({
   slug: z.string().min(1).max(100).regex(/^[a-zA-Z0-9_-]+$/),
@@ -10,10 +11,14 @@ export const eventRegistrationSchema = z.object({
   language: z.enum(["da", "en"]),
   name: z.string().trim().min(2).max(100),
   email: z.email().max(254),
-  phone: z.string().trim().min(6).max(30).regex(/^[+0-9 ()-]+$/).refine(value => value.replace(/\D/g, "").length >= 6),
+  phone: z.string().trim().min(6).max(30),
+  phoneCountry: z.string().length(2).default("DK"),
   termsAccepted: z.literal(true),
   marketingOptIn: z.boolean(),
-});
+}).superRefine((input, context) => {
+  if (!normalizePhone(input.phone, input.phoneCountry))
+    context.addIssue({ code: "custom", path: ["phone"], message: "Invalid phone number" });
+}).transform(input => ({ ...input, phone: normalizePhone(input.phone, input.phoneCountry)! }));
 export type EventRegistration = z.infer<typeof eventRegistrationSchema>;
 export type EventTicket = Occurrence["tickets"][number];
 

@@ -16,6 +16,7 @@
     "@fontsource/anton": "^5.3.0",
     "@fontsource/dm-sans": "^5.3.0",
     "@hugeicons/core-free-icons": "^4.3.5",
+    "libphonenumber-js": "^1.13.14",
     "lucide-react": "1.47.0",
     "luxon": "3.7.2",
     "motion": "^13.4.2",

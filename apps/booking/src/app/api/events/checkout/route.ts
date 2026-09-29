@@ -24,7 +24,8 @@ export async function POST(request: Request) {
   try { body = await boundedJson(request, 4096); }
   catch (error) { return NextResponse.json({error: error instanceof HttpError ? error.message : "Invalid JSON"}, {status: error instanceof HttpError ? error.status : 400, headers: {"Cache-Control":"no-store"}}); }
   const parsed = eventRegistrationSchema.safeParse(body);
-  if (!parsed.success) return json({ error: "Invalid event details" }, 400);
+  if (!parsed.success) return parsed.error.issues.some(issue => issue.path.join(".") === "phone")
+    ? json({ code: "invalid_phone" }, 422) : json({ error: "Invalid event details" }, 400);
   const input = parsed.data;
   try {
     const catalog = await getCatalog();

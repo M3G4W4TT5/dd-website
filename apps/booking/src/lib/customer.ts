@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { MAX_HOURS } from "./booking";
+import { normalizePhone } from "./phone";
 
 export const customerDetailsSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.email().max(254),
-  phone: z.string().trim().min(6).max(30).regex(/^[+0-9 ()-]+$/),
+  phone: z.string().trim().min(6).max(30),
+  phoneCountry: z.string().length(2).default("DK"),
   customerType: z.enum(["private", "instructor", "business"]),
   attendeeCount: z.number().int().min(1).max(100),
   purpose: z.string().trim().min(2).max(150),
@@ -14,7 +16,10 @@ export const customerDetailsSchema = z.object({
   if (details.customerType === "business" && !details.company) {
     context.addIssue({ code: "custom", path: ["company"], message: "Company is required for business bookings" });
   }
-});
+  if (!normalizePhone(details.phone, details.phoneCountry)) {
+    context.addIssue({ code: "custom", path: ["phone"], message: "Invalid phone number" });
+  }
+}).transform(details => ({ ...details, phone: normalizePhone(details.phone, details.phoneCountry)! }));
 
 export const preflightSchema = z.object({
   date: z.iso.date(),

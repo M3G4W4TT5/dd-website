@@ -18,6 +18,19 @@ export const rentalCheckoutSchema = preflightSchema.extend({
 });
 export type RentalCheckoutInput = zType.infer<typeof rentalCheckoutSchema>;
 export class RentalConflict extends Error {}
+export class RentalPriceChanged extends RentalConflict {}
+export class RentalPhoneRejected extends Error {}
+
+async function rejectPretixSelection(response: Response): Promise<never> {
+  if (response.status === 409) throw new RentalConflict("Inventory changed");
+  if (response.status === 400) {
+    let fields: unknown;
+    try { fields = await response.json(); } catch { /* Provider response is not exposed. */ }
+    if (fields && typeof fields === "object" && "phone" in fields)
+      throw new RentalPhoneRejected("Invalid phone number");
+  }
+  throw new Error("Pretix rejected checkout request");
+}
 
 const orderSchema = z.object({
   code: z.string(), event: z.string(), status: z.string(), testmode: z.boolean(),
@@ -39,6 +52,11 @@ function ore(value: string): number {
 function sameQuote(a: Quote, b: RentalCheckoutInput["acceptedQuote"]) {
   return a.currency === b.currency && a.hours === b.hours &&
     a.start === b.start && a.end === b.end && a.totalOre === b.totalOre &&
+    a.slotIds.length === b.slotIds.length && a.slotIds.every((id, i) => id === b.slotIds[i]);
+}
+
+function sameSelection(a: Quote, b: RentalCheckoutInput["acceptedQuote"]) {
+  return a.hours === b.hours && a.start === b.start && a.end === b.end &&
     a.slotIds.length === b.slotIds.length && a.slotIds.every((id, i) => id === b.slotIds[i]);
 }
 
@@ -137,7 +155,9 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
   const availability = await dependencies.availability(input.date);
   if (availability.source !== "pretix") throw new Error("Authoritative availability required");
   const quote = quoteInterval(availability, input.startId, input.hours);
-  if (!quote || !sameQuote(quote, input.acceptedQuote)) throw new RentalConflict("Selection or price changed");
+  if (!quote) throw new RentalConflict("Selection changed");
+  if (!sameSelection(quote, input.acceptedQuote)) throw new RentalConflict("Selection changed");
+  if (!sameQuote(quote, input.acceptedQuote)) throw new RentalPriceChanged("Price changed");
   const discountedHours = quote.hours === MAX_HOURS ? availability.fullDayDiscount?.discountedHours ?? 0 : 0;
   const discountId = discountedHours ? availability.fullDayDiscount?.id : null;
   if (discountedHours && (!discountId || !Number.isInteger(discountId)))
@@ -167,19 +187,19 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
   };
   const endpoint = new URL(cfg.path, cfg.base);
   const simulation = await dependencies.request(endpoint, cfg.writeToken, "POST", { ...payload, simulate: true });
-  if (simulation.status === 400 || simulation.status === 409) throw new RentalConflict("Pretix rejected the selection");
+  if (simulation.status === 400 || simulation.status === 409) await rejectPretixSelection(simulation);
   if (!simulation.ok) throw new Error(`Pretix order simulation failed: ${simulation.status}`);
   const simulated = orderSchema.parse(await simulation.json());
   if (ore(simulated.total) !== quote.totalOre ||
       !matchesPositions(simulated, quote, cfg.itemId, discountedHours, discountId ?? null))
-    throw new RentalConflict("Pretix total or discount changed");
+    throw new RentalPriceChanged("Pretix total or discount changed");
   let response: Response | undefined;
   try { response = await dependencies.request(endpoint, cfg.writeToken, "POST", payload); }
   catch { /* A timeout can occur after Pretix committed. Recover by deterministic code. */ }
   if (response?.ok) order = orderSchema.parse(await response.json());
   else order = await existingOrder(cfg, code, dependencies.request);
   if (!order) {
-    if (response && [400, 409].includes(response.status)) throw new RentalConflict("Pretix inventory changed");
+    if (response && [400, 409].includes(response.status)) await rejectPretixSelection(response);
     throw new Error("Pretix order outcome uncertain; retry with the same submission identity");
   }
   if (order.api_meta?.ttd_checkout_intent !== intent) throw new RentalConflict("Submission changed");
