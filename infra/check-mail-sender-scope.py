@@ -62,6 +62,7 @@ def authenticate(username, password):
 def probe(username, password, label, envelope, visible):
     message = EmailMessage()
     message["From"] = visible
+    message["Reply-To"] = f"{username}"
     message["To"] = RECIPIENT
     message["Subject"] = f"DD sender scope probe: {label}"
     message.set_content("Synthetic sender-scope probe. No customer or booking data.")
