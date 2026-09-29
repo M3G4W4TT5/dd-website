@@ -10,7 +10,7 @@ const item: RawItem = { id: 7, name: { en: "Ticket", da: "Billet" }, active: tru
 const quota: RawQuota = { subevent: 42, items: [7], closed: false, available: true, available_number: 5 };
 const now = DateTime.fromISO("2026-10-01T12:00:00Z");
 const occurrence = normalizeEvent(event, date, [item], [quota], now)!;
-const input = eventRegistrationSchema.parse({ slug: "dance", dateId: 42, itemId: 7, quantity: 3, unitPrice: "200.00", language: "en", name: "Test Buyer", email: "buyer@example.org", phone: "+45 12345678", termsAccepted: true, marketingOptIn: false });
+const input = eventRegistrationSchema.parse({ slug: "dance", dateId: 42, itemId: 7, quantity: 3, unitPrice: "200.00", language: "en", name: "Test Buyer", email: "buyer@example.org", phone: "+45 20123456", termsAccepted: true, marketingOptIn: false });
 
 test("mandatory buyer data and terms, positive whole quantities, and optional marketing consent", () => {
   assert.equal(input.marketingOptIn, false);

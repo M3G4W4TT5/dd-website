@@ -14,6 +14,7 @@ const copy = {
     back: "Back to event", eyebrow: "YOUR DETAILS", title: "Sign up for the event.",
     intro: "Enter your details and choose how many tickets you would like. All tickets will be sent to your email.",
     name: "Name", email: "Email", phone: "Phone", quantity: "Number of tickets", ticket: "Ticket type", total: "Total",
+    phoneInvalid: "Enter a valid phone number for the selected country code.",
     submit: "Continue to payment", working: "Checking tickets…",
     invalid: "Complete or correct the highlighted fields to continue.", changed: "Ticket availability or the price has changed. Refresh the event before continuing.",
     error: "Checkout could not be started. Please try again.", rate: "Please wait a moment before trying again.",
@@ -25,6 +26,7 @@ const copy = {
     back: "Tilbage til event", eyebrow: "DINE OPLYSNINGER", title: "Tilmeld dig eventet.",
     intro: "Indtast dine oplysninger, og vælg antal billetter. Alle billetter sendes til din e-mail.",
     name: "Navn", email: "E-mail", phone: "Telefon", quantity: "Antal billetter", ticket: "Billettype", total: "I alt",
+    phoneInvalid: "Indtast et gyldigt telefonnummer med den valgte landekode.",
     submit: "Fortsæt til betaling", working: "Tjekker billetter…",
     invalid: "Udfyld eller ret de markerede felter for at fortsætte.", changed: "Antallet af ledige billetter eller prisen har ændret sig. Genindlæs eventet, før du fortsætter.",
     error: "Betaling kunne ikke startes. Prøv igen.", rate: "Vent et øjeblik, før du prøver igen.",
@@ -69,7 +71,7 @@ export function EventSignupForm({ occurrence, language, onBack }: {
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [showTermsError, setShowTermsError] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
-  const [status, setStatus] = useState<"idle" | "working" | "invalid" | "changed" | "error" | "rate">("idle");
+  const [status, setStatus] = useState<"idle" | "working" | "invalid" | "changed" | "error" | "rate" | "phoneInvalid">("idle");
   const [handoff, setHandoff] = useState<Handoff | null>(null);
   const submitting = useRef(false);
   useEffect(() => { titleRef.current?.focus(); }, []);
@@ -85,7 +87,6 @@ export function EventSignupForm({ occurrence, language, onBack }: {
     const form = event.currentTarget;
     const invalid = invalidDetailFields(form);
     const values = new FormData(form);
-    if (!/^[+0-9 ()-]+$/.test(String(values.get("phone"))) || String(values.get("phone")).replace(/\D/g, "").length < 6) invalid.push("phone");
     setInvalidFields([...new Set(invalid)]);
     setShowTermsError(!termsAccepted);
     if (invalid.length || !termsAccepted) {
@@ -98,10 +99,11 @@ export function EventSignupForm({ occurrence, language, onBack }: {
       const response = await submitWithIdentity(submission.current!, "/api/events/checkout", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ slug: occurrence.slug, dateId: occurrence.dateId, itemId: ticket.id, quantity: count, unitPrice: ticket.price,
-          language, name: values.get("name"), email: values.get("email"), phone: values.get("phone"), termsAccepted, marketingOptIn }),
+          language, name: values.get("name"), email: values.get("email"), phone: values.get("phone"), phoneCountry: values.get("phoneCountry"), termsAccepted, marketingOptIn }),
       });
       if (!response.ok) {
-        setStatus(response.status === 409 ? "changed" : response.status === 400 ? "invalid" : response.status === 429 ? "rate" : "error");
+        if (response.status === 422) setInvalidFields(["phone"]);
+        setStatus(response.status === 422 ? "phoneInvalid" : response.status === 409 ? "changed" : response.status === 400 ? "invalid" : response.status === 429 ? "rate" : "error");
         return;
       }
       const result = await response.json() as Handoff;
@@ -134,7 +136,7 @@ export function EventSignupForm({ occurrence, language, onBack }: {
     <form className="details-form" noValidate onSubmit={event => void checkout(event)} onInput={event => { if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); setHandoff(null); }}>
       <fieldset className="event-signup-fields" disabled={status === "working"}>
         <div className="details-fields">
-          <BuyerDetailsFields labels={t} invalidFields={invalidFields} />
+          <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} />
           {eligible.length > 1 && <label>{t.ticket}<select name="itemId" value={ticket?.id} onChange={event => { const item = eligible.find(item => item.id === Number(event.target.value))!; setItemId(item.id); setQuantity(String(item.minPerOrder)); setShowQuantityLimit(false); }}>
             {eligible.map(item => <option key={item.id} value={item.id}>{language === "da" ? item.name : item.nameEn} · {formatPrice(Number(item.price))}</option>)}
           </select></label>}
@@ -142,6 +144,7 @@ export function EventSignupForm({ occurrence, language, onBack }: {
         </div>
         {showQuantityLimit && <p id="event-quantity-limit" className="form-field-error" role="alert">{maximum} {t.max}</p>}
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.invalid}</p>}
+        {invalidFields.includes("phone") && <p id="phone-field-error" className="form-field-error" role="alert">{t.phoneInvalid}</p>}
         <DetailsConsent idPrefix="event" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {language === "en" ? "&" : "og"} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={setMarketingOptIn} onTermsChange={checked => { setTermsAccepted(checked); if (checked) setShowTermsError(false); }} />
         <div className="details-actions"><button type="submit" disabled={!ticket || status === "working" || !!handoff}>{status === "working" ? t.working : t.submit}<ArrowUpRight size={19} aria-hidden="true" /></button></div>
       </fieldset>

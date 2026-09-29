@@ -5,7 +5,7 @@ import { customerDetailsSchema, preflightSchema } from "./customer";
 const base = {
   name: "Demo Visitor",
   email: "demo@example.invalid",
-  phone: "+45 12 34 56 78",
+  phone: "+45 20 12 34 56",
   customerType: "private",
   attendeeCount: 2,
   purpose: "Dance practice",

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import test from "node:test";
 import { DateTime } from "luxon";
-import { startRentalCheckout, type RentalCheckoutInput, RentalConflict } from "../../server/rental-checkout";
+import { startRentalCheckout, type RentalCheckoutInput, RentalConflict, RentalPhoneRejected, RentalPriceChanged } from "../../server/rental-checkout";
 import { quoteInterval, type Availability } from "./booking";
 
 const key = "12345678-1234-1234-1234-123456789abc";
@@ -25,7 +25,7 @@ function input(purpose = "Synthetic rental", hours = 2): RentalCheckoutInput {
   return {
     date, startId: "1", hours, acceptedQuote: quoteInterval(availability, "1", hours)!,
     termsAccepted: true, marketingOptIn: false, marketingLanguage: "en",
-    details: { name: "Synthetic Test", email: "synthetic@example.invalid", phone: "+4512345678",
+    details: { name: "Synthetic Test", email: "synthetic@example.invalid", phone: "+4520123456", phoneCountry: "DK",
       customerType: "private", attendeeCount: 2, purpose, company: "", comment: "" },
   };
 }
@@ -100,6 +100,7 @@ function service(options: {
   orderChange?: (order: TestOrder) => void;
   simulationChange?: (order: TestOrder) => void;
   createStatus?: number;
+  simulationResponse?: { status: number; body: object };
   available?: Availability;
   simultaneousLookups?: boolean;
 } = {}) {
@@ -128,6 +129,7 @@ function service(options: {
     const candidate = orderFrom(payload, options.available?.slots[0].priceOre);
     if (payload.simulate) {
       simulations += 1;
+      if (options.simulationResponse) return Response.json(options.simulationResponse.body, { status: options.simulationResponse.status });
       options.simulationChange?.(candidate);
       return Response.json(candidate);
     }
@@ -231,6 +233,22 @@ test("inventory conflict and stale quote return no handoff or partial reservatio
   await assert.rejects(startRentalCheckout(input(), key, rejected.dependencies), RentalConflict);
   assert.equal(rejected.creations, 0);
   assert.equal(rejected.order, null);
+});
+
+test("Pretix phone validation remains a field error without creating an order", async () => {
+  configure();
+  const fake = service({ simulationResponse: { status: 400, body: { phone: ["Invalid"] } } });
+  await assert.rejects(startRentalCheckout(input(), key, fake.dependencies), RentalPhoneRejected);
+  assert.equal(fake.creations, 0);
+});
+
+test("provider failure is distinct from phone, inventory, and price changes", async () => {
+  configure();
+  const fake = service({ simulationResponse: { status: 400, body: { other: ["Rejected"] } } });
+  await assert.rejects(startRentalCheckout(input(), key, fake.dependencies), error =>
+    error instanceof Error && !(error instanceof RentalConflict) && !(error instanceof RentalPhoneRejected));
+  const changed = { ...input(), acceptedQuote: { ...input().acceptedQuote, totalOre: 1 } };
+  await assert.rejects(startRentalCheckout(changed, key, service().dependencies), RentalPriceChanged);
 });
 
 test("full-day selection uses configured price, final positions and rule identity", async () => {

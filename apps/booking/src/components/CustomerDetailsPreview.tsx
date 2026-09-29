@@ -18,6 +18,8 @@ const copy = {
     name: "Navn",
     email: "E-mail",
     phone: "Telefon",
+    phoneInvalid: "Indtast et gyldigt telefonnummer med den valgte landekode.",
+    priceChanged: "Prisen har ændret sig. Gennemgå bookingen igen.",
     type: "Jeg booker som",
     private: "Privatperson",
     instructor: "Underviser / instruktør",
@@ -53,6 +55,8 @@ const copy = {
     name: "Name",
     email: "Email",
     phone: "Phone",
+    phoneInvalid: "Enter a valid phone number for the selected country code.",
+    priceChanged: "The price has changed. Review your booking again.",
     type: "I am booking as",
     private: "Private customer",
     instructor: "Teacher / instructor",
@@ -112,7 +116,7 @@ export function CustomerDetailsPreview({
   const [marketingResult, setMarketingResult] = useState<boolean | null>(null);
   const [showTermsError, setShowTermsError] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
-  const [status, setStatus] = useState<"idle" | "working" | "success" | "invalid" | "changed" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "working" | "success" | "invalid" | "phone" | "changed" | "price" | "error">("idle");
 
   useEffect(() => {
     const form = formRef.current;
@@ -159,6 +163,7 @@ export function CustomerDetailsPreview({
             name: values.get("name"),
             email: values.get("email"),
             phone: values.get("phone"),
+            phoneCountry: values.get("phoneCountry"),
             customerType: values.get("customerType"),
             attendeeCount: Number(values.get("attendeeCount")),
             purpose: values.get("purpose"),
@@ -168,8 +173,13 @@ export function CustomerDetailsPreview({
         }),
       }, false);
       if (response.status === 409) {
-        setStatus("changed");
-        await onConflict();
+        const result = await response.json() as { code?: string };
+        if (result.code === "price_changed") setStatus("price");
+        else { setStatus("changed"); await onConflict(); }
+      } else if (response.status === 422) {
+        setInvalidFields(["phone"]);
+        setStatus("phone");
+        form.querySelector<HTMLInputElement>('[name="phone"]')?.focus();
       } else if (response.status === 400) {
         setStatus("invalid");
       } else if (!response.ok) {
@@ -197,7 +207,7 @@ export function CustomerDetailsPreview({
       <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{t.back}</button><span className="section-kicker">{t.eyebrow}</span><h3 id="details-title" tabIndex={-1}>{t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
       <form ref={formRef} className="details-form" noValidate onInput={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
         <div className="details-fields">
-          <BuyerDetailsFields labels={t} invalidFields={invalidFields} />
+          <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} />
           <label>{t.type}<select name="customerType" value={customerType} onChange={(event) => setCustomerType(event.target.value)} required aria-invalid={invalidFields.includes("customerType")}><option value="" disabled>{t.placeholderType}</option><option value="private">{t.private}</option><option value="instructor">{t.instructor}</option><option value="business">{t.business}</option></select></label>
           <label>{t.attendeeCount}<input name="attendeeCount" type="number" inputMode="numeric" min={1} max={100} step={1} required aria-invalid={invalidFields.includes("attendeeCount")} /></label>
           <label>{t.purpose}<input name="purpose" type="text" maxLength={150} minLength={2} required aria-invalid={invalidFields.includes("purpose")} /></label>
@@ -205,8 +215,9 @@ export function CustomerDetailsPreview({
           <label className="details-wide">{t.comment} <span>({t.optional})</span><textarea name="comment" rows={3} maxLength={2000} /></label>
         </div>
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.fieldsRequired}</p>}
+        {invalidFields.includes("phone") && <p id="phone-field-error" className="form-field-error" role="alert">{t.phoneInvalid}</p>}
         <DetailsConsent idPrefix="accept-booking" marketingId="accept-marketing" termsErrorId="terms-acceptance-error" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {t.and} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={checked => { draft.marketingOptIn = checked; setMarketingOptIn(checked); }} onTermsChange={checked => { draft.termsAccepted = checked; setTermsAccepted(checked); if (checked) setShowTermsError(false); }} />
-        <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : t.error}</p>}{marketingResult !== null && <p className="marketing-result" role="status">{marketingResult ? t.marketingSent : t.marketingFailed}</p>}</div>
+        <div className="details-actions"><button type="submit" disabled={status === "working"}>{status === "working" ? t.reviewing : t.review}<ArrowUpRight size={19} /></button>{status !== "idle" && status !== "working" && status !== "phone" && <p className={`details-status ${status}`} role="status">{status === "success" ? t.success : status === "invalid" ? t.invalid : status === "changed" ? t.changed : status === "price" ? t.priceChanged : t.error}</p>}{marketingResult !== null && <p className="marketing-result" role="status">{marketingResult ? t.marketingSent : t.marketingFailed}</p>}</div>
       </form>
     </section>
   );
