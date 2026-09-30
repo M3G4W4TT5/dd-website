@@ -1,6 +1,34 @@
 # DD personal page — unpublished editorial draft
 
-Updated 23 September 2026. The app keeps `noindex,nofollow` and remains unpublished. At the user's request, the page itself has final-form copy without visible draft or rights notices; this ledger retains the outstanding publication checks. The user supplied four selected-work images and two Halo banner images for the local page; the Holdit Work image remains external. **Receiving a file does not establish its photographer credit or permission for public site use.** All seven selected images remain provisional pending DD's approval and rights confirmation. No video file is hosted.
+Updated 23 September 2026. The app keeps `noindex,nofollow` and remains unpublished. At the user's request, the page itself has final-form copy without visible draft or rights notices; this ledger retains the outstanding publication checks. The user supplied four selected-work images and two Halo banner images for the local page; the Holdit Work image remains external. **Receiving a file does not establish its photographer credit or permission for public site use.** All seven selected images remain provisional pending DD's approval and rights confirmation. At that stage, no video file was hosted. The 30 September clip addition is documented below.
+
+## 30 September 2026 — supplied photo update
+
+The user removed Holdit and STINE GOYA × Umbro from Selected Work, added four projects with the role Dancer, and supplied separate work images and video thumbnails in [this Google Drive folder](https://drive.google.com/drive/folders/1xFOdQ_i2JwsNVph1TBkK74s2kJ-fyzi7). The older inventory below describes the previous selection. New assets are local WebP derivatives at quality 90, capped at 1600 pixels without an exported crop; the source files remain unchanged in Drive. No individual creator credit was supplied. This update is local and does not publish the site.
+
+| Selection | Work_Images source → local asset | Video Thumbnails source → local asset |
+| --- | --- | --- |
+| GAP x Jungle / Linen Moves | `GAP x Jungle.png` → `public/work/work-gap.webp` | `GAP x Jungle.png` → `public/work/film-gap.webp` |
+| LISA x NikeSKIMS | `nike skims.png` → `public/work/work-lisa.webp` | `Nike SKIMS.jpeg` → `public/work/film-lisa.webp` |
+| Calvin Harris / Potion | `Calvin Harris - Potion.png` → `public/work/work-potion.webp` | `Calvin Harris - Potion.png` → `public/work/film-potion.webp` |
+| DJ Snake, Don Toliver / Something Wrong | `Dj Snake Something Wrong.png` → `public/work/work-snake.webp` | `DJ SNAKE - Something Wrong.jpg` → `public/work/film-snake.webp` |
+| Rosalía / Berghain at the BRIT Awards 2026 | — | `berghain.jpg` → `public/work/film-brits.webp` |
+| Rosalía / DE AQUÍ NO SALES | — | `deaquinosales.jpg` → `public/work/film-deaqui.webp` |
+
+## 30 September 2026 — local motion reel
+
+Eight excerpts selected from the user-supplied root `web_clips/` folder appear immediately after DANCE / CHOREOGRAPHY / MODELLING. The original source clips remain unchanged. Derived files are 960×540, 24 fps, silent H.264 MP4s with WebP poster frames; the eight videos total approximately 6.7 MB. These local clips use the supplied React Bits FlexCarousel source, adapted for video textures and an undistorted center frame. Drag, arrow keys, navigation arrows and pause are available. Clips pause outside the viewport or when the document is hidden. Reduced-motion preferences or unavailable WebGL use a native video strip with individual controls. Selection and order currently live in `src/content.ts`; Sanity is not connected yet. This addition does not publish the site.
+
+| Project | Original in `web_clips/` | Derived video and poster in `public/clips/` |
+| --- | --- | --- |
+| Jungle / Back On 74 | Jungle - Back On 74 (Official Video)_V1-0013.mp4 | `jungle.mp4` / `jungle.webp` |
+| Calvin Harris / Potion | Calvin Harris - Potion (Official Video) ft Dua Lipa & Young Thug_V1-0017.mp4 | `potion.mp4` / `potion.webp` |
+| GAP x Jungle / Linen Moves | GAP x Jungle - Linen Moves Campaign (feat. Tyla)_V1-0025.mp4 | `gap.mp4` / `gap.webp` |
+| LISA x NikeSKIMS | LISA x NikeSKIMS Spring `26 Collection _ Nike (1)_V1-0019.mp4 | `lisa.mp4` / `lisa.webp` |
+| DJ Snake, Don Toliver / Something Wrong | DJ Snake, Don Toliver – Something Wrong (Visualizer)_V1-0003.mp4 | `something-wrong.mp4` / `something-wrong.webp` |
+| Dua Lipa / Glastonbury | Dua Lipa - Houdini (Glastonbury 2024)_V1-0022.mp4 | `houdini.mp4` / `houdini.webp` |
+| Rosalía / BRIT Awards 2026 | ROSALÍA - Berghain (Live at The BRIT Awards 2026) ft. Björk_V1-0027.mp4 | `berghain.mp4` / `berghain.webp` |
+| Rosalía / DE AQUÍ NO SALES | ROSALÍA - DE AQUÍ NO SALES_V1-0008.mp4 | `de-aqui-no-sales.mp4` / `de-aqui-no-sales.webp` |
 
 ## Selected work and copy evidence
 
@@ -30,7 +58,7 @@ The four user-supplied work images also serve as the matching film thumbnails wh
 | Rosalía work and film thumbnails | User supplied `rosalia_lux.jpg`; draft copy: `public/work/rosalia_lux.jpg` (2048×1322, 489 KB), stripped of camera metadata. | Photographer not supplied. Camera metadata does not establish authorship. | Shows Rosalía and an ensemble on the LUX Tour stage. **DD is not identified in this exact frame. Provisional local image; publication rights and credit pending.** |
 | STINE GOYA × Umbro work card | User supplied `umbro_goya.jpg` (4270×5338, 23 MB); draft derivative: `public/work/umbro_goya.webp` (1600×2000, 651 KB), resized and stripped of metadata for page use. | Umbro / STINE GOYA campaign; photographer uncredited on the [brand page](https://www.umbro.com/en/style/collections/stine-goya-x-umbro-where-we-meet/). | Shows DD in the campaign setting. **Provisional local image; publication rights and photographer credit pending.** |
 
-The film cards open YouTube's embedded player only after a visitor selects one. The iframe explicitly sends the page origin as its referrer, as [YouTube requires for embedded playback](https://support.google.com/youtube/answer/171780). Source videos: [BBC Music — *Houdini* at Glastonbury](https://www.youtube.com/watch?v=qeQfFfRy_FU), [Jungle — *Back On 74*](https://www.youtube.com/watch?v=q3lX2p_Uy9I), and [PITA Music — Rosalía performing *Berghain* on the LUX Tour in Madrid](https://www.youtube.com/watch?v=spc9rrcX-wo). PITA Music describes its video as its own copyrighted concert recording; **DD is not identified in that clip**, and embedding/availability should be confirmed with the creator before publication. An in-page poster and direct video link appear if a browser blocks the iframe. No video file is copied into the draft, and playback starts only after selection.
+The film cards open YouTube's embedded player only after a visitor selects one. The iframe explicitly sends the page origin as its referrer, as [YouTube requires for embedded playback](https://support.google.com/youtube/answer/171780). Source videos: [BBC Music — *Houdini* at Glastonbury](https://www.youtube.com/watch?v=qeQfFfRy_FU), [Jungle — *Back On 74*](https://www.youtube.com/watch?v=q3lX2p_Uy9I), and [PITA Music — Rosalía performing *Berghain* on the LUX Tour in Madrid](https://www.youtube.com/watch?v=spc9rrcX-wo). PITA Music describes its video as its own copyrighted concert recording; **DD is not identified in that clip**, and embedding/availability should be confirmed with the creator before publication. An in-page poster and direct video link appear if a browser blocks the iframe. For these full-length films, no video file is copied into the draft, and playback starts only after selection. The separate short clip reel is documented above.
 
 Local browser QA confirmed that the film dialog opens, has a labelled close button, and closes with Escape. YouTube's oEmbed endpoint returned HTTP 200 for all three selected video IDs. The Codex in-app browser blocked both `youtube-nocookie.com` and `youtube.com` third-party iframe requests with `ERR_BLOCKED_BY_CLIENT`, while direct YouTube watch pages loaded. The in-page fallback was visually verified; actual embedded playback could not be confirmed in that preview. A regular browser playback check remains open.
 

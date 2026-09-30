@@ -8,8 +8,8 @@ type Film = {
   detail: string;
   kind: string;
   publisher: string;
-  image: string;
-  imageAlt: string;
+  image?: string;
+  imageAlt?: string;
   youtubeId: string;
   url: string;
 };
@@ -74,7 +74,7 @@ export function FilmCarousel({ films }: { films: readonly Film[] }) {
           {films.map((film) => (
             <article className="feed-slide" key={film.number}>
               <button type="button" className="feed-video-trigger" onClick={() => openFilm(film)} aria-label={`Play ${film.title} on this page`}>
-                <img src={film.image} loading="lazy" alt={film.imageAlt} />
+                {film.image ? <img src={film.image} loading="lazy" alt={film.imageAlt} /> : <div className="feed-video-placeholder" aria-hidden="true">DD.</div>}
                 <div className="feed-card-top"><span>{film.kind} / {film.number}</span></div>
                 <div className="feed-card-bottom"><strong>{film.title}</strong><Play size={20} /></div>
               </button>
@@ -93,7 +93,7 @@ export function FilmCarousel({ films }: { films: readonly Film[] }) {
         {selectedFilm && <>
           <div className="film-dialog-head"><div><span>NOW PLAYING / {selectedFilm.publisher}</span><strong>{selectedFilm.title}</strong></div><button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close video player">CLOSE ×</button></div>
           <div className="film-dialog-frame">
-            <img className="film-dialog-poster" src={selectedFilm.image} alt="" />
+            {selectedFilm.image && <img className="film-dialog-poster" src={selectedFilm.image} alt="" />}
             <iframe ref={iframeRef} className={playerState === "ready" ? "is-ready" : ""} src={`https://www.youtube.com/embed/${selectedFilm.youtubeId}?autoplay=1&rel=0`} title={`${selectedFilm.title} — YouTube player`} referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen onLoad={playerLoaded} onError={() => setPlayerState("blocked")} />
             {playerState === "loading" && <div className="film-player-loading" role="status" aria-label="Loading YouTube player"><span className="dd-loader-mark" aria-hidden="true"><span>D</span><span>D</span><i>.</i></span></div>}
             {playerState === "blocked" && <div className="film-player-fallback" role="alert"><strong>YouTube playback is blocked in this browser.</strong><a href={selectedFilm.url} target="_blank" rel="noopener noreferrer">Watch on YouTube <ArrowUpRight size={18} /></a></div>}

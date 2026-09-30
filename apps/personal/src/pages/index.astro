@@ -4,8 +4,9 @@ import { ContactPreview } from "../components/ContactPreview";
 import { EditorialMotion } from "../components/EditorialMotion";
 import { FilmCarousel } from "../components/FilmCarousel";
 import { WorkSwitcher } from "../components/WorkSwitcher";
+import { ClipReel } from "../components/ClipReel";
 import { NewsletterSignup } from "../components/NewsletterSignup";
-import { films, media, work } from "../content";
+import { clips, films, media, work } from "../content";
 import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
 import "@fontsource/montserrat/900.css";
@@ -49,10 +50,8 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
       <section class="intro-statement" aria-label="Introduction">
         <div class="section-index"><span>01 / INTRODUCTION</span></div>
         <p>DANCE.<br />CHOREOGRAPHY.<br /><em>MODELLING.</em></p>
-        <div class="intro-detail"><span>DD / DIDDE-MIE LYKKE FROM</span><p>DD’s work moves between live stages, music films and campaigns. Selected credits include Dua Lipa’s Glastonbury set, Jungle’s <i>Back On 74</i> and Rosalía’s LUX tour. <a href="https://www.voguescandinavia.com/articles/didde-mie-beauty-guide" target="_blank" rel="noopener noreferrer">Tour source <ArrowUpRight size={14} /></a></p></div>
+        <ClipReel client:visible clips={clips} />
       </section>
-
-      <div class="ticker" aria-hidden="true"><div>DANCE <span>✳</span> CHOREOGRAPHY <span>✳</span> MODELLING <span>✳</span> DANCE <span>✳</span> CHOREOGRAPHY <span>✳</span> MODELLING <span>✳</span></div></div>
 
       <section class="work-section" id="work" aria-labelledby="work-title">
         <div class="section-index"><span>02 / SELECTED WORK</span><span>PERFORMANCE / CAMPAIGNS</span></div>
@@ -62,7 +61,7 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
 
       <section class="social-section" id="films" aria-labelledby="films-title">
         <div class="section-index"><span>03 / WATCH</span></div>
-        <div class="mega-heading"><h2 id="films-title">SELECTED<br /><span>FILMS.</span></h2><p>Performance films and a recording from Rosalía’s LUX tour. Select a film to watch it here.</p></div>
+        <div class="mega-heading"><h2 id="films-title">SELECTED<br /><span>FILMS.</span></h2><p>Music videos, campaigns and live performances. Select a film to watch it here.</p></div>
         <FilmCarousel client:visible films={films} />
       </section>
 
