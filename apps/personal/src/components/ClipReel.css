@@ -1,0 +1,24 @@
+/* Pull the transparent upper canvas space into the heading's lower edge. */
+.clip-reel { --clip-reel-stage-height:clamp(400px,43vw,640px); position:relative; margin:calc(var(--clip-reel-stage-height) * -.24 - 20px) -2.3vw 0; }
+.clip-reel-stage { position:relative; height:var(--clip-reel-stage-height); }
+.clip-reel .flex-carousel:focus-visible { box-shadow:inset 0 0 0 2px var(--pink); }
+.clip-reel-native:not([hidden]) { position:absolute; inset:0; display:flex; align-items:center; gap:32px; padding:0 5vw; overflow-x:auto; scroll-snap-type:x mandatory; }
+.clip-reel-native video { display:block; flex:0 0 auto; min-width:0; width:auto; height:52%; max-width:88%; aspect-ratio:16/9; object-fit:contain; scroll-snap-align:center; background:var(--black); }
+.clip-reel-controls { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:0 2.3vw; color:#c3bdc4; font-size:9px; font-weight:700; letter-spacing:.13em; }
+.clip-reel-controls>div { display:flex; gap:8px; }
+.clip-reel-controls button { display:grid; place-items:center; width:40px; height:40px; border:1px solid #bbb1bd; border-radius:50%; background:transparent; color:var(--white); }
+.clip-reel-controls button:hover { background:var(--pink); border-color:var(--pink); color:var(--black); }
+.clip-reel-controls button:focus-visible { outline:2px solid var(--pink); outline-offset:3px; }
+.clip-reel-bio { position:absolute; top:calc(var(--clip-reel-stage-height) * .76 + 50px); left:calc(50% + 17.5px); right:2.3vw; max-width:570px; margin:0; color:#c1bcc3; font-size:18px; line-height:1.5; }
+.clip-reel-bio a { display:inline-flex; align-items:center; gap:4px; color:var(--white); font-size:13px; white-space:nowrap; text-decoration:underline; text-underline-offset:4px; }
+.clip-reel-bio a:hover { color:var(--pink); }
+@media(max-width:1320px) {
+  .clip-reel-bio { position:relative; top:auto; left:auto; right:auto; margin:calc(var(--clip-reel-stage-height) * -.24 + 32px) 2.3vw 24px auto; }
+}
+@media(max-width:760px) {
+  .clip-reel { --clip-reel-stage-height:clamp(270px,78vw,420px); margin:calc(var(--clip-reel-stage-height) * -.27 - 10px) -20px 0; }
+  .clip-reel-bio { margin:calc(var(--clip-reel-stage-height) * -.27 + 25px) 20px 24px; font-size:14px; }
+  .clip-reel-controls { padding:0 20px; }
+  .clip-reel-native:not([hidden]) { gap:16px; padding:0 6vw; }
+  .clip-reel-native video { height:46%; }
+}

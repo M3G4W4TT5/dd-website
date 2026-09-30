@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 type WorkItem = {
@@ -8,10 +8,10 @@ type WorkItem = {
   title: string;
   role: string;
   note: string;
-  image: string;
-  imageAlt: string;
-  imagePosition: string;
-  imageCredit: string;
+  image?: string;
+  imageAlt?: string;
+  imagePosition?: string;
+  imageCredit?: string;
   sourceUrl: string;
   sourceLabel: string;
   filmUrl?: string;
@@ -37,6 +37,8 @@ function MobileWorkImage({ item }: { item: WorkItem }) {
     if (image?.complete && image.naturalWidth > 0) setStatus("loaded");
   }, [item.image]);
 
+  if (!item.image) return null;
+
   return <div className="work-mobile-image">
     {status === "loading" && <DDLoader label={`Loading image for ${item.title}`} />}
     {status === "error" && <ImageError />}
@@ -58,14 +60,40 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
   const [active, setActive] = useState(0);
   const [imageStatus, setImageStatus] = useState<Partial<Record<string, "loaded" | "error">>>({});
   const activeImageRef = useRef<HTMLImageElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
   const reducedMotion = useReducedMotion();
   const current = items[active];
-  const currentStatus = imageStatus[current.image] ?? "loading";
+  const currentStatus = current.image ? imageStatus[current.image] ?? "loading" : "empty";
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const update = () => {
+      setCanScrollUp(list.scrollTop > 1);
+      setCanScrollDown(list.scrollTop + list.clientHeight < list.scrollHeight - 1);
+    };
+    update();
+    list.addEventListener("scroll", update, { passive: true });
+    const observer = new ResizeObserver(update);
+    observer.observe(list);
+    return () => {
+      list.removeEventListener("scroll", update);
+      observer.disconnect();
+    };
+  }, [items.length]);
+
+  const scrollList = (direction: number) => {
+    const list = listRef.current;
+    if (list) list.scrollBy({ top: direction * list.clientHeight * .75, behavior: reducedMotion ? "instant" : "smooth" });
+  };
 
   useEffect(() => {
     const image = activeImageRef.current;
-    if (image?.complete && image.naturalWidth > 0 && image.getAttribute("src") === current.image) {
-      setImageStatus((previous) => ({ ...previous, [current.image]: "loaded" }));
+    const source = current.image;
+    if (source && image?.complete && image.naturalWidth > 0 && image.getAttribute("src") === source) {
+      setImageStatus((previous) => ({ ...previous, [source]: "loaded" }));
     }
   }, [current.image]);
 
@@ -75,16 +103,17 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
         <div className="work-visual">
           {currentStatus === "loading" && <DDLoader label={`Loading image for ${current.title}`} />}
           {currentStatus === "error" && <ImageError />}
+          {currentStatus === "empty" && <div className="work-visual-placeholder" aria-hidden="true">DD.</div>}
           <AnimatePresence mode="wait">
-            {currentStatus !== "error" && <motion.img
+            {current.image && currentStatus !== "error" && <motion.img
               ref={activeImageRef}
               key={current.number}
               src={current.image}
               alt={current.imageAlt}
               decoding="async"
               style={{ objectPosition: current.imagePosition }}
-              onLoad={() => setImageStatus((previous) => ({ ...previous, [current.image]: "loaded" }))}
-              onError={() => setImageStatus((previous) => ({ ...previous, [current.image]: "error" }))}
+              onLoad={() => setImageStatus((previous) => ({ ...previous, [current.image!]: "loaded" }))}
+              onError={() => setImageStatus((previous) => ({ ...previous, [current.image!]: "error" }))}
               initial={{ opacity: 0, filter: reducedMotion ? "blur(0px)" : "blur(16px)", scale: reducedMotion ? 1 : 1.04 }}
               animate={{ opacity: currentStatus === "loaded" ? 1 : 0, filter: "blur(0px)", scale: 1 }}
               exit={{ opacity: reducedMotion ? 1 : 0, filter: reducedMotion ? "blur(0px)" : "blur(12px)" }}
@@ -98,7 +127,8 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
           <div><a href={current.sourceUrl} target="_blank" rel="noopener noreferrer">{current.sourceLabel} <ArrowUpRight size={15} /></a>{current.filmUrl && <a href={current.filmUrl} target={current.filmUrl.startsWith("#") ? undefined : "_blank"} rel={current.filmUrl.startsWith("#") ? undefined : "noopener noreferrer"}>{current.filmLabel} <ArrowUpRight size={15} /></a>}</div>
         </div>
       </div>
-      <div className="work-list" aria-label="Selected projects">
+      <div className="work-list-column">
+      <div className="work-list" id="selected-projects" ref={listRef} aria-label="Selected projects">
         {items.map((item, index) => (
           <div className="work-entry" key={item.number}>
             <button
@@ -120,6 +150,14 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
             </div>
           </div>
         ))}
+      </div>
+      <div className="work-list-controls">
+        <span>SCROLL TO EXPLORE · {items.length.toString().padStart(2, "0")} PROJECTS</span>
+        <div>
+          <button type="button" onClick={() => scrollList(-1)} disabled={!canScrollUp} aria-label="Scroll to previous projects" aria-controls="selected-projects"><ArrowUp size={20} /></button>
+          <button type="button" onClick={() => scrollList(1)} disabled={!canScrollDown} aria-label="Scroll to more projects" aria-controls="selected-projects"><ArrowDown size={20} /></button>
+        </div>
+      </div>
       </div>
     </div>
   );
