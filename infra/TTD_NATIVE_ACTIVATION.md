@@ -48,25 +48,26 @@ wallet/saved-card/SCA completion or hosted release identity.
    pinned image identity and running application revisions to the approved release.
 3. From the approved repository release directory, as dd-owner, stage only the
    settings package into the running web container. Commands below contain no
-   credentials. `DCP` is a Bash array to keep the fixed Compose paths exact.
+   credentials. Use the already verified running web container directly; the
+   deployment helper supplies immutable image references and the hosted/primary
+   Compose overlays, so do not reconstruct a partial Compose invocation.
 
 ```bash
-DCP=(sudo docker compose --env-file /etc/dd-hosted/compose.env -f /etc/dd-hosted/compose.production.yaml)
-"${DCP[@]}" exec -T pretix mkdir -p /tmp/ttd-native-review
-"${DCP[@]}" cp infra/configure-ttd-checkout.py pretix:/tmp/ttd-native-review/configure-ttd-checkout.py
-"${DCP[@]}" cp infra/ttd-checkout-settings.json pretix:/tmp/ttd-native-review/ttd-checkout-settings.json
-"${DCP[@]}" cp infra/configure-ttd-event-emails.py pretix:/tmp/ttd-native-review/configure-ttd-event-emails.py
-"${DCP[@]}" cp infra/ttd-event-email-settings.json pretix:/tmp/ttd-native-review/ttd-event-email-settings.json
-"${DCP[@]}" exec -T -w /pretix/src pretix python /tmp/ttd-native-review/configure-ttd-checkout.py
-"${DCP[@]}" exec -T -w /pretix/src pretix python /tmp/ttd-native-review/configure-ttd-event-emails.py
+sudo docker exec dd-hosted-pretix-1 mkdir -p /tmp/ttd-native-review
+sudo docker cp infra/configure-ttd-checkout.py dd-hosted-pretix-1:/tmp/ttd-native-review/configure-ttd-checkout.py
+sudo docker cp infra/ttd-checkout-settings.json dd-hosted-pretix-1:/tmp/ttd-native-review/ttd-checkout-settings.json
+sudo docker cp infra/configure-ttd-event-emails.py dd-hosted-pretix-1:/tmp/ttd-native-review/configure-ttd-event-emails.py
+sudo docker cp infra/ttd-event-email-settings.json dd-hosted-pretix-1:/tmp/ttd-native-review/ttd-event-email-settings.json
+sudo docker exec -w /pretix/src dd-hosted-pretix-1 python /tmp/ttd-native-review/configure-ttd-checkout.py
+sudo docker exec -w /pretix/src dd-hosted-pretix-1 python /tmp/ttd-native-review/configure-ttd-event-emails.py
 ```
 
 4. Review the inspection output. Only after the owner approves each native package,
    run its corresponding command (these are independent activations):
 
 ```bash
-"${DCP[@]}" exec -T -w /pretix/src pretix python /tmp/ttd-native-review/configure-ttd-checkout.py --apply
-"${DCP[@]}" exec -T -w /pretix/src pretix python /tmp/ttd-native-review/configure-ttd-event-emails.py --apply
+sudo docker exec -w /pretix/src dd-hosted-pretix-1 python /tmp/ttd-native-review/configure-ttd-checkout.py --apply
+sudo docker exec -w /pretix/src dd-hosted-pretix-1 python /tmp/ttd-native-review/configure-ttd-event-emails.py --apply
 ```
 
 5. Repeat both inspection commands. Inspect actual effective settings/templates
