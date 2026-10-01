@@ -121,7 +121,7 @@ h3 {
 
 .error-message { color: var(--red-ink); }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
   .timezone { font-size: 8px; }
 
 }
@@ -234,7 +234,7 @@ h3 {
   .header-actions { gap: 11px; }
 
 }
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
   .preview-bar { line-height: 1.35; }
 
   .site-header { height: 76px; padding: 0 20px; }
@@ -244,7 +244,7 @@ h3 {
   .site-header .booking-header-actions { flex-direction: column; align-items: flex-end; gap: 0; }
 
 }
-@media (max-width: 820px) {
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
   .desktop-nav { display: none; }
 
   .site-header { grid-template-columns: 1fr auto 1fr; }
@@ -857,7 +857,7 @@ h3 {
   .booking-heading h1 { font-size: 7vw; }
 
 }
-@media (max-width: 820px) {
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
   .details-preview { grid-template-columns: 1fr; }
 
   .summary-panel { max-width: none; }
@@ -891,7 +891,7 @@ h3 {
   .booking-heading-side p { font-size: 20px; line-height: clamp(24px, 1.77vw, 29px); }
 
 }
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
   .section-heading { display: block; margin-bottom: 26px; }
 
   .section-heading h1 { font-size: 44px; }
@@ -1055,7 +1055,7 @@ h3 {
   .studio-gallery-title { font-size: 7vw; }
 
 }
-@media (max-width: 820px) {
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
   .hero-photo img { height: 47vw; }
 
   .hero-photo-detail img { height: 45vw; }
@@ -1065,7 +1065,7 @@ h3 {
   .studio-gallery-title { font-size: clamp(64px, 10vw, 98px); }
 
 }
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
   .hero-gallery { grid-template-columns: 1fr; gap: 36px; }
 
   .hero-photo img { height: 110vw; max-height: 530px; }
@@ -1335,7 +1335,7 @@ h3 {
   .event-row-status { grid-column: 2; padding: 0; text-align: left; }
 
 }
-@media (max-width: 820px) {
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
   .event-header .desktop-nav { display: none; }
 
   .events-main { padding: 32px 4vw 95px; }
@@ -1343,7 +1343,7 @@ h3 {
   .event-detail-grid { grid-template-columns: 1fr; gap: 30px; }
 
 }
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
   .events-main { padding: 25px 19px 80px; }
 
   .events-heading { padding-bottom: 36px; }
@@ -1477,7 +1477,7 @@ h3 {
 
 .contact-form-bottom p { max-width: 310px; margin: 0; font-size: 12px; line-height: 1.5; }
 
-@media (max-width: 820px) {
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
   .contact-main { padding: 32px 4vw 0; }
 
 }
@@ -1499,7 +1499,7 @@ h3 {
   }
 
 }
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
   .contact-main { padding: 25px 19px 0; }
 
   .contact-field-grid { grid-template-columns: 1fr; }
@@ -1845,7 +1845,7 @@ h3 {
 
 .manage-dialog button:disabled { opacity: .55; cursor: wait; }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
 
 
 
@@ -1921,7 +1921,7 @@ body:has(.legal-main) .legal-main {
 .not-found-return:focus-visible { outline: 2px solid currentColor; outline-offset: 8px; }
 .not-found-flowers { position: absolute; right: -5vw; bottom: calc(min(43vw, 700px) * -.19); width: min(43vw, 700px); height: auto; pointer-events: none; }
 
-@media (max-width: 820px) {
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
   .not-found-main { display: flex; flex-direction: column; justify-content: center; padding: 70px 20px 0; }
   .not-found-copy h1 { font-size: clamp(150px, 39vw, 290px); margin-bottom: 24px; }
   .not-found-flowers { position: relative; right: auto; bottom: auto; width: min(100%, 520px); margin: 36px 0 -65px; flex: none; }
@@ -1977,7 +1977,7 @@ body:has(.legal-main) .legal-main {
 
 .unsubscribe-flower { position: absolute; right: max(3vw, 24px); bottom: 4vh; width: min(36vw, 540px); height: auto; transform: scaleX(-1); pointer-events: none; }
 
-@media (max-width: 820px) {
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
   .unsubscribe-main .marketing-page { min-height: auto; padding-bottom: 0; }
   .unsubscribe-flower { position: relative; display: block; right: auto; bottom: auto; width: min(calc(100% - 40px), 520px); margin: 36px auto 0; }
 }
@@ -1992,7 +1992,7 @@ body:has(.legal-main) .legal-main {
   color: var(--neutral-ink);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
   .legal-main { padding-top: 58px; padding-bottom: 82px; }
 
   .legal-intro h1 { font-size: clamp(42px, 10vw, 58px); overflow-wrap: anywhere; }
@@ -2135,11 +2135,11 @@ body:has(.legal-main) .legal-main {
   .site-footer { position: relative; --footer-progress: 1 !important; }
 
 }
-@media (max-width: 820px) {
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
   .footer-details { align-self: center; }
 
 }
-@media (max-width: 600px) {
+@media (max-width: 600px), (hover: none) and (pointer: coarse) {
   .summary-footer { padding: 15px 23px; }
 
   .footer-main { flex-direction: column; align-items: stretch; gap: 20px; padding-block: 73.5px 61.5px; }
@@ -2339,3 +2339,13 @@ body:has(.legal-main) .legal-main {
 .details-fields .phone-country option { color:var(--theme-ink); background:var(--theme-bg); }
 .phone-country::after { content:""; position:absolute; right:10px; top:calc(50% - 4px); width:6px; height:6px; border-right:1px solid currentColor; border-bottom:1px solid currentColor; transform:rotate(45deg); pointer-events:none; }
 .details-fields .phone-country select { appearance:none; }
+
+/* Mobile zoom keeps normal document flow; desktop retains its footer reveal. */
+@media (max-width:820px), (hover:none) and (pointer:coarse) {
+ html,body { overflow-x:clip; }
+ .page-transition-surface { min-width:0; width:100%; }
+ main,.booking-section,.events-main,.details-form,.manage-card { min-width:0; max-width:100%; }
+ .footer-reveal-space { display:none; }
+ .site-footer { position:relative; inset:auto; width:100%; --footer-progress:1 !important; }
+ .footer-main,.footer-details,.footer-links { min-width:0; }
+}
