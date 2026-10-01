@@ -45,8 +45,9 @@ function availableStarts(availability: Availability | undefined, hours: number, 
   });
 }
 
-export function ReschedulePicker({ bookingStart, bookingEnd, language, selected, onSelect, guidedStep }: {
+export function ReschedulePicker({ bookingStart, bookingEnd, language, selected, onSelect, guidedStep, onDateAvailabilityChange }: {
   guidedStep?: "date" | "start" | "review";
+  onDateAvailabilityChange?: (available: boolean) => void;
   bookingStart: string;
   bookingEnd: string;
   language: Language;
@@ -125,6 +126,7 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
 
   const current = days[date];
   const starts = validDuration ? availableStarts(current || undefined, hours, bookingStart) : [];
+  useEffect(() => { onDateAvailabilityChange?.(starts.length > 0); }, [starts.length, onDateAvailabilityChange]);
   const monthLabel = DateTime.fromISO(date).setLocale(language).toFormat("LLLL yyyy");
   const latestWeek = DateTime.fromISO(maxDate).startOf("week").toISODate()!;
   const earliestWeek = today.startOf("week").toISODate()!;
@@ -137,7 +139,7 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
     {guided ? <MobileMonthCalendar language={language} month={month} onMonth={setMonth} date={date} min={todayDate} max={maxDate} onDate={day => { if (day !== date) { setDate(day); onSelect(null); } }} status={day => {
       const entry = days[day];
       const count = validDuration ? availableStarts(entry || undefined, hours, bookingStart).length : 0;
-      return {text: entry === undefined ? "…" : entry === null ? "!" : count ? String(count) : "–", description: entry === undefined ? t.loading : entry === null ? t.error : count ? `${count} ${t.available}` : t.full};
+      return {disabled: !entry || !count, unavailable: !!entry && !count, text: entry === undefined ? "…" : entry === null ? "!" : count ? String(count) : "–", description: entry === undefined ? t.loading : entry === null ? t.error : count ? `${count} ${t.available}` : t.full};
     }} /> : <>
     <div className="reschedule-navigation" aria-label={t.chooseDate}>
       <div className="reschedule-nav-group">

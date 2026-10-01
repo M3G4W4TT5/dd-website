@@ -206,7 +206,7 @@ export function CustomerDetailsPreview({
 
   return (
     <section className="details-preview" id="booking-details" aria-labelledby="details-title">
-      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button>{!guided && <span className="section-kicker">{t.eyebrow}</span>}<h3 id="details-title" tabIndex={-1}>{guided ? (language === "da" ? "Indtast dine oplysninger" : "Enter your details") : t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
+      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button>{!guided && <span className="section-kicker">{t.eyebrow}</span>}<h3 id="details-title" tabIndex={-1}>{guided ? (language === "da" ? "Indtast dine oplysninger" : "Enter your details") : t.title}</h3>{!guided && <><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></>}</div>
       <form ref={formRef} className="details-form" noValidate onInput={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
         <div className="details-fields">
           <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} defaults={draft.fields} />

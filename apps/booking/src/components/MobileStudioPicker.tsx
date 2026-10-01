@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { STUDIO_ZONE, type Availability, type Quote } from "@/lib/booking";
 import { studioEndChoices, studioProgress, type StudioStep } from "@/lib/mobile-journey";
 
+import { useMonthAvailability } from "./useMonthAvailability";
 import { MobileMonthCalendar } from "./MobileMonthCalendar";
 
 type Language = "da" | "en";
@@ -22,6 +23,8 @@ export function MobileStudioPicker({language,step,setStep,more,onMore,date,today
 }) {
  const t = copy[language];
  const [month, setMonth] = useState(() => DateTime.fromISO(date).startOf("month").toISODate()!);
+ const days = useMonthAvailability(month, today, maxDay, step === "date");
+ const timeGrid = availability ? [...availability.slots.map(slot => ({iso: slot.start, slot})), ...(availability.slots.length ? [{iso: availability.slots.at(-1)!.end, slot: undefined}] : [])] : [];
  const heading = useRef<HTMLHeadingElement>(null);
  const progress = studioProgress(more);
  const endChoices = studioEndChoices(availability,startId);
@@ -29,16 +32,20 @@ export function MobileStudioPicker({language,step,setStep,more,onMore,date,today
  useEffect(()=>{ if(step === "entry")return;const target=heading.current;target?.focus({preventScroll:true});target?.closest(".mobile-journey")?.scrollIntoView({block:"start",behavior:"instant"}); },[step]);
  if(step === "entry")return <div className="mobile-studio-entry"><button className="button button-dark" type="button" onClick={()=>setStep("date")}>{t.entry}</button></div>;
  const labels = progress.map(value=>t[value as keyof typeof t]);
- const valid = step === "date" ? !loading && !!availability && !error : step === "start" ? !!quote : step === "more" ? more !== null : step === "end" ? !!quote && quote.hours > 1 : !!quote;
+ const valid = step === "date" ? !loading && !!availability?.slots.some(slot => slot.available) && !error : step === "start" ? !!quote : step === "more" ? more !== null : step === "end" ? !!quote && quote.hours > 1 : !!quote;
  const next = ()=>{ if(step === "review")onCheck();else setStep(step === "date"?"start":step === "start"?"more":step === "more"?(more?"end":"review"):"review"); };
  const back = ()=>setStep(step === "date"?"entry":step === "start"?"date":step === "more"?"start":step === "end"?"more":more?"end":"more");
  return <section className="mobile-journey" aria-labelledby="mobile-studio-title" aria-busy={loading || checking}>
   <JourneyProgress language={language} labels={labels} index={progress.indexOf(step)} />
   <h2 ref={heading} tabIndex={-1} id="mobile-studio-title" className="mobile-journey-heading">{t[step]}</h2>
-  {step === "date" && <><MobileMonthCalendar language={language} month={month} onMonth={setMonth} date={date} min={today} max={maxDay} onDate={onDate} status={day => ({text: day === date ? (loading ? "…" : error ? "!" : availability?.slots.some(slot => slot.available) ? "✓" : "–") : "", description: day === date ? (loading ? t.loading : error ? t.unavailable : availability?.slots.some(slot => slot.available) ? (language === "da" ? "Ledige tider" : "Times available") : t.empty) : (language === "da" ? "Vælg for at se ledige tider" : "Select to check availability")})} /><p className="mobile-calendar-key">{language === "da" ? "Vælg en dato for at se ledige tider · ✓ ledig · – ingen tider" : "Select a date to check availability · ✓ available · – no times"}</p></>}
-  {step === "start" && <div className="journey-options journey-times">{availability?.slots.map(slot=><button key={slot.id} type="button" disabled={!slot.available} aria-pressed={slot.id===startId} onClick={()=>onStart(slot.id)}>{time(slot.start)}</button>)}</div>}
+  {step === "date" && <><MobileMonthCalendar language={language} month={month} onMonth={setMonth} date={date} min={today} max={maxDay} onDate={onDate} status={day => {
+    const entry = day === date ? (loading ? undefined : error ? null : availability ?? undefined) : days[day];
+    const available = entry?.slots.some(slot => slot.available);
+    return {text: entry === undefined ? "…" : entry === null ? "!" : available ? "✓" : "–", description: entry === undefined ? t.loading : entry === null ? t.unavailable : available ? (language === "da" ? "Ledige tider" : "Times available") : t.empty, disabled: !available, unavailable: !!entry && !available};
+  }} /><p className="mobile-calendar-key">{language === "da" ? "✓ ledige tider · rødt: ingen tider · … henter · ! fejl" : "✓ available · red: no times · … loading · ! error"}</p></>}
+  {step === "start" && <div className="journey-options journey-times">{timeGrid.map(({iso, slot})=><button key={iso} type="button" disabled={!slot?.available} className={slot && !slot.available ? "is-unavailable" : undefined} aria-pressed={slot?.id===startId} onClick={()=>slot && onStart(slot.id)}>{time(iso)}</button>)}</div>}
   {step === "more" && <div className="journey-options"><button type="button" aria-pressed={more===false} onClick={()=>onMore(false)}>{t.no}</button><button type="button" aria-pressed={more===true} disabled={!endChoices.length} onClick={()=>onMore(true)}>{t.yes}</button></div>}
-  {step === "end" && <div className="journey-options journey-times">{endChoices.map(choice=><button key={choice.hours} type="button" aria-pressed={quote?.hours===choice.hours} onClick={()=>onEnd(choice.hours)}>{time(choice.end)}</button>)}</div>}
+  {step === "end" && <div className="journey-options journey-times">{timeGrid.map(({iso})=>{ const choice=endChoices.find(choice=>choice.end===iso); return <button key={iso} type="button" disabled={!choice} aria-pressed={!!choice && quote?.end===iso} onClick={()=>choice && onEnd(choice.hours)}>{time(iso)}</button>; })}</div>}
   {step === "review" && quote && <div className="journey-review"><p>{DateTime.fromISO(date).setLocale(language).toLocaleString({weekday:"long",day:"numeric",month:"long",year:"numeric"})}</p><strong>{time(quote.start)}–{time(quote.end)}</strong><p>{t.duration}: {quote.hours} {quote.hours===1?t.hour:t.hours}</p><p>{t.total}: <strong>{new Intl.NumberFormat(language==="da"?"da-DK":"en-DK",{style:"currency",currency:"DKK"}).format(quote.totalOre/100)}</strong></p><p>{t.policy}</p></div>}
   {loading && <p role="status">{t.loading}</p>}{error && <p role="alert">{t.unavailable}</p>}{!loading && availability && !availability.slots.some(slot=>slot.available) && <p>{t.empty}</p>}
   {(status==="changed" || status==="error") && <p role="alert">{t[status]}</p>}

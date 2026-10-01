@@ -111,6 +111,7 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, onC
 }) {
   const t = copy[language];
   const mobile = useMobileJourney();
+  const [changeDateAvailable, setChangeDateAvailable] = useState(false);
   const [changeStep, setChangeStep] = useState<"date" | "start" | "review">("date");
   const changeHeading = useRef<HTMLHeadingElement>(null);
   const [booking, setBooking] = useState(initialBooking);
@@ -243,11 +244,11 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, onC
         {mobile && <JourneyProgress language={language} labels={language === "da" ? ["Dato", "Starttid", "Overblik"] : ["Date", "Start time", "Review"]} index={["date", "start", "review"].indexOf(changeStep)} />}
         <h3 ref={changeHeading} tabIndex={-1} id="change-booking-title">{t.changeTitle}</h3>
         <p>{t.changeIntro}</p>
-        <ReschedulePicker bookingStart={booking.firstHourIso} bookingEnd={booking.endIso} language={language} selected={selectedInterval} onSelect={setSelectedInterval} guidedStep={mobile ? changeStep : undefined} />
+        <ReschedulePicker bookingStart={booking.firstHourIso} bookingEnd={booking.endIso} language={language} selected={selectedInterval} onSelect={setSelectedInterval} onDateAvailabilityChange={mobile ? setChangeDateAvailable : undefined} guidedStep={mobile ? changeStep : undefined} />
         {changeError && <p className="manage-error" role="alert">{t.changeError}</p>}
         {mobile ? <>
           {changeStep === "review" && selectedInterval && <div className="journey-review"><p>{t.time}: <strong>{dateTime(selectedInterval.firstHourIso, language)} – {dateTime(selectedInterval.endIso, language)}</strong></p><p>{t.paid}: <strong>{money(booking.paidOre, language)}</strong></p><p>{t.changeDescription}</p></div>}
-          <div className="journey-actions"><button type="button" disabled={changing} onClick={() => { if (changeStep === "date") { setFlow(null); setChangeError(false); } else setChangeStep(changeStep === "review" ? "start" : "date"); }}>{language === "da" ? "Tilbage" : "Back"}</button><button type="button" disabled={changing || (changeStep !== "date" && !selectedInterval)} onClick={() => changeStep === "review" ? void confirmChange() : setChangeStep(changeStep === "date" ? "start" : "review")}>{changeStep === "review" ? (changing ? t.changing : t.confirmChange) : language === "da" ? "Fortsæt" : "Continue"}</button></div>
+          <div className="journey-actions"><button type="button" disabled={changing} onClick={() => { if (changeStep === "date") { setFlow(null); setChangeError(false); } else setChangeStep(changeStep === "review" ? "start" : "date"); }}>{language === "da" ? "Tilbage" : "Back"}</button><button type="button" disabled={changing || (changeStep === "date" ? !changeDateAvailable : !selectedInterval)} onClick={() => changeStep === "review" ? void confirmChange() : setChangeStep(changeStep === "date" ? "start" : "review")}>{changeStep === "review" ? (changing ? t.changing : t.confirmChange) : language === "da" ? "Fortsæt" : "Continue"}</button></div>
         </> : (
         <div className="manage-actions manage-flow-actions"><button type="button" className="manage-back-button" disabled={changing} onClick={() => { setFlow(null); setChangeError(false); }}><ArrowLeft size={18} strokeWidth={1.35} aria-hidden="true" />{t.backToChoices}</button><button type="button" className="button button-dark" disabled={!selectedInterval || changing} onClick={() => void confirmChange()}>{changing ? t.changing : t.confirmChange}</button></div>)}
 

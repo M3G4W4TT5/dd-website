@@ -5,7 +5,7 @@ import { mobileMonthCells } from "@/lib/mobile-calendar";
 export function MobileMonthCalendar({language, month, onMonth, date, min, max, onDate, status}: {
   language: "da" | "en"; month: string; onMonth: (month: string) => void;
   date: string; min: string; max: string; onDate: (day: string) => void;
-  status?: (day: string) => { text: string; description: string };
+  status?: (day: string) => { text: string; description: string; disabled?: boolean; unavailable?: boolean };
 }) {
   const first = DateTime.fromISO(month).startOf("month");
   const previous = first.minus({months: 1});
@@ -23,7 +23,7 @@ export function MobileMonthCalendar({language, month, onMonth, date, min, max, o
         const value = DateTime.fromISO(day).setLocale(language);
         const outOfRange = day < min || day > max;
         const state = outOfRange ? undefined : status?.(day);
-        return <button key={day} type="button" disabled={outOfRange} aria-pressed={day === date} aria-label={`${value.toFormat("cccc d LLLL yyyy")}${state ? `: ${state.description}` : ""}`} onClick={() => onDate(day)}>
+        return <button key={day} type="button" disabled={outOfRange || state?.disabled} className={state?.unavailable ? "is-unavailable" : undefined} aria-pressed={day === date} aria-label={`${value.toFormat("cccc d LLLL yyyy")}${state ? `: ${state.description}` : ""}`} onClick={() => onDate(day)}>
           <strong>{value.day}</strong>{state && <small>{state.text}</small>}
         </button>;
       })}
