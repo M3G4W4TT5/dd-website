@@ -4,7 +4,7 @@ const countries = new Set<string>(getCountries());
 
 export function countryOptions(language: "da" | "en") {
   const names = new Intl.DisplayNames([language], { type: "region" });
-  return getCountries().map(code => ({ code, label: `${names.of(code) || code} (+${getCountryCallingCode(code)})` }))
+  return getCountries().map(code => ({ code, callingCode: `+${getCountryCallingCode(code)}`, label: `${names.of(code) || code} (+${getCountryCallingCode(code)})` }))
     .sort((a, b) => a.label.localeCompare(b.label, language));
 }
 
