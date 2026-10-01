@@ -44,7 +44,7 @@ TARGET = {
     'compose.hosted.yaml': '21b6df7f428132e39519db26b16aa28b7e85e4f597bbd896cc739f5f6caa8ba1',
     'proxy.conf': 'dc8a94afec5e67a49b23f41e83940aa04c8e23177d8736aa04b9ce545216022c',
     'pretix-nginx.conf': 'bdac328919966debe72e2f86cd4eba1442fc452cd43eb35a3fc7b41ef1e3a563',
-    'pretix-settings.py': '3a329720ef34ea579f4bc93c8f2953712e915c29f3f6b4000c0dea208460d96e',
+    'pretix-settings.py': '6a44dc562036058661b9911b8122eb71af501b55bfc75150741fc64515720a10',
     'pretix-task.conf': '3e3036710bd4a0135c3f2743345fb4b5e6ad952aec1395859a516291fbc7abbb',
     'deploy.py': '78e929be92c9e808128b5f867425bbf7dd27d19482c9bac6d73442c38dc9d242',
 }

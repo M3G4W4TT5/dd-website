@@ -38,6 +38,7 @@ class HostedPretixHelpersConfig(PretixHelpersConfig):
         monkeypatching.should_block_access = booking_webhook_private_access
         super().ready()
         configure_ttd_presentation()
+        configure_ttd_card()
 
 
 INSTALLED_APPS[INSTALLED_APPS.index('pretix.helpers')] = 'production_settings.HostedPretixHelpersConfig'
@@ -126,3 +127,94 @@ def configure_ttd_presentation():
 
     global_html_head.connect(head, weak=False, dispatch_uid='ttd_checkout_style')
     global_html_page_header.connect(header, weak=False, dispatch_uid='ttd_checkout_logo')
+
+
+# This adapter targets the Card Element integration in Pretix 2026.7.0. Keep
+# upstream payment/session/token handling; card data never enters this adapter.
+TTD_CARD_SCRIPT = r"""
+<script>
+(function () {
+ 'use strict';
+ function install() {
+  const fields = document.getElementById('ttd-card-billing');
+  if (!fields || !window.pretixstripe) return;
+  const country = fields.querySelector('select');
+  const postal = fields.querySelector('input[type=text]');
+  const absent = fields.querySelector('input[type=checkbox]');
+  const customer = JSON.parse(fields.dataset.customer);
+  function postalRequirement() { postal.required = !absent.checked; postal.disabled = absent.checked; }
+  absent.addEventListener('change', postalRequirement);
+  postalRequirement();
+  const original = pretixstripe.pm_request;
+  pretixstripe.pm_request = function (method, element, kwargs = {}) {
+   if (method !== 'card') return original.call(this, method, element, kwargs);
+   postalRequirement();
+   if (!country.reportValidity() || (!absent.checked && !postal.reportValidity())) return;
+   const details = { ...customer, ...(kwargs.billing_details || {}) };
+   details.address = { ...(details.address || {}), country: country.value };
+   // An explicit no-postcode choice omits the value; never invent a postcode.
+   if (!absent.checked) details.address.postal_code = postal.value.trim();
+   else delete details.address.postal_code;
+   return original.call(this, method, element, { ...kwargs, billing_details: details });
+  };
+  // Stripe loads asynchronously. Observe its mount instead of timing a network
+  // request, then stop observing. Saved cards and wallets keep upstream handling.
+  function updateCard() {
+   if (!pretixstripe.card) return false;
+   pretixstripe.card.update({ hidePostalCode: true });
+   return true;
+  }
+  if (!updateCard()) {
+   const observer = new MutationObserver(() => { if (updateCard()) observer.disconnect(); });
+   observer.observe(document.getElementById('stripe-card'), { childList: true, subtree: true });
+   window.addEventListener('pagehide', () => observer.disconnect(), { once: true });
+  }
+ }
+ if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
+ else install();
+})();
+</script>
+"""
+
+
+def ttd_billing_fields(request, event, order=None):
+    import json
+    from html import escape
+    from django_countries import countries
+    from pretix.base.models import InvoiceAddress
+    from pretix.presale.views.cart import cart_session
+
+    cs = cart_session(request)
+    ia = getattr(order, 'invoice_address', None) if order else None
+    if ia is None and cs.get('invoice_address'):
+        ia = InvoiceAddress.objects.filter(pk=cs['invoice_address'], order__isnull=True).first()
+    customer = {key: value for key, value in {
+        'name': getattr(ia, 'name', ''),
+        'email': order.email if order else cs.get('email', ''),
+        'phone': order.phone if order else cs.get('phone', ''),
+    }.items() if value}
+    existing_country = str(getattr(ia, 'country', '') or '')
+    country = existing_country or 'DK'  # editable, never inferred from a phone number
+    postal = getattr(ia, 'zipcode', '') or ''
+    danish = getattr(request, 'LANGUAGE_CODE', 'en').startswith('da')
+    labels = ('Faktureringsland', 'Postnummer', 'Min faktureringsadresse har ikke et postnummer') if danish else ('Billing country', 'Postal code', 'My billing address has no postal code')
+    options = ''.join('<option value="' + escape(code) + '"' + (' selected' if code == country else '') + '>' + escape(str(name)) + '</option>' for code, name in countries)
+    return '<div id="ttd-card-billing" data-customer="' + escape(json.dumps(customer), quote=True) + '"><div class="form-group"><label for="ttd-billing-country">' + labels[0] + '</label><select id="ttd-billing-country" class="form-control" autocomplete="country" required>' + options + '</select></div><div class="form-group"><label for="ttd-billing-postal">' + labels[1] + '</label><input id="ttd-billing-postal" class="form-control" type="text" autocomplete="postal-code" maxlength="20" value="' + escape(postal, quote=True) + '" required><label style="display:block;margin-top:12px"><input type="checkbox"> ' + labels[2] + '</label></div></div>'
+
+
+def configure_ttd_card():
+    from functools import wraps
+    from pretix.plugins.stripe.payment import StripeCC
+    original = StripeCC.payment_form_render
+
+    @wraps(original)
+    def render(self, request, total, order=None):
+        html = original(self, request, total, order)
+        if not ttd_theme(self.event):
+            return html
+        marker = '<div id="stripe-card"'
+        if marker not in html:
+            raise RuntimeError('TTD card template changed; review pinned Pretix adapter')
+        return html.replace(marker, ttd_billing_fields(request, self.event, order) + marker, 1) + TTD_CARD_SCRIPT
+
+    StripeCC.payment_form_render = render
