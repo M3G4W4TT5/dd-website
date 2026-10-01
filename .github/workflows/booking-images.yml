@@ -39,6 +39,7 @@ jobs:
       - run: npm run build:server
       - run: python3 infra/deploy.test.py
       - run: python3 infra/apply-hosted-release.test.py
+      - run: python3 infra/check-mail-sender-scope.test.py
       - run: python3 infra/verify-hosted-compose-upgrade.py
 
   images:
