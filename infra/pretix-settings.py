@@ -143,14 +143,22 @@ TTD_CARD_SCRIPT = r"""
   const postal = fields.querySelector('input[type=text]');
   const absent = fields.querySelector('input[type=checkbox]');
   const customer = JSON.parse(fields.dataset.customer);
-  function postalRequirement() { postal.required = !absent.checked; postal.disabled = absent.checked; }
-  absent.addEventListener('change', postalRequirement);
+  function postalRequirement(required = false) {
+   country.required = required;
+   postal.required = required && !absent.checked;
+   postal.disabled = absent.checked;
+  }
+  absent.addEventListener('change', () => postalRequirement());
   postalRequirement();
   const original = pretixstripe.pm_request;
   pretixstripe.pm_request = function (method, element, kwargs = {}) {
    if (method !== 'card') return original.call(this, method, element, kwargs);
+   postalRequirement(true);
+   const valid = country.reportValidity() && (absent.checked || postal.reportValidity());
+   // Only the new-card branch validates these fields. Keeping native HTML
+   // constraints active would also block gift cards, saved cards or wallets.
    postalRequirement();
-   if (!country.reportValidity() || (!absent.checked && !postal.reportValidity())) return;
+   if (!valid) return;
    const details = { ...customer, ...(kwargs.billing_details || {}) };
    details.address = { ...(details.address || {}), country: country.value };
    // An explicit no-postcode choice omits the value; never invent a postcode.
@@ -162,7 +170,7 @@ TTD_CARD_SCRIPT = r"""
   // request, then stop observing. Saved cards and wallets keep upstream handling.
   function updateCard() {
    if (!pretixstripe.card) return false;
-   pretixstripe.card.update({ hidePostalCode: true });
+   pretixstripe.card.update({ hidePostalCode: true, style: { base: { fontSize: '16px', color: fields.dataset.ink } } });
    return true;
   }
   if (!updateCard()) {
@@ -189,7 +197,7 @@ def ttd_billing_fields(request, event, order=None):
     ia = getattr(order, 'invoice_address', None) if order else None
     if ia is None and cs.get('invoice_address'):
         ia = InvoiceAddress.objects.filter(pk=cs['invoice_address'], order__isnull=True).first()
-    customer = {key: value for key, value in {
+    customer = {key: str(value) for key, value in {
         'name': getattr(ia, 'name', ''),
         'email': order.email if order else cs.get('email', ''),
         'phone': order.phone if order else cs.get('phone', ''),
@@ -200,7 +208,7 @@ def ttd_billing_fields(request, event, order=None):
     danish = getattr(request, 'LANGUAGE_CODE', 'en').startswith('da')
     labels = ('Faktureringsland', 'Postnummer', 'Min faktureringsadresse har ikke et postnummer') if danish else ('Billing country', 'Postal code', 'My billing address has no postal code')
     options = ''.join('<option value="' + escape(code) + '"' + (' selected' if code == country else '') + '>' + escape(str(name)) + '</option>' for code, name in countries)
-    return '<div id="ttd-card-billing" data-customer="' + escape(json.dumps(customer), quote=True) + '"><div class="form-group"><label for="ttd-billing-country">' + labels[0] + '</label><select id="ttd-billing-country" class="form-control" autocomplete="country" required>' + options + '</select></div><div class="form-group"><label for="ttd-billing-postal">' + labels[1] + '</label><input id="ttd-billing-postal" class="form-control" type="text" autocomplete="postal-code" maxlength="20" value="' + escape(postal, quote=True) + '" required><label style="display:block;margin-top:12px"><input type="checkbox"> ' + labels[2] + '</label></div></div>'
+    return '<div id="ttd-card-billing" data-ink="' + ttd_theme(event)[1] + '" data-customer="' + escape(json.dumps(customer), quote=True) + '"><div class="form-group"><label for="ttd-billing-country">' + labels[0] + '</label><select id="ttd-billing-country" class="form-control" autocomplete="country">' + options + '</select></div><div class="form-group"><label for="ttd-billing-postal">' + labels[1] + '</label><input id="ttd-billing-postal" class="form-control" type="text" autocomplete="postal-code" maxlength="20" value="' + escape(postal, quote=True) + '"><label style="display:block;margin-top:12px"><input type="checkbox"> ' + labels[2] + '</label></div></div>'
 
 
 def configure_ttd_card():
