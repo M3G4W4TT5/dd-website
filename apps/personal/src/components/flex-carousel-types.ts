@@ -23,6 +23,7 @@ export type FlexCarouselProps = {
   tilt?: number;
   roundness?: number;
   bend?: number;
+  smoothBend?: boolean;
   reach?: number;
   curl?: "twist" | "rise" | "fall";
   dispersion?: number;

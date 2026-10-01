@@ -148,6 +148,7 @@ uniform float uDispersion;
 uniform float uStrength;
 uniform float uSceneAlpha;
 uniform float uSafeHalfWidth;
+uniform float uSmoothBend;
 uniform vec2 uSceneBounds;
 out vec4 fragColor;
 
@@ -173,10 +174,18 @@ void main() {
   float safeEdge = smoothstep(uSafeHalfWidth, uSafeHalfWidth + uResolution.x * 0.12, abs(rel.x));
   ramp *= safeEdge;
   slope *= safeEdge;
+  if (uSmoothBend > 0.5) {
+    // A flat center joins a gradual curve across the narrow mobile side cards.
+    float outerWidth = max(uResolution.x * 0.5 - uSafeHalfWidth, 1.0);
+    float progress = clamp((abs(rel.x) - uSafeHalfWidth) / outerWidth, 0.0, 1.0);
+    ramp = progress * progress;
+    slope = 2.0 * progress;
+  }
   float reachX = rel.x / (uResolution.x * 0.5);
   float side = smoothstep(0.02, 0.3, abs(reachX)) * (uCurl == 0.0 ? sign(reachX) : uCurl);
   float lift = ramp * side * uFlow * uStrength;
   vec2 swirl = along * along.y * side * slope * uFlow * uStrength * 0.35;
+  if (uSmoothBend > 0.5) swirl = vec2(0.0);
   vec2 drift = vec2(0.0, -lift) - swirl;
   vec2 shifted = uv + drift / uResolution;
   // Keep the outer lens sampling video when a snapped card ends inside the viewport.
@@ -241,6 +250,7 @@ const FlexCarousel = ({
   tilt,
   roundness,
   bend,
+  smoothBend = false,
   reach,
   curl,
   dispersion,
@@ -289,6 +299,7 @@ const FlexCarousel = ({
       tilt: pick(tilt, 'tilt'),
       roundness: pick(roundness, 'roundness'),
       bend: pick(bend, 'bend'),
+      smoothBend,
       reach: pick(reach, 'reach'),
       curl: pick(curl, 'curl'),
       dispersion: pick(dispersion, 'dispersion'),
@@ -390,6 +401,7 @@ const FlexCarousel = ({
       uStrength: { value: 0 },
       uSceneAlpha: { value: 0 },
       uSafeHalfWidth: { value: 0 },
+      uSmoothBend: { value: 0 },
       uSceneBounds: { value: [0, 1] }
     };
     const lensMesh = new Mesh(gl, {
@@ -1003,6 +1015,7 @@ const FlexCarousel = ({
         gl.generateMipmap(gl.TEXTURE_2D);
 
         lensUniforms.uSafeHalfWidth.value = m.widths[current] / 2 + 8;
+        lensUniforms.uSmoothBend.value = s.smoothBend ? 1 : 0;
         lensUniforms.uResolution.value = [width, height];
         lensUniforms.uDpr.value = dpr;
         lensUniforms.uCenter.value = [lensX, lens.y];
