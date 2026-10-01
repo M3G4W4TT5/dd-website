@@ -1,0 +1,9 @@
+---
+import { Image } from "astro:assets";
+import ddName from "../assets/branding/dd-name.png";
+
+const { href = "/" } = Astro.props;
+---
+<a class="wordmark wordmark-logo" href={href} aria-label="DD — Didde-Mie Lykke From, top of page">
+  <Image src={ddName} alt="" width={1120} format="png" loading="eager" />
+</a>

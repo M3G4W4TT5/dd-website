@@ -1,23 +1,28 @@
 ---
 import { ArrowUpRight } from "lucide-react";
+import { Image, getImage } from "astro:assets";
+import ddFlower from "../assets/branding/dd-flower-sharp-corners.png";
+import BrandWordmark from "../components/BrandWordmark.astro";
+import SiteFavicon from "../components/SiteFavicon.astro";
 import { ContactPreview } from "../components/ContactPreview";
 import { EditorialMotion } from "../components/EditorialMotion";
-import { FilmCarousel } from "../components/FilmCarousel";
 import { WorkSwitcher } from "../components/WorkSwitcher";
 import { ClipReel } from "../components/ClipReel";
 import { NewsletterSignup } from "../components/NewsletterSignup";
-import { clips, films, media, work } from "../content";
+import { clips, media, work } from "../content";
 import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
 import "@fontsource/montserrat/900.css";
 import "../styles/site.css";
 
 const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000";
+const heroLogo = await getImage({ src: ddFlower, width: 2048, format: "png" });
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
+    <SiteFavicon />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
@@ -31,10 +36,10 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
     </div>
     <EditorialMotion client:load />
     <header class="site-header">
-      <a class="wordmark" href="#top" aria-label="DD — top of page">DD<span>.</span><small>DIDDE-MIE LYKKE FROM</small></a>
-      <nav class="desktop-nav" aria-label="Main navigation"><a href="#work">Work</a><a href="#films">Films</a><a href="#contact">Contact</a></nav>
+      <BrandWordmark href="#top" />
+      <nav class="desktop-nav" aria-label="Main navigation"><a href="#work">Work</a><a href="#contact">Contact</a></nav>
       <a class="header-book" href={bookingUrl}>STUDIO BOOKING <ArrowUpRight size={18} /></a>
-      <details class="mobile-menu"><summary>MENU <span>+</span></summary><nav aria-label="Mobile navigation"><a href="#work">Work</a><a href="#films">Films</a><a href="#contact">Contact</a><a href={bookingUrl}>Studio booking</a></nav></details>
+      <details class="mobile-menu"><summary>MENU <span>+</span></summary><nav aria-label="Mobile navigation"><a href="#work">Work</a><a href="#contact">Contact</a><a href={bookingUrl}>Studio booking</a></nav></details>
     </header>
 
     <main id="top">
@@ -42,7 +47,7 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
         <div class="hero-name"><h1 id="hero-heading">IN MOTION.</h1></div>
         <div class="hero-image" data-reveal>
           <img src={media.heroPortrait} alt="Close-up portrait of DD looking into the camera" fetchpriority="high" />
-          <div class="hero-overlay-type" aria-hidden="true">DD.</div>
+          <div class="hero-overlay-type" aria-hidden="true" style={`--hero-logo: url("${heroLogo.src}")`}></div>
           <div class="hero-image-caption"><span>DD / HALO</span></div>
         </div>
       </section>
@@ -59,10 +64,10 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
         <WorkSwitcher client:load items={work} />
       </section>
 
-      <section class="social-section" id="films" aria-labelledby="films-title">
-        <div class="section-index"><span>03 / WATCH</span></div>
-        <div class="mega-heading"><h2 id="films-title">SELECTED<br /><span>FILMS.</span></h2><p>Music videos, campaigns and live performances. Select a film to watch it here.</p></div>
-        <FilmCarousel client:visible films={films} />
+      <section class="contact-section" id="contact" aria-labelledby="contact-title" style={`--contact-image: url("${media.lowerBanner}")`}>
+        <div class="section-index"><span>03 / GET IN TOUCH</span><span>DANCE / CHOREOGRAPHY / CAMPAIGNS</span></div>
+        <div class="contact-layout"><div class="contact-copy"><h2 id="contact-title"><span>WORK<br />WITH</span><span class="contact-title-logo"><Image src={ddFlower} alt="DD." width={600} widths={[240, 360, 600]} sizes="(max-width: 500px) 26vw, (max-width: 760px) 184px, (max-width: 1653px) 17vw, 275px" format="webp" quality={95} loading="lazy" /></span></h2><p>For dance, choreography and campaign inquiries.</p></div><ContactPreview client:load /></div>
+        <p class="contact-image-credit">DD / HALO</p>
       </section>
 
       <section class="links-section" aria-labelledby="links-title">
@@ -77,19 +82,55 @@ const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000"
           </div>
         </div>
       </section>
-
-      <section class="contact-section" id="contact" aria-labelledby="contact-title" style={`--contact-image: url("${media.lowerBanner}")`}>
-        <div class="section-index"><span>05 / GET IN TOUCH</span><span>DANCE / CHOREOGRAPHY / CAMPAIGNS</span></div>
-        <div class="contact-layout"><div class="contact-copy"><h2 id="contact-title"><span class="contact-title-blend">WORK<br />WITH<br />DD</span><span class="contact-title-dot">.</span></h2><p>For dance, choreography and campaign inquiries.</p></div><ContactPreview client:load /></div>
-        <p class="contact-image-credit">DD / HALO</p>
-      </section>
     </main>
 
     <footer class="site-footer"><div class="footer-bottom"><span>© {new Date().getFullYear()} DD Production</span><a href="/privacy">PRIVACY POLICY</a><span class="footer-credit"><span>Designed by</span><span class="footer-credit-logo" role="img" aria-label="Memory(One)"></span></span></div></footer>
     <script>
-      document.querySelectorAll<HTMLAnchorElement>(".mobile-menu nav a").forEach((link) => {
-        link.addEventListener("click", () => link.closest("details")?.removeAttribute("open"));
-      });
+      const header = document.querySelector<HTMLElement>(".site-header");
+      const heroImage = document.querySelector<HTMLElement>(".hero-image");
+      const menu = document.querySelector<HTMLDetailsElement>(".mobile-menu");
+
+      if (header && heroImage && menu) {
+        // Clamp elastic overscroll so bouncing at either end cannot reverse direction.
+        const scrollPosition = () => Math.max(0, Math.min(window.scrollY,
+          document.documentElement.scrollHeight - window.innerHeight));
+        let previousY = scrollPosition();
+        const inHero = () => heroImage.getBoundingClientRect().bottom > header.offsetHeight;
+        const setHidden = (hidden: boolean) => {
+          if (hidden) {
+            menu.open = false;
+            if (document.activeElement instanceof HTMLElement && header.contains(document.activeElement)) {
+              document.activeElement.blur();
+            }
+          }
+          header.classList.toggle("is-scroll-hidden", hidden);
+          header.inert = hidden;
+        };
+
+        window.addEventListener("scroll", () => {
+          const currentY = scrollPosition();
+          if (inHero() || currentY < previousY) setHidden(false);
+          else if (currentY > previousY) setHidden(true);
+          previousY = currentY;
+        }, { passive: true });
+
+        window.addEventListener("resize", () => {
+          previousY = scrollPosition();
+          if (inHero()) setHidden(false);
+        });
+        window.addEventListener("pageshow", () => {
+          previousY = scrollPosition();
+          setHidden(!inHero() && !menu.open);
+        });
+        menu.addEventListener("toggle", () => {
+          if (menu.open) setHidden(false);
+        });
+        header.addEventListener("focusin", () => setHidden(false));
+        menu.querySelectorAll<HTMLAnchorElement>("nav a").forEach((link) => {
+          link.addEventListener("click", () => { menu.open = false; });
+        });
+        setHidden(!inHero() && !menu.open);
+      }
     </script>
   </body>
 </html>

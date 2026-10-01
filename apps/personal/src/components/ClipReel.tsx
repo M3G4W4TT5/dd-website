@@ -63,9 +63,10 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
         lensHeight={mobile ? .7 : 1.26}
         tilt={53}
         roundness={.39}
-        bend={mobile ? .12 : .29}
+        bend={mobile ? .24 : .29}
+        smoothBend={mobile}
         reach={mobile ? .2 : .33}
-        dispersion={mobile ? .35 : 1.42}
+        dispersion={1.42}
         followCursor={false}
         autoplay={!paused}
         interval={6}

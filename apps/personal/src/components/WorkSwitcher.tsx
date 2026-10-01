@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, ArrowUpRight } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 type WorkItem = {
@@ -12,10 +13,7 @@ type WorkItem = {
   imageAlt?: string;
   imagePosition?: string;
   imageCredit?: string;
-  sourceUrl: string;
-  sourceLabel: string;
-  filmUrl?: string;
-  filmLabel?: string;
+  videoUrl: string;
 };
 
 function DDLoader({ label }: { label: string }) {
@@ -49,7 +47,6 @@ function MobileWorkImage({ item }: { item: WorkItem }) {
       loading="lazy"
       decoding="async"
       className={status === "loaded" ? "is-loaded" : ""}
-      style={{ objectPosition: item.imagePosition }}
       onLoad={() => setStatus("loaded")}
       onError={() => setStatus("error")}
     />
@@ -64,8 +61,60 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
   const reducedMotion = useReducedMotion();
+  const [mobile, setMobile] = useState(false);
+  const [mobileActive, setMobileActive] = useState(0);
+  const [mobileHeight, setMobileHeight] = useState<number>();
+  const focusSelectedCard = useRef(false);
+  const [carouselRef, carousel] = useEmblaCarousel({
+    active: false,
+    align: "start",
+    loop: true,
+    duration: reducedMotion ? 0 : 25,
+    breakpoints: { "(max-width: 760px)": { active: true } },
+  });
+  const setListRef = useCallback((node: HTMLDivElement | null) => {
+    listRef.current = node;
+    carouselRef(node);
+  }, [carouselRef]);
   const current = items[active];
   const currentStatus = current.image ? imageStatus[current.image] ?? "loading" : "empty";
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 760px)");
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (!carousel || !mobile) return;
+    let observer: ResizeObserver | undefined;
+    const update = () => {
+      const index = carousel.selectedScrollSnap();
+      setMobileActive(index);
+      const card = carousel.slideNodes()[index];
+      observer?.disconnect();
+      if (!card) return;
+      const resize = () => setMobileHeight(card.offsetHeight);
+      resize();
+      observer = new ResizeObserver(resize);
+      observer.observe(card);
+    };
+    update();
+    carousel.on("select", update).on("reInit", update);
+    return () => {
+      observer?.disconnect();
+      carousel.off("select", update).off("reInit", update);
+    };
+  }, [carousel, mobile]);
+
+  useEffect(() => {
+    if (mobile && focusSelectedCard.current) {
+      carousel?.slideNodes()[mobileActive]?.focus({ preventScroll: true });
+      focusSelectedCard.current = false;
+    }
+  }, [carousel, mobile, mobileActive]);
 
   useEffect(() => {
     const list = listRef.current;
@@ -100,7 +149,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
   return (
     <div className="work-switcher">
       <div className="work-visual-column" aria-live="polite">
-        <div className="work-visual">
+        <a className="work-visual" href={current.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Watch ${current.title} video`}>
           {currentStatus === "loading" && <DDLoader label={`Loading image for ${current.title}`} />}
           {currentStatus === "error" && <ImageError />}
           {currentStatus === "empty" && <div className="work-visual-placeholder" aria-hidden="true">DD.</div>}
@@ -111,7 +160,6 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
               src={current.image}
               alt={current.imageAlt}
               decoding="async"
-              style={{ objectPosition: current.imagePosition }}
               onLoad={() => setImageStatus((previous) => ({ ...previous, [current.image!]: "loaded" }))}
               onError={() => setImageStatus((previous) => ({ ...previous, [current.image!]: "error" }))}
               initial={{ opacity: 0, filter: reducedMotion ? "blur(0px)" : "blur(16px)", scale: reducedMotion ? 1 : 1.04 }}
@@ -121,35 +169,62 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
             />}
           </AnimatePresence>
           <span className="work-visual-index">{current.number} / {items.length.toString().padStart(2, "0")}</span>
-        </div>
+        </a>
         <div className="work-visual-info">
           <p><strong>{current.role}</strong></p>
-          <div><a href={current.sourceUrl} target="_blank" rel="noopener noreferrer">{current.sourceLabel} <ArrowUpRight size={15} /></a>{current.filmUrl && <a href={current.filmUrl} target={current.filmUrl.startsWith("#") ? undefined : "_blank"} rel={current.filmUrl.startsWith("#") ? undefined : "noopener noreferrer"}>{current.filmLabel} <ArrowUpRight size={15} /></a>}</div>
         </div>
       </div>
       <div className="work-list-column">
-      <div className="work-list" id="selected-projects" ref={listRef} aria-label="Selected projects">
+      <div
+        className="work-list"
+        id="selected-projects"
+        ref={setListRef}
+        role={mobile ? "region" : undefined}
+        aria-roledescription={mobile ? "carousel" : undefined}
+        aria-label="Selected projects"
+        style={mobile && mobileHeight ? { height: mobileHeight } : undefined}
+        onKeyDown={(event) => {
+          if (!mobile || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
+          event.preventDefault();
+          focusSelectedCard.current = true;
+          if (event.key === "ArrowLeft") carousel?.scrollPrev();
+          else carousel?.scrollNext();
+        }}
+      >
+        <div className="work-track">
         {items.map((item, index) => (
-          <div className="work-entry" key={item.number}>
-            <button
-              type="button"
+          <a
+            className="work-entry"
+            key={item.number}
+            href={item.videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            inert={mobile && index !== mobileActive}
+            aria-hidden={mobile && index !== mobileActive ? true : undefined}
+            onMouseEnter={() => setActive(index)}
+            onFocus={() => setActive(index)}
+          >
+            <div
               className={index === active ? "work-item active" : "work-item"}
-              aria-pressed={index === active}
-              onMouseEnter={() => setActive(index)}
-              onFocus={() => setActive(index)}
-              onClick={() => setActive(index)}
             >
               <span className="work-item-top"><span>{item.number} / {item.category}</span><ArrowUpRight size={20} /></span>
               <strong>{item.title}</strong>
               <span className="work-item-role">{item.role}</span>
               <span className="work-item-note">{item.note}</span>
-            </button>
+            </div>
             <div className="work-mobile-media">
               <MobileWorkImage item={item} />
-              <div><a href={item.sourceUrl} target="_blank" rel="noopener noreferrer">{item.sourceLabel} <ArrowUpRight size={15} /></a>{item.filmUrl && <a href={item.filmUrl} target={item.filmUrl.startsWith("#") ? undefined : "_blank"} rel={item.filmUrl.startsWith("#") ? undefined : "noopener noreferrer"}>{item.filmLabel} <ArrowUpRight size={15} /></a>}</div>
             </div>
-          </div>
+          </a>
         ))}
+        </div>
+      </div>
+      <div className="work-gallery-controls">
+        <span>CLICK AN IMAGE TO WATCH · OPENS YOUTUBE</span>
+        <div>
+          <button type="button" onClick={() => carousel?.scrollPrev()} aria-label="Previous project" aria-controls="selected-projects"><ArrowLeft size={20} /></button>
+          <button type="button" onClick={() => carousel?.scrollNext()} aria-label="Next project" aria-controls="selected-projects"><ArrowRight size={20} /></button>
+        </div>
       </div>
       <div className="work-list-controls">
         <span>SCROLL TO EXPLORE · {items.length.toString().padStart(2, "0")} PROJECTS</span>
