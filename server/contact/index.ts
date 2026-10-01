@@ -1,5 +1,5 @@
 import { primaryContact, bookingContact, type Site } from "@dd/contracts";
-import type { Mailer } from "@dd/mail";
+import { personalEmail, type Mailer } from "@dd/mail";
 import { personalAutoReply, bookingAutoReply } from "./templates";
 export { personalAutoReply, bookingAutoReply } from "./templates";
 export async function contact(
@@ -28,11 +28,12 @@ export async function contact(
     site === "primary" ? "DD personal site" : "TTD Studio booking site";
   const mailbox =
     site === "primary" ? "contact@didde-mie.com" : "booking@didde-mie.com";
+  const inquiryText = `New ${name} inquiry\n\nName: ${input.name}\nEmail: ${input.email}\nTopic: ${topic}\n\nMessage:\n${input.message}`;
   await send("inquiry", {
     to: mailbox,
     replyTo: { name: input.name, address: input.email },
     subject: `[${name}] ${topic}`,
-    text: `New ${name} inquiry\n\nName: ${input.name}\nEmail: ${input.email}\nTopic: ${topic}\n\nMessage:\n${input.message}`,
+    ...(site === "primary" ? personalEmail(inquiryText.replace(`New ${name} inquiry`, "I’ve received a new inquiry through my website.")) : { text: inquiryText }),
   });
   try {
     if (await reserve(input.email)) {

@@ -120,3 +120,5 @@ export type Mailer = (
   body: SendMailOptions,
   messageId?: string,
 ) => Promise<unknown>;
+
+export { personalEmail } from "./personal-branding";

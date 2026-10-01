@@ -1,3 +1,4 @@
+import { personalMarketingEmail } from "./templates";
 import { randomBytes } from "node:crypto";
 import type { Pool } from "pg";
 import type { Language, Site } from "@dd/contracts";
@@ -108,6 +109,7 @@ export function marketing(
     url.searchParams.set("lang", language);
     const personal = site === "primary";
     const tokenHours = 48;
+    if (personal) return personalMarketingEmail(email, purpose, url.toString());
     if (purpose === "unsubscribe")
       return {
         to: email,
