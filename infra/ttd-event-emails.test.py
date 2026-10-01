@@ -13,8 +13,16 @@ settings = importlib.util.module_from_spec(spec); spec.loader.exec_module(settin
 class EmailSettings(unittest.TestCase):
     def setUp(self):
         self.writes = []
+        class Proxy:
+            def __init__(self, translations): self.translations = translations
+            def __getitem__(self, language): return self.translations.get(language, self.translations['en'])
         class I18n:
-            def __init__(self, value): self.data = dict(value)
+            LazyGettextProxy = Proxy
+            def __init__(self, value): self.data = value
+            def localize(self, language):
+                if isinstance(self.data, dict): return self.data.get(language, self.data['en'])
+                if isinstance(self.data, str): return self.data
+                return self.data[language]
         self.I18n = I18n
         class EventSettings:
             def __init__(inner, changes): inner.values = {key: {**{lang: change['before'] for lang, change in langs.items()}, 'de': 'Unchanged extra language {url}'} for key, langs in changes.items()}
@@ -22,7 +30,7 @@ class EmailSettings(unittest.TestCase):
             def set(inner, key, value): self.writes.append(key); inner.values[key] = value.data
         self.events = {slug: SimpleNamespace(slug=slug, testmode=True, settings=EventSettings(changes)) for slug, changes in settings.PATCH['events'].items()}
         self.modules = {}
-        for name, attrs in {'django.db': {'transaction': SimpleNamespace(atomic=nullcontext)}, 'i18nfield.strings': {'LazyI18nString': I18n}, 'django_scopes': {'scope': lambda **kw: nullcontext()}, 'pretix.base.models': {'Organizer': SimpleNamespace(objects=SimpleNamespace(get=lambda **kw: SimpleNamespace(slug=kw['slug']))), 'Event': SimpleNamespace(objects=SimpleNamespace(select_for_update=lambda: SimpleNamespace(get=lambda **kw: self.events[kw['slug']])))}}.items():
+        for name, attrs in {'django.conf': {'settings': SimpleNamespace(LANGUAGES=[('en', 'English'), ('da', 'Danish'), ('de', 'German')])}, 'django.db': {'transaction': SimpleNamespace(atomic=nullcontext)}, 'i18nfield.strings': {'LazyI18nString': I18n}, 'django_scopes': {'scope': lambda **kw: nullcontext()}, 'pretix.base.models': {'Organizer': SimpleNamespace(objects=SimpleNamespace(get=lambda **kw: SimpleNamespace(slug=kw['slug']))), 'Event': SimpleNamespace(objects=SimpleNamespace(select_for_update=lambda: SimpleNamespace(get=lambda **kw: self.events[kw['slug']])))}}.items():
             m = ModuleType(name); m.__dict__.update(attrs); self.modules[name] = m
 
     def run_settings(self, apply=False):
@@ -46,6 +54,29 @@ class EmailSettings(unittest.TestCase):
         self.assertEqual(self.writes, [])
         event.settings.values[key]['da'] = original; event.testmode = False
         with self.assertRaisesRegex(RuntimeError, 'sandbox'): self.run_settings(True)
+        self.assertEqual(self.writes, [])
+
+    def test_inherited_gettext_defaults_preserve_all_supported_languages(self):
+        for event in self.events.values():
+            event.settings.values = {key: self.I18n.LazyGettextProxy(value) for key, value in event.settings.values.items()}
+        self.run_settings()
+        self.assertEqual(self.writes, [])
+        self.run_settings(True)
+        self.run_settings(True)
+        self.assertEqual(len(self.writes), 14)
+        for event in self.events.values():
+            for value in event.settings.values.values():
+                self.assertEqual(value['de'], 'Unchanged extra language {url}')
+                self.assertNotIn('You can change', value['en'])
+                self.assertNotIn('Du kan ændre', value['da'])
+
+    def test_late_inherited_default_drift_prevents_all_writes(self):
+        event = list(self.events.values())[-1]
+        key = list(event.settings.values)[-1]
+        event.settings.values[key]['da'] += ' New owner copy'
+        event.settings.values[key] = self.I18n.LazyGettextProxy(event.settings.values[key])
+        with self.assertRaisesRegex(RuntimeError, 'drift'):
+            self.run_settings(True)
         self.assertEqual(self.writes, [])
 
     def test_package_changes_only_approved_phrases_and_preserves_placeholders(self):

@@ -43,3 +43,5 @@ Screenshots: desktop-overview-readable.jpg, desktop-details-readable.jpg.
 Prior automated suites retained; typography-only change did not modify native/server behavior. Hosted acceptance remains unverified.
 
 Owner baseline status received2October: healthy current c02936ab; native adapter exactPR28 e1b875ac; identified and corrected missing installer baseline; 11/11 installer tests including drift rejection passed. Not corrected-release acceptance.
+
+2October native inherited-email reader correction: 5 focused email tests, 5 adapter/settings,1 responseCSP,11 installer tests pass. Fresh actual pinned isolated runtime verifies untouched inherited gettext defaults/all languages plus explicit translations/idempotence and card/responseCSP/native constructors. No hosted activation or acceptance claimed.
