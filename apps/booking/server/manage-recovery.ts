@@ -197,6 +197,11 @@ async function accessMessage(
   const url = new URL("/manage/access", publicBase());
   url.searchParams.set("lang", language);
   url.hash = `token=${token}`;
+  return bookingAccessEmail(email, url.toString(), language, confirmation, booking);
+}
+
+/** Shared renderer for delivery and review drafts; action tokens remain intact. */
+export function bookingAccessEmail(email: string, url: string, language: Language, confirmation: boolean, booking?: ManagedBooking) {
   const da = language === "da";
   const studioTime = (iso: string) =>
     DateTime.fromISO(iso, { setZone: true })

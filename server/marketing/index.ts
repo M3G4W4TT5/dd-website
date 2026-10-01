@@ -1,3 +1,4 @@
+import { ttdMarketingEmail } from "./ttd-templates";
 import { personalMarketingEmail } from "./templates";
 import { randomBytes } from "node:crypto";
 import type { Pool } from "pg";
@@ -107,34 +108,8 @@ export function marketing(
     const url = new URL(`/marketing/${purpose}`, actionBase);
     url.hash = `token=${token}`;
     url.searchParams.set("lang", language);
-    const personal = site === "primary";
-    const tokenHours = 48;
-    if (personal) return personalMarketingEmail(email, purpose, url.toString());
-    if (purpose === "unsubscribe")
-      return {
-        to: email,
-        subject:
-          language === "da" ? "Bekræft afmelding" : "Confirm unsubscribe",
-        text:
-          language === "da"
-            ? `Bekræft din afmelding her:\n${url}\n\nHvis du ikke har bedt om dette, kan du ignorere mailen. Du kan også svare på denne mail og bede om afmelding.`
-            : `Confirm your unsubscribe here:\n${url}\n\nIf you did not request this, ignore this email. You can also reply to this message and ask to unsubscribe.`,
-      };
-    const subject = personal
-      ? "Confirm your DD newsletter signup"
-      : language === "da"
-        ? "Bekræft tilmelding til TTD Studio-mails"
-        : "Confirm TTD Studio email signup";
-    const description = personal
-      ? "updates on my work and dance videos"
-      : language === "da"
-        ? "tilbud, nye events og rabatter fra TTD Studio"
-        : "TTD Studio offers, new events and discounts";
-    const text =
-      language === "da" && !personal
-        ? `Du har bedt om at modtage ${description} fra TOTAL ENTERTAINMENT. Bekræft din tilmelding her:\n${url}\n\nHvis du ikke har bedt om dette, kan du ignorere mailen. Linket udløber efter ${tokenHours} timer. Du kan altid afmelde dig. Svar til denne adresse, hvis du har spørgsmål.`
-        : `You asked to receive ${description} from ${personal ? "DD Production" : "TOTAL ENTERTAINMENT"}. Confirm your signup here:\n${url}\n\nIf you did not request this, ignore this email. The link expires in ${tokenHours} hours. You can unsubscribe at any time. Reply to this address with questions.`;
-    return { to: email, subject, text };
+    if (site === "primary") return personalMarketingEmail(email, purpose, url.toString());
+    return ttdMarketingEmail(email, purpose, url.toString(), language);
   }
   async function consume(token: string, purpose: "confirm" | "unsubscribe") {
     return transaction(pool, async (c) => {
