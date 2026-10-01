@@ -54,7 +54,6 @@ const copy = {
     taken: "Optaget",
     noTimes: "Ingen tider denne dag. Prøv en anden dato.",
     loading: "Henter tider…",
-    summaryEyebrow: "DIN TID I STUDIET",
     summaryTitle: "Overblik",
     selectedDay: "Dato",
     selectedHours: "Varighed",
@@ -94,7 +93,6 @@ const copy = {
     taken: "Unavailable",
     noTimes: "No times on this day. Try another date.",
     loading: "Loading times…",
-    summaryEyebrow: "YOUR STUDIO TIME",
     summaryTitle: "Overview",
     selectedDay: "Date",
     selectedHours: "Duration",
@@ -430,10 +428,10 @@ export function BookingExperience({
 
             <aside className="summary-panel" aria-labelledby="summary-title">
               <div className="summary-header">
-                <div className="summary-heading"><span className="section-kicker">{t.summaryEyebrow}</span><h3 id="summary-title">{t.summaryTitle}</h3></div>
-                <div className="summary-fact"><span className="metric-icon"><Clock3 size={17} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
-                <div className="summary-fact"><span className="metric-icon"><Coins size={17} strokeWidth={1.4} /></span><span>{current?.slots[0] ? `${money(current.slots[0].priceOre, language)}${t.perHour}` : "—"}</span></div>
-                <div className="summary-fact"><span className="metric-icon"><Maximize2 size={17} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
+                <div className="summary-heading"><h3 id="summary-title">{t.summaryTitle}</h3></div>
+                <div className="summary-fact"><span className="metric-icon"><Clock3 size={22} strokeWidth={1.8} /></span><span>{t.metricTwo}</span></div>
+                <div className="summary-fact"><span className="metric-icon"><Coins size={22} strokeWidth={1.8} /></span><span>{current?.slots[0] ? `${money(current.slots[0].priceOre, language)}${t.perHour}` : "—"}</span></div>
+                <div className="summary-fact"><span className="metric-icon"><Maximize2 size={22} strokeWidth={1.8} /></span><span>{t.metricOne}</span></div>
               </div>
               <div className="summary-content">
                 <div className="summary-row"><span>{t.selectedDay}</span><strong>{dateLabel(date, language)}</strong></div>
