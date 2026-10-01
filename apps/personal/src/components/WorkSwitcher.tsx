@@ -57,6 +57,8 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
   const [active, setActive] = useState(0);
   const [imageStatus, setImageStatus] = useState<Partial<Record<string, "loaded" | "error">>>({});
   const activeImageRef = useRef<HTMLImageElement>(null);
+  const visualRef = useRef<HTMLAnchorElement>(null);
+  const [desktopHeight, setDesktopHeight] = useState<number>();
   const listRef = useRef<HTMLDivElement>(null);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
@@ -86,6 +88,16 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
     query.addEventListener("change", update);
     return () => query.removeEventListener("change", update);
   }, []);
+
+  useEffect(() => {
+    const visual = visualRef.current;
+    if (!visual || mobile) return;
+    const update = () => setDesktopHeight(visual.getBoundingClientRect().height);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(visual);
+    return () => observer.disconnect();
+  }, [mobile]);
 
   useEffect(() => {
     if (!carousel || !mobile) return;
@@ -149,7 +161,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
   return (
     <div className="work-switcher">
       <div className="work-visual-column" aria-live="polite">
-        <a className="work-visual" href={current.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Watch ${current.title} video`}>
+        <a ref={visualRef} className="work-visual" href={current.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Watch ${current.title} video`}>
           {currentStatus === "loading" && <DDLoader label={`Loading image for ${current.title}`} />}
           {currentStatus === "error" && <ImageError />}
           {currentStatus === "empty" && <div className="work-visual-placeholder" aria-hidden="true">DD.</div>}
@@ -182,7 +194,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
         role={mobile ? "region" : undefined}
         aria-roledescription={mobile ? "carousel" : undefined}
         aria-label="Selected projects"
-        style={mobile && mobileHeight ? { height: mobileHeight } : undefined}
+        style={mobile ? mobileHeight ? { height: mobileHeight } : undefined : desktopHeight ? { height: desktopHeight, maxHeight: desktopHeight } : undefined}
         onKeyDown={(event) => {
           if (!mobile || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
           event.preventDefault();

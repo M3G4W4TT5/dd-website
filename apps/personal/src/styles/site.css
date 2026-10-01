@@ -233,3 +233,7 @@ html.desktop-intro-active { overflow:hidden; overscroll-behavior:none; scrollbar
 .newsletter-unsubscribe-page .marketing-action-button { display:block; margin-top:35px; border:0; padding:15px 20px; background:var(--pink); color:var(--black); font-size:11px; font-weight:900; letter-spacing:.08em; }
 .newsletter-unsubscribe-page [role="status"],.newsletter-unsubscribe-page [role="alert"] { margin-top:28px; padding:18px 20px; border:1px solid var(--pink); background:#211b21; }
 .newsletter-unsubscribe-page p a { text-decoration:underline; }
+
+body { -webkit-user-select:none; user-select:none; }
+input,textarea,select,[contenteditable="true"],[contenteditable=""] { -webkit-user-select:text; user-select:text; }
+.footer-credit:focus-visible { outline:2px solid var(--pink); outline-offset:6px; }
