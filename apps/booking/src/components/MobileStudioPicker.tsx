@@ -1,8 +1,10 @@
 "use client";
 import { DateTime } from "luxon";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { STUDIO_ZONE, type Availability, type Quote } from "@/lib/booking";
 import { studioEndChoices, studioProgress, type StudioStep } from "@/lib/mobile-journey";
+
+import { MobileMonthCalendar } from "./MobileMonthCalendar";
 
 type Language = "da" | "en";
 const copy = {
@@ -13,12 +15,13 @@ export function JourneyProgress({ language, labels, index }: {language: Language
  const t = copy[language];
  return <div className="journey-progress" aria-label={`${t.step} ${index + 1} ${t.of} ${labels.length}`}><span>{t.step} {index + 1} {t.of} {labels.length} · {labels[index]}</span><progress max={labels.length} value={index + 1} /></div>;
 }
-export function MobileStudioPicker({language,step,setStep,more,onMore,date,week,weekStart,today,maxDay,availability,startId,quote,loading,error,checking,status,onDate,onWeek,onStart,onEnd,onCheck}: {
+export function MobileStudioPicker({language,step,setStep,more,onMore,date,today,maxDay,availability,startId,quote,loading,error,checking,status,onDate,onStart,onEnd,onCheck}: {
  language:Language;step:StudioStep;setStep:(step:StudioStep)=>void;more:boolean|null;onMore:(more:boolean)=>void;
- date:string;week:string[];weekStart:string;today:string;maxDay:string;availability:Availability|null;startId:string|null;quote:Quote|null;
- loading:boolean;error:boolean;checking:boolean;status:string;onDate:(date:string)=>void;onWeek:(amount:number)=>void;onStart:(id:string)=>void;onEnd:(hours:number)=>void;onCheck:()=>void;
+ date:string;today:string;maxDay:string;availability:Availability|null;startId:string|null;quote:Quote|null;
+ loading:boolean;error:boolean;checking:boolean;status:string;onDate:(date:string)=>void;onStart:(id:string)=>void;onEnd:(hours:number)=>void;onCheck:()=>void;
 }) {
  const t = copy[language];
+ const [month, setMonth] = useState(() => DateTime.fromISO(date).startOf("month").toISODate()!);
  const heading = useRef<HTMLHeadingElement>(null);
  const progress = studioProgress(more);
  const endChoices = studioEndChoices(availability,startId);
@@ -32,7 +35,7 @@ export function MobileStudioPicker({language,step,setStep,more,onMore,date,week,
  return <section className="mobile-journey" aria-labelledby="mobile-studio-title" aria-busy={loading || checking}>
   <JourneyProgress language={language} labels={labels} index={progress.indexOf(step)} />
   <h2 ref={heading} tabIndex={-1} id="mobile-studio-title" className="mobile-journey-heading">{t[step]}</h2>
-  {step === "date" && <><div className="journey-date-nav"><button type="button" disabled={weekStart<=today} onClick={()=>onWeek(-7)} aria-label={t.previous}>←</button><strong>{DateTime.fromISO(weekStart).setLocale(language).toFormat("LLLL yyyy")}</strong><button type="button" disabled={DateTime.fromISO(weekStart).plus({days:7}).toISODate()!>maxDay} onClick={()=>onWeek(7)} aria-label={t.following}>→</button></div><div className="journey-options journey-dates">{week.map(day=><button type="button" key={day} disabled={day<today || day>maxDay} aria-pressed={day===date} onClick={()=>onDate(day)}><span>{DateTime.fromISO(day).setLocale(language).toFormat("ccc")}</span><strong>{DateTime.fromISO(day).day}</strong></button>)}</div></>}
+  {step === "date" && <><MobileMonthCalendar language={language} month={month} onMonth={setMonth} date={date} min={today} max={maxDay} onDate={onDate} status={day => ({text: day === date ? (loading ? "…" : error ? "!" : availability?.slots.some(slot => slot.available) ? "✓" : "–") : "", description: day === date ? (loading ? t.loading : error ? t.unavailable : availability?.slots.some(slot => slot.available) ? (language === "da" ? "Ledige tider" : "Times available") : t.empty) : (language === "da" ? "Vælg for at se ledige tider" : "Select to check availability")})} /><p className="mobile-calendar-key">{language === "da" ? "Vælg en dato for at se ledige tider · ✓ ledig · – ingen tider" : "Select a date to check availability · ✓ available · – no times"}</p></>}
   {step === "start" && <div className="journey-options journey-times">{availability?.slots.map(slot=><button key={slot.id} type="button" disabled={!slot.available} aria-pressed={slot.id===startId} onClick={()=>onStart(slot.id)}>{time(slot.start)}</button>)}</div>}
   {step === "more" && <div className="journey-options"><button type="button" aria-pressed={more===false} onClick={()=>onMore(false)}>{t.no}</button><button type="button" aria-pressed={more===true} disabled={!endChoices.length} onClick={()=>onMore(true)}>{t.yes}</button></div>}
   {step === "end" && <div className="journey-options journey-times">{endChoices.map(choice=><button key={choice.hours} type="button" aria-pressed={quote?.hours===choice.hours} onClick={()=>onEnd(choice.hours)}>{time(choice.end)}</button>)}</div>}

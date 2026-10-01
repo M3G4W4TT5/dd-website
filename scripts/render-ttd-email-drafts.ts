@@ -20,16 +20,16 @@ for(const lang of ['en','da'] as const) {
  }
 }
 
-// Native specimens retain the exact admin copy and unresolved Pretix placeholders.
+// Native specimens use the approved effective-settings snapshot and unresolved Pretix placeholders.
 // The banner is the new adapter; hosted native layout/attachments remain unverified.
 const native = JSON.parse(readFileSync(`${out}/native-event-templates.json`, 'utf8'));
 for (const template of native.templates) {
  const lang = template.name.endsWith('_1') ? 'da' : 'en';
  const html = `<table role="presentation" width="100%" cellspacing="0" cellpadding="24" style="background:#EFE9FB;color:#7349CD"><tr><td align="center"><img alt="TTD Studio" width="180" height="79" style="display:block;width:180px;max-width:100%;height:auto;border:0" src="ttd-event-logo.png"></td></tr></table>`;
  const name = template.name.replace(/^mail_text_/, 'native-');
- writeFileSync(`${out}/${name}.html`, `<!doctype html><html lang="${lang}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${name}</title><body style="margin:0;background:#eeeeee;font:16px Arial;line-height:1.5"><div style="background:white;padding:12px">LOCAL NATIVE EMAIL SPECIMEN · exact workshop copy · unresolved placeholders · native hosted layout and ticket attachments require validation</div>${html}<div style="max-width:640px;background:white;margin:20px auto;padding:24px">${escapeHtml(template.value).replace(/\n/g,'<br>')}</div></body></html>`);
+ writeFileSync(`${out}/${name}.html`, `<!doctype html><html lang="${lang}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${name}</title><body style="margin:0;background:#eeeeee;font:16px Arial;line-height:1.5"><div style="background:white;padding:12px">LOCAL NATIVE EMAIL SPECIMEN · approved copy from both inspected ticket events · unresolved placeholders · native hosted layout and ticket attachments require validation</div>${html}<div style="max-width:640px;background:white;margin:20px auto;padding:24px">${escapeHtml(template.value).replace(/\n/g,'<br>')}</div></body></html>`);
 }
 
 const links = readdirSync(out).filter(name => name.endsWith('.html') && name !== 'index.html').sort()
  .map(name => `<li><a href="${escapeHtml(name)}">${escapeHtml(name.replace('.html', '').replace(/-/g, ' '))}</a></li>`).join('');
-writeFileSync(`${out}/index.html`, `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TTD email review</title><body style="font:16px Arial;line-height:1.6;max-width:800px;margin:40px auto;padding:20px;color:#116E3A;background:#DAF2E5"><h1>TTD email drafts</h1><p>Local review only. Existing copy and action links are preserved. Booking fixtures use synthetic details and nonfunctional tokens. Native event specimens retain Pretix placeholders; their final layout and ticket attachments need hosted validation.</p><ul>${links}</ul></body></html>`);
+writeFileSync(`${out}/index.html`, `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TTD email review</title><body style="font:16px Arial;line-height:1.6;max-width:800px;margin:40px auto;padding:20px;color:#116E3A;background:#DAF2E5"><h1>TTD email drafts</h1><p>Local review only. Existing copy and action links are preserved. Booking fixtures use synthetic details and nonfunctional tokens. Event-prefixed native drafts use the actual pinned Pretix ClassicMailRenderer and inspected effective settings for each event. Unprefixed native files are simple copy specimens. Both retain unresolved placeholders; delivery, functional links and ticket attachments require hosted validation.</p><ul>${links}</ul></body></html>`);

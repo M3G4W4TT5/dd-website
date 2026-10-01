@@ -16,13 +16,15 @@ ALLOWED = {'region', 'primary_color', 'allow_modifications', 'cancel_allow_user'
 
 def configure(apply=False):
     from django.db import transaction
-    from pretix.base.models import Event
-    with transaction.atomic():
+    from django_scopes import scope
+    from pretix.base.models import Event, Organizer
+    organizer = Organizer.objects.get(slug=PATCH['organizer'])
+    with scope(organizer=organizer), transaction.atomic():
         events = []
         for slug, changes in PATCH['events'].items():
             if not changes.keys() <= ALLOWED:
                 raise RuntimeError('Unreviewed settings key')
-            event = Event.objects.select_for_update().get(organizer__slug=PATCH['organizer'], slug=slug)
+            event = Event.objects.select_for_update().get(organizer=organizer, slug=slug)
             if not event.testmode:
                 raise RuntimeError('Event is not in sandbox test mode')
             events.append((event, changes))

@@ -137,7 +137,7 @@ class HostedSettingsPatch(unittest.TestCase):
             def set(self, key, value): writes.append((key, value))
         events = {slug: SimpleNamespace(slug=slug, testmode=True, settings=Settings()) for slug in settings.PATCH['events']}
         modules = {}
-        for name, attributes in {'django.db': {'transaction': SimpleNamespace(atomic=nullcontext)}, 'pretix.base.models': {'Event': SimpleNamespace(objects=SimpleNamespace(select_for_update=lambda: SimpleNamespace(get=lambda **kwargs: events[kwargs['slug']])))}}.items():
+        for name, attributes in {'django.db': {'transaction': SimpleNamespace(atomic=nullcontext)}, 'django_scopes': {'scope': lambda **kw: nullcontext()}, 'pretix.base.models': {'Organizer': SimpleNamespace(objects=SimpleNamespace(get=lambda **kw: SimpleNamespace(slug=kw['slug']))), 'Event': SimpleNamespace(objects=SimpleNamespace(select_for_update=lambda: SimpleNamespace(get=lambda **kwargs: events[kwargs['slug']])))}}.items():
             module = ModuleType(name); module.__dict__.update(attributes); modules[name] = module
         with patch.dict('sys.modules', modules), patch('builtins.print'):
             settings.configure()

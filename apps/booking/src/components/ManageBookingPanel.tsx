@@ -113,7 +113,6 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, onC
   const mobile = useMobileJourney();
   const [changeStep, setChangeStep] = useState<"date" | "start" | "review">("date");
   const changeHeading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { if (mobile) { changeHeading.current?.focus({preventScroll:true}); changeHeading.current?.scrollIntoView({block:"start",behavior:"instant"}); } }, [mobile, changeStep]);
   const [booking, setBooking] = useState(initialBooking);
   const [confirming, setConfirming] = useState(false);
   const [working, setWorking] = useState(false);
@@ -121,6 +120,11 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, onC
   const [changeError, setChangeError] = useState(false);
   const [changed, setChanged] = useState(false);
   const [flow, setFlow] = useState<"change" | null>(null);
+  useEffect(() => {
+    if (!mobile || flow !== "change") return;
+    changeHeading.current?.focus({ preventScroll: true });
+    changeHeading.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [mobile, flow, changeStep]);
   const [selectedInterval, setSelectedInterval] = useState<AvailableInterval | null>(null);
   const [changing, setChanging] = useState(false);
   const [nowIso, setNowIso] = useState(serverNowIso);

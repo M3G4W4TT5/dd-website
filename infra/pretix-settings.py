@@ -81,12 +81,19 @@ def ttd_theme(event):
     return ('green', '#116E3A', '#DAF2E5') if event.slug == 'studio' else ('purple', '#7349CD', '#EFE9FB')
 
 
-def ttd_checkout_style(event):
+def ttd_csp_block(request, tag, content):
+    from pretix.base.middleware import calculate_csp_hash, add_to_response_csp_via_request
+    add_to_response_csp_via_request(request, {tag + "-src": [calculate_csp_hash(content)]})
+    return "<" + tag + ">" + content + "</" + tag + ">"
+
+
+def ttd_checkout_style(event, request):
     theme = ttd_theme(event)
     if not theme:
         return ''
     _, ink, background = theme
-    return '<style>' + """
+    return ttd_csp_block(request, "style", """
+.ttd-no-postal { display:block; margin-top:12px; }
 body { color: INK; background: BACKGROUND; }
 .ttd-checkout-brand { max-width: 1140px; margin: 24px auto 8px; padding: 0 20px; }
 .ttd-checkout-brand img { display:block; width:180px; max-width:100%; height:auto; }
@@ -110,7 +117,7 @@ input:focus,select:focus,textarea:focus { border-color:INK; outline:2px solid IN
  table { max-width:100%; }
  .cart-row h3,.panel-heading { overflow-wrap:anywhere; }
 }
-""".replace('INK', ink).replace('BACKGROUND', background) + '</style>'
+""".replace('INK', ink).replace('BACKGROUND', background))
 
 
 def configure_ttd_presentation():
@@ -118,7 +125,7 @@ def configure_ttd_presentation():
     from pretix.presale.signals import global_html_head, global_html_page_header
 
     def head(sender, request, **kwargs):
-        return mark_safe(ttd_checkout_style(getattr(request, 'event', None)))
+        return mark_safe(ttd_checkout_style(getattr(request, 'event', None), request))
 
     def header(sender, request, **kwargs):
         theme = ttd_theme(getattr(request, 'event', None))
@@ -208,7 +215,7 @@ def ttd_billing_fields(request, event, order=None):
     danish = getattr(request, 'LANGUAGE_CODE', 'en').startswith('da')
     labels = ('Faktureringsland', 'Postnummer', 'Min faktureringsadresse har ikke et postnummer') if danish else ('Billing country', 'Postal code', 'My billing address has no postal code')
     options = ''.join('<option value="' + escape(code) + '"' + (' selected' if code == country else '') + '>' + escape(str(name)) + '</option>' for code, name in countries)
-    return '<div id="ttd-card-billing" data-ink="' + ttd_theme(event)[1] + '" data-customer="' + escape(json.dumps(customer), quote=True) + '"><div class="form-group"><label for="ttd-billing-country">' + labels[0] + '</label><select id="ttd-billing-country" class="form-control" autocomplete="country">' + options + '</select></div><div class="form-group"><label for="ttd-billing-postal">' + labels[1] + '</label><input id="ttd-billing-postal" class="form-control" type="text" autocomplete="postal-code" maxlength="20" value="' + escape(postal, quote=True) + '"><label style="display:block;margin-top:12px"><input type="checkbox"> ' + labels[2] + '</label></div></div>'
+    return '<div id="ttd-card-billing" data-ink="' + ttd_theme(event)[1] + '" data-customer="' + escape(json.dumps(customer), quote=True) + '"><div class="form-group"><label for="ttd-billing-country">' + labels[0] + '</label><select id="ttd-billing-country" class="form-control" autocomplete="country">' + options + '</select></div><div class="form-group"><label for="ttd-billing-postal">' + labels[1] + '</label><input id="ttd-billing-postal" class="form-control" type="text" autocomplete="postal-code" maxlength="20" value="' + escape(postal, quote=True) + '"><label class="ttd-no-postal"><input type="checkbox"> ' + labels[2] + '</label></div></div>'
 
 
 def configure_ttd_card():
@@ -224,7 +231,7 @@ def configure_ttd_card():
         marker = '<div id="stripe-card"'
         if marker not in html:
             raise RuntimeError('TTD card template changed; review pinned Pretix adapter')
-        return html.replace(marker, ttd_billing_fields(request, self.event, order) + marker, 1) + TTD_CARD_SCRIPT
+        return html.replace(marker, ttd_billing_fields(request, self.event, order) + marker, 1) + ttd_csp_block(request, "script", TTD_CARD_SCRIPT.split("<script>", 1)[1].split("</script>", 1)[0])
 
     StripeCC.payment_form_render = render
 

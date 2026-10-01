@@ -142,6 +142,7 @@ export function EventSignupForm({ occurrence, language, onBack, draft }: {
         <strong>{language === "da" ? occurrence.title : occurrence.titleEn}</strong>
         <p>{start.toLocaleString({ weekday: "long", day: "numeric", month: "long", year: "numeric" })}<br />{start.toFormat("HH:mm")}–{end.toFormat("HH:mm")}</p>
         <p>{(language === "da" ? occurrence.location : occurrence.locationEn) || "TTD Studio"}</p>
+        {mobile && ticket && <p className="event-selected-ticket">{language === "da" ? ticket.name : ticket.nameEn}</p>}
         {ticket && <p>{validQuantity ? `${count} × ${formatPrice(Number(ticket.price))}` : formatPrice(Number(ticket.price))}</p>}
         <div className="event-signup-total" aria-live="polite"><span>{t.total}</span><strong>{validQuantity ? formatPrice(count * Number(ticket.price)) : "—"}</strong></div>
       </div>
