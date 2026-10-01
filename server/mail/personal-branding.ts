@@ -11,7 +11,7 @@ export function personalEmail(text: string, action?: { url: string; label: strin
   }).join("");
   return {
     text,
-    html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#09090b;background:#ffffff;padding:24px">${html}<img src="cid:dd-flower-mark" alt="DD." width="120" height="120" style="display:block;width:120px;height:120px;border:0" /></div>`,
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#09090b;background:#ffffff;padding:24px">${html}<img src="cid:dd-flower-mark" alt="DD." width="180" height="81" style="display:block;width:180px;height:auto;border:0" /></div>`,
     attachments: [{ filename: "dd-flower-v2.png", path: fileURLToPath(new URL("./dd-flower-v2.png", import.meta.url)), cid: "dd-flower-mark", contentType: "image/png", contentDisposition: "inline" as const }],
   };
 }
