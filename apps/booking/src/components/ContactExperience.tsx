@@ -104,7 +104,6 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
       <div className="events-heading"><h1>{t.title}</h1><p>{t.intro}</p></div>
       <section className="contact-layout" aria-label={t.form}>
         <form className="studio-contact-form" noValidate onInput={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onChange={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onSubmit={submit}>
-          <div className="contact-form-heading"><span className="section-kicker">01 / {t.form}</span><ArrowUpRight size={25} strokeWidth={1.5} /></div>
           <div className="contact-field-grid">
             <label>{t.name}<input name="name" type="text" autoComplete="name" minLength={2} maxLength={120} required aria-invalid={invalidFields.includes("name")} /></label>
             <label>{t.email}<input name="email" type="email" autoComplete="email" maxLength={254} required aria-invalid={invalidFields.includes("email")} /></label>

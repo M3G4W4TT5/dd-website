@@ -12,8 +12,7 @@ export type BookingDetailsDraft = { fields: Record<string, string>; termsAccepte
 
 const copy = {
   da: {
-    eyebrow: "04 / DINE OPLYSNINGER",
-    title: "Gør din booking klar.",
+    title: "Indtast dine oplysninger",
     intro: "Indtast dine oplysninger, og gennemgå din booking, før du fortsætter til betaling.",
     name: "Navn",
     email: "E-mail",
@@ -49,8 +48,7 @@ const copy = {
     checkout: "Betaling sker på næste trin.",
   },
   en: {
-    eyebrow: "04 / YOUR DETAILS",
-    title: "Prepare your booking.",
+    title: "Enter your details",
     intro: "Enter your details and review your booking before continuing to payment.",
     name: "Name",
     email: "Email",
@@ -206,7 +204,7 @@ export function CustomerDetailsPreview({
 
   return (
     <section className="details-preview" id="booking-details" aria-labelledby="details-title">
-      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button>{!guided && <span className="section-kicker">{t.eyebrow}</span>}<h3 id="details-title" tabIndex={-1}>{guided ? (language === "da" ? "Indtast dine oplysninger" : "Enter your details") : t.title}</h3>{!guided && <><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></>}</div>
+      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button><h3 id="details-title" tabIndex={-1}>{t.title}</h3>{!guided && <><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></>}</div>
       <form ref={formRef} className="details-form" noValidate onInput={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
         <div className="details-fields">
           <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} defaults={draft.fields} />

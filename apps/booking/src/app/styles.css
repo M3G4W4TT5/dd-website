@@ -1375,13 +1375,11 @@ h3 {
 
 .contact-main { min-height: 68vh; padding: 42px 2.3vw 0; background: var(--red-bg); }
 
-.contact-layout { border-top: 1px solid var(--line); padding: 28px 0 80px; }
+.contact-layout { border-top: 1px solid var(--line); padding: 16px 0 80px; }
 
 .studio-contact-form { width: min(100%, 850px); }
 
 .contact-visual-placeholder { display: none; }
-
-.contact-form-heading { display: flex; align-items: center; justify-content: space-between; padding-bottom: 30px; }
 
 .contact-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25px 18px; }
 
@@ -2380,3 +2378,6 @@ body:has(.legal-main) .legal-main {
 .mobile-month-days button.is-unavailable:disabled,.journey-times button.is-unavailable:disabled { color:#a92323; border-color:#a92323; background:#fbe4e4; opacity:1; }
 .journey-times button:disabled:not(.is-unavailable) { color:#666; border-color:#999; background:#e6e6e6; opacity:1; }
 .mobile-booking-flow #booking-details .details-form { margin-top:0; }
+
+/* Studio details heading occupies the former desktop eyebrow position. */
+#booking-details .details-intro h3 { margin-top:0; }
