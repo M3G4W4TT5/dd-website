@@ -1,3 +1,4 @@
+import { ttdEmail } from "./ttd-branding";
 import nodemailer, { type SendMailOptions, type Transporter } from "nodemailer";
 import type { Site } from "@dd/contracts";
 export { createCapture } from "./capture";
@@ -98,7 +99,7 @@ export function createMailer(
     )
       throw new DeliveryError("permanent");
     const mail = {
-      ...body,
+      ...(site === "booking" && kind !== "inquiry" ? ttdEmail(body) : body),
       from: p.from,
       replyTo: kind === "inquiry" ? body.replyTo : p.replyTo,
       envelope: { from: p.envelopeFrom, to: [recipient] },

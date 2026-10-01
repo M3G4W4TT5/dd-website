@@ -39,6 +39,7 @@ class HostedPretixHelpersConfig(PretixHelpersConfig):
         super().ready()
         configure_ttd_presentation()
         configure_ttd_card()
+        configure_ttd_mail()
 
 
 INSTALLED_APPS[INSTALLED_APPS.index('pretix.helpers')] = 'production_settings.HostedPretixHelpersConfig'
@@ -218,3 +219,26 @@ def configure_ttd_card():
         return html.replace(marker, ttd_billing_fields(request, self.event, order) + marker, 1) + TTD_CARD_SCRIPT
 
     StripeCC.payment_form_render = render
+
+
+
+def configure_ttd_mail():
+    from functools import wraps
+    from pretix.base.email import TemplateBasedMailRenderer
+    original = TemplateBasedMailRenderer.render
+
+    @wraps(original)
+    def render(self, plain_body, plain_signature, subject, order, position, context):
+        html = original(self, plain_body, plain_signature, subject, order, position, context)
+        theme = ttd_theme(self.event)
+        if not theme and not self.event and self.organizer and self.organizer.slug == 'dd-studio':
+            theme = ('green', '#116E3A', '#DAF2E5')
+        if not theme:
+            return html
+        color, ink, background = theme
+        banner = '<table role="presentation" width="100%" cellspacing="0" cellpadding="24" style="background:' + background + ';color:' + ink + '"><tr><td align="center"><img alt="TTD Studio" width="180" height="79" style="display:block;width:180px;max-width:100%;height:auto;border:0" src="data:image/png;base64,' + TTD_LOGOS[color] + '"></td></tr></table>'
+        # Native Pretix mail converts this embedded PNG to a CID attachment.
+        # Keep upstream body, signature, URLs, ticket/invoice attachments intact.
+        return re.sub(r'(<body\b[^>]*>)', lambda match: match[0] + banner, html, count=1, flags=re.I)
+
+    TemplateBasedMailRenderer.render = render
