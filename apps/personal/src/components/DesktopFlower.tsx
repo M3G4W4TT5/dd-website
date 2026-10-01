@@ -9,6 +9,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
   const glowCanvasRef = useRef<HTMLCanvasElement>(null);
+  const glowFilterRef = useRef<SVGFilterElement>(null);
 
   useEffect(() => {
     const flower = flowerRef.current;
@@ -18,10 +19,12 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     const page = document.querySelector<HTMLElement>(".desktop-flower-page");
     const hero = document.querySelector<HTMLElement>(".hero-image");
     const links = document.querySelector<HTMLElement>(".links-section");
+    const linksList = links?.querySelector<HTMLElement>(".links-list");
     if (!flower || !canvas || !glow || !glowCanvas || !page || !hero || !links) return;
     const glowContext = glowCanvas.getContext("2d");
 
     const desktop = window.matchMedia("(min-width:761px)");
+    let measuredDesktop = desktop.matches;
     const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
     let frame = 0;
     let lastTime = 0;
@@ -61,7 +64,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     const abort = new AbortController();
     const fullTurn = Math.PI * 2;
     const updateInteraction = () => {
-      flower.disabled = !model || !desktop.matches || reduced.matches
+      flower.disabled = !model || reduced.matches
         || document.documentElement.classList.contains("desktop-intro-active");
     };
     updateInteraction();
@@ -76,15 +79,33 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       const rightGap = heroRect.right - pageRect.left - originalX - flower.offsetWidth;
       startX = originalX + rightGap / 2;
       startY = heroRect.top - pageRect.top + heroRect.height * .7 - flower.offsetHeight / 2;
+      if (!desktop.matches) {
+        const inset = heroRect.width * .05;
+        startX = heroRect.right - pageRect.left - flower.offsetWidth - inset;
+        startY = heroRect.bottom - pageRect.top - flower.offsetHeight - inset;
+      }
       viewportY = Math.min(pageTop + startY, window.innerHeight - flower.offsetHeight - 40);
       linksTop = linksRect.top - pageRect.top;
       linksBottom = linksRect.bottom - pageRect.top;
       dockThreshold = linksTop + linksRect.height / 2 - flower.offsetHeight / 2;
       endX = linksRect.right - pageRect.left - window.innerWidth * .023 - flower.offsetWidth;
       endY = linksRect.bottom - pageRect.top - flower.offsetHeight - 48;
+      if (!desktop.matches && linksList) {
+        const dividerY = linksList.getBoundingClientRect().bottom - pageRect.top;
+        endX = linksRect.right - pageRect.left - 20 - flower.offsetWidth;
+        endY = dividerY + (linksBottom - dividerY - flower.offsetHeight) / 2;
+      }
       flowerHeight = flower.offsetHeight;
       glow.style.width = `${flower.offsetWidth + 48}px`;
       glow.style.height = `${flowerHeight + 48}px`;
+      // Keep the same perceived rim and shine on the smaller mobile coin.
+      const glowScale = desktop.matches ? 1 : flower.offsetWidth / 144;
+      glowFilterRef.current?.querySelectorAll("[data-glow-radius]").forEach(primitive => {
+        primitive.setAttribute("radius", String(Number(primitive.getAttribute("data-glow-radius")) * glowScale));
+      });
+      glowFilterRef.current?.querySelectorAll("[data-glow-blur]").forEach(primitive => {
+        primitive.setAttribute("stdDeviation", String(Number(primitive.getAttribute("data-glow-blur")) * glowScale));
+      });
       // Difference blending yields the site's black when this ink is over pink.
       const pink = getComputedStyle(links).backgroundColor.match(/\d+/g)?.map(Number);
       const black = getComputedStyle(document.body).backgroundColor.match(/\d+/g)?.map(Number);
@@ -186,7 +207,6 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
 
     const tick = (time: number) => {
       frame = 0;
-      if (!desktop.matches) return;
       const elapsed = Math.min(Math.max((time - lastTime) / 1000, 0), .064);
       const goal = target();
       if (!initialized || reduced.matches || document.documentElement.classList.contains("desktop-intro-active")) {
@@ -224,7 +244,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     };
 
     const wake = () => {
-      if (!desktop.matches || frame) return;
+      if (frame) return;
       lastTime = performance.now();
       frame = window.requestAnimationFrame(tick);
     };
@@ -254,10 +274,10 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     const scroll = () => { lastScrollTime = performance.now(); wake(); };
     const introComplete = () => { updateInteraction(); wake(); };
     const loadModel = async () => {
-      if (loadingModel || model || !desktop.matches) return;
+      if (loadingModel || model) return;
       loadingModel = true;
       try {
-        // Import Three.js and fetch the GLB only for desktop.
+        // Load the renderer separately from the initial page bundle.
         const { createFlowerModel } = await import("./FlowerModel");
         if (stopped) return;
         const loaded = await createFlowerModel(canvas, modelSrc, abort.signal);
@@ -276,19 +296,16 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       }
     };
     const resize = () => {
-      if (!desktop.matches) {
-        if (frame) window.cancelAnimationFrame(frame);
-        frame = 0;
+      if (measuredDesktop !== desktop.matches) {
+        measuredDesktop = desktop.matches;
         initialized = false;
         settlingClick = false;
         rotationTurns = rotationPhase = angularVelocity = 0;
+        pointerX = pointerY = 0;
         mouseX = mouseY = NaN;
         hoverGlow = 0;
         clickGlow = 0;
         glow.style.opacity = "0";
-        flower.style.visibility = "hidden";
-        updateInteraction();
-        return;
       }
       measure();
       updateInteraction();
@@ -296,7 +313,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       wake();
     };
     const move = (event: PointerEvent) => {
-      if (!desktop.matches || reduced.matches || document.documentElement.classList.contains("desktop-intro-active") || event.pointerType === "touch") return;
+      if (reduced.matches || document.documentElement.classList.contains("desktop-intro-active") || event.pointerType === "touch") return;
       pointerX = clamp(event.clientX / window.innerWidth * 2 - 1, -1, 1);
       pointerY = clamp(event.clientY / window.innerHeight * 2 - 1, -1, 1);
       mouseX = event.clientX;
@@ -358,15 +375,15 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       <canvas ref={glowCanvasRef} />
     </div>
     <svg width="0" height="0" className="desktop-flower-glow-defs" aria-hidden="true">
-      <defs><filter id="desktop-flower-edge-glow" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
-        <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="expanded" />
-        <feMorphology in="SourceAlpha" operator="erode" radius="1" result="contracted" />
+      <defs><filter ref={glowFilterRef} id="desktop-flower-edge-glow" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="3" data-glow-radius="3" result="expanded" />
+        <feMorphology in="SourceAlpha" operator="erode" radius="1" data-glow-radius="1" result="contracted" />
         <feComposite in="expanded" in2="contracted" operator="out" result="edge" />
         <feFlood floodColor="var(--pink)" result="pink" />
         <feComposite in="pink" in2="edge" operator="in" result="rim" />
-        <feGaussianBlur in="rim" stdDeviation="8" result="halo" />
+        <feGaussianBlur in="rim" stdDeviation="8" data-glow-blur="8" result="halo" />
         <feComponentTransfer in="halo" result="softHalo"><feFuncA type="linear" slope="2.5" /></feComponentTransfer>
-        <feGaussianBlur in="rim" stdDeviation="3" result="nearGlow" />
+        <feGaussianBlur in="rim" stdDeviation="3" data-glow-blur="3" result="nearGlow" />
         <feMerge><feMergeNode in="softHalo" /><feMergeNode in="nearGlow" /><feMergeNode in="rim" /></feMerge>
       </filter></defs>
     </svg>

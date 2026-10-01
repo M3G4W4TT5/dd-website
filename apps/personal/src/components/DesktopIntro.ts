@@ -1,4 +1,4 @@
-/** Coordinates the desktop loader with the actual rendered coin, rather than a guessed endpoint. */
+/** Coordinates the loader with the actual rendered coin on both desktop and mobile. */
 export async function startDesktopIntro() {
   const root = document.documentElement;
   if (!root.classList.contains("desktop-intro-active")) return;
@@ -44,16 +44,16 @@ export async function startDesktopIntro() {
     window.removeEventListener("touchmove", blockScroll);
     window.removeEventListener("keydown", blockKey);
     window.removeEventListener("dd:intro-complete", finish);
-    desktop.removeEventListener("change", preferenceChange);
+    desktop.removeEventListener("change", finish);
     reduced.removeEventListener("change", preferenceChange);
     window.dispatchEvent(new Event("dd:intro-complete"));
   };
-  const preferenceChange = () => { if (!desktop.matches || reduced.matches) finish(); };
+  const preferenceChange = () => { if (reduced.matches) finish(); };
   window.addEventListener("wheel", blockScroll, { passive: false });
   window.addEventListener("touchmove", blockScroll, { passive: false });
   window.addEventListener("keydown", blockKey);
   window.addEventListener("dd:intro-complete", finish);
-  desktop.addEventListener("change", preferenceChange);
+  desktop.addEventListener("change", finish);
   reduced.addEventListener("change", preferenceChange);
 
   try {

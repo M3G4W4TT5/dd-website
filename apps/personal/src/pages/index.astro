@@ -25,7 +25,7 @@ const flowerMask = await getImage({ src: flower, width: 512, format: "png" });
 <html lang="en">
   <head>
     <script is:inline>
-      if (matchMedia("(min-width:761px)").matches && !matchMedia("(prefers-reduced-motion:reduce)").matches) {
+      if (!matchMedia("(prefers-reduced-motion:reduce)").matches) {
         document.documentElement.classList.add("desktop-intro-active");
         // Release the page even if a client script or graphics resource cannot load.
         setTimeout(() => {
