@@ -43,7 +43,8 @@ function availableStarts(availability: Availability | undefined, hours: number, 
   });
 }
 
-export function ReschedulePicker({ bookingStart, bookingEnd, language, selected, onSelect }: {
+export function ReschedulePicker({ bookingStart, bookingEnd, language, selected, onSelect, guidedStep }: {
+  guidedStep?: "date" | "start" | "review";
   bookingStart: string;
   bookingEnd: string;
   language: Language;
@@ -120,6 +121,7 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
 
   return <div className="reschedule-picker">
     <p className="reschedule-duration">{t.duration} <strong>{hours === MAX_HOURS ? t.fullDay : `${hours} ${hours === 1 ? t.hour : t.hours}`}</strong></p>
+    <div hidden={!!guidedStep && guidedStep !== "date"}>
     <div className="reschedule-navigation" aria-label={t.chooseDate}>
       <div className="reschedule-nav-group">
         <button type="button" onClick={() => shiftMonth(-1)} disabled={previousMonth.endOf("month").toISODate()! < todayDate} aria-label={t.previousMonth}><ChevronLeft size={17} /><ChevronLeft size={17} /></button>
@@ -139,17 +141,21 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
         const count = validDuration ? availableStarts(entry || undefined, hours, bookingStart).length : 0;
         const status = outOfRange ? "" : entry === undefined ? "…" : entry === null ? "!" : count ? String(count) : "–";
         const description = entry === undefined ? t.loading : entry === null ? t.error : count ? `${count} ${t.available}` : t.full;
-        return <button key={day} type="button" disabled={outOfRange} aria-pressed={date === day} aria-label={`${value.toFormat("cccc d. LLLL")}: ${description}`} className={date === day ? "reschedule-day selected" : "reschedule-day"} onClick={() => { setDate(day); onSelect(null); }}>
+        return <button key={day} type="button" disabled={outOfRange} aria-pressed={date === day} aria-label={`${value.toFormat("cccc d. LLLL")}: ${description}`} className={date === day ? "reschedule-day selected" : "reschedule-day"} onClick={() => { if (day !== date) { setDate(day); onSelect(null); } }}>
           <span>{value.toFormat("ccc")}</span><strong>{value.day}</strong><small>{status}</small>
         </button>;
       })}
     </div>
     <p className="reschedule-key">{language === "da" ? "Tal viser antal ledige starttider · – betyder ingen plads" : "Numbers show available start times · – means no space"}</p>
+    </div>
+    <div hidden={!!guidedStep && guidedStep !== "start"}>
+    {guidedStep && <p>{language === "da" ? "Nuværende starttid" : "Current start time"}: <strong>{DateTime.fromISO(bookingStart).setZone(STUDIO_ZONE).toFormat("HH:mm")}</strong></p>}
     <h4>{t.chooseTime} · {DateTime.fromISO(date).setLocale(language).toFormat("d. LLLL")}</h4>
     {loading && current === undefined ? <p role="status">{t.loading}</p> : current === null ? <p className="manage-error" role="alert">{t.error}</p> : starts.length === 0 ? <p>{t.noTimes}</p> : <div className="reschedule-times">
       {starts.map((interval) => <button key={interval.firstHourIso} type="button" aria-pressed={selected?.firstHourIso === interval.firstHourIso} className={selected?.firstHourIso === interval.firstHourIso ? "selected" : ""} onClick={() => onSelect(interval)}>
         {DateTime.fromISO(interval.firstHourIso, { setZone: true }).setZone(STUDIO_ZONE).toFormat("HH:mm")}–{DateTime.fromISO(interval.endIso, { setZone: true }).setZone(STUDIO_ZONE).toFormat("HH:mm")}
       </button>)}
     </div>}
+    </div>
   </div>;
 }

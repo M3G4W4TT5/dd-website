@@ -89,6 +89,7 @@ const copy = {
 
 export function CustomerDetailsPreview({
   language,
+  guided = false,
   date,
   startId,
   hours,
@@ -98,6 +99,7 @@ export function CustomerDetailsPreview({
   onConflict,
 }: {
   language: Language;
+  guided?: boolean;
   date: string;
   startId: string;
   hours: number;
@@ -204,10 +206,10 @@ export function CustomerDetailsPreview({
 
   return (
     <section className="details-preview" id="booking-details" aria-labelledby="details-title">
-      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{t.back}</button><span className="section-kicker">{t.eyebrow}</span><h3 id="details-title" tabIndex={-1}>{t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
+      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button><span className="section-kicker">{guided ? (language === "da" ? "DINE OPLYSNINGER" : "YOUR DETAILS") : t.eyebrow}</span><h3 id="details-title" tabIndex={-1}>{t.title}</h3><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></div>
       <form ref={formRef} className="details-form" noValidate onInput={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
         <div className="details-fields">
-          <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} />
+          <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} defaults={draft.fields} />
           <label>{t.type}<select name="customerType" value={customerType} onChange={(event) => setCustomerType(event.target.value)} required aria-invalid={invalidFields.includes("customerType")}><option value="" disabled>{t.placeholderType}</option><option value="private">{t.private}</option><option value="instructor">{t.instructor}</option><option value="business">{t.business}</option></select></label>
           <label>{t.attendeeCount}<input name="attendeeCount" type="number" inputMode="numeric" min={1} max={100} step={1} required aria-invalid={invalidFields.includes("attendeeCount")} /></label>
           <label>{t.purpose}<input name="purpose" type="text" maxLength={150} minLength={2} required aria-invalid={invalidFields.includes("purpose")} /></label>
