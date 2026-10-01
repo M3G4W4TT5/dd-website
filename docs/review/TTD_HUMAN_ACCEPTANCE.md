@@ -1,6 +1,6 @@
 # TTD hosted human acceptance
 
-Started 1 October 2026 (Europe/Copenhagen). **Acceptance incomplete. Separate Step 6 predeployment review is pending.**
+Started 1 October 2026 (Europe/Copenhagen). **Acceptance incomplete. Owner authorized private VPS release with Step 6 review in situ.**
 Starting local HEAD: `961ee6d`; baseline: `be350a1`. Corrected candidate identity
 is recorded in TTD_STEP6_PREDEPLOY_REVIEW.md. This review does not replace final
 hosted acceptance after approved installation.
@@ -15,10 +15,10 @@ details or raw customer records belong here. Record safe order references only.
 | Check | Result | Evidence / remaining work |
 | --- | --- | --- |
 | Local corrections and verification | Passed locally | All approved corrections implemented; fresh tests/builds, browser checks and actual isolated pinned Pretix runtime passed; see TTD_CHECKOUT_REVIEW.md |
-| Separate Step 6 predeployment review | Unverified | Required before push; preserve TTD_STEP6_PREDEPLOY_REVIEW.md; reconcile findings and verify corrections, then wait for explicit owner approval |
-| Approved PR/main integration | Unverified | No push, PR or merge performed in this review |
-| Actual hosted release identity | Unverified | After release, compare running booking/communications/worker revisions and image IDs with approved main release and manifest |
-| Effective native adapter | Unverified | Verify mounted file hashes in Pretix web/cron, pinned 2026.7.0, recreation and actual CSP/card behavior |
+| Step 6 review in situ | Unverified | Owner superseded the earlier separate predeployment gate; perform the planned review on the corrected private VPS release, preserving TTD_STEP6_PREDEPLOY_REVIEW.md |
+| Approved PR/main integration | Passed | Owner authorized release; PR29 merged as 3e72b830ff4d927f5237e4cafbb191b471326d67 after all CI checks/image builds passed |
+| Actual hosted release identity | Passed | Owner status and independent manifest comparison: all three running revisions/digests match merge3e72b83, runtime mounts/startup match, current/successful attempt and host config148e0d8d agree; healthy, zero restarts; primary be350a1 preserved |
+| Effective native adapter | Unverified | Owner installer PASS; both web/cron mounted hashes match 6f5090ee and pinned 2026.7.0 identity, supervised processes RUNNING. Actual response CSP/card behavior still unverified |
 | Effective event settings | Unverified | Inspect all three sandbox events; DK/colours; both ticket events disable modifications and unpaid/paid customer cancellation |
 | Access and release gates | Unverified | Freshly confirm both hosts protected, exact webhook exception only; preserve deployment/live-payment/unrestricted-mail gates |
 | Stripe sandbox | Unverified | Confirm connected Total Entertainment sandbox, test-mode event/providers and effective payment methods; no secret values in evidence |

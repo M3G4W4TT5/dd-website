@@ -1,0 +1,118 @@
+PASS ephemeral SQLite migrations
+PASS native card + response CSP studio/en
+PASS native card + response CSP studio/da
+PASS native card + response CSP street-dance-workshop-dd-dev/en
+PASS native card + response CSP street-dance-workshop-dd-dev/da
+PASS native card + response CSP dance-with-dd-dev/en
+PASS native card + response CSP dance-with-dd-dev/da
+studio: {"region": "DK"}
+street-dance-workshop-dd-dev: {"allow_modifications": "no", "cancel_allow_user": false, "region": "DK"}
+dance-with-dd-dev: {"allow_modifications": "no", "cancel_allow_user": false, "region": "DK"}
+studio: {"region": "DK"}
+studio: verified
+street-dance-workshop-dd-dev: {"allow_modifications": "no", "cancel_allow_user": false, "region": "DK"}
+street-dance-workshop-dd-dev: verified
+dance-with-dd-dev: {"allow_modifications": "no", "cancel_allow_user": false, "region": "DK"}
+dance-with-dd-dev: verified
+studio: already matches
+studio: verified
+street-dance-workshop-dd-dev: already matches
+street-dance-workshop-dd-dev: verified
+dance-with-dd-dev: already matches
+dance-with-dd-dev: verified
+PASS real checkout settings activation + idempotence
+street-dance-workshop-dd-dev/mail_text_order_approved_free: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_custom_mail: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_free: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_paid: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_placed: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_placed_require_approval: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_resend_link: approved wording replacement only
+dance-with-dd-dev/mail_text_order_approved_free: approved wording replacement only
+dance-with-dd-dev/mail_text_order_custom_mail: approved wording replacement only
+dance-with-dd-dev/mail_text_order_free: approved wording replacement only
+dance-with-dd-dev/mail_text_order_paid: approved wording replacement only
+dance-with-dd-dev/mail_text_order_placed: approved wording replacement only
+dance-with-dd-dev/mail_text_order_placed_require_approval: approved wording replacement only
+dance-with-dd-dev/mail_text_resend_link: approved wording replacement only
+Inspection only; no settings written
+street-dance-workshop-dd-dev/mail_text_order_approved_free: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_custom_mail: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_free: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_paid: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_placed: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_placed_require_approval: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_resend_link: approved wording replacement only
+dance-with-dd-dev/mail_text_order_approved_free: approved wording replacement only
+dance-with-dd-dev/mail_text_order_custom_mail: approved wording replacement only
+dance-with-dd-dev/mail_text_order_free: approved wording replacement only
+dance-with-dd-dev/mail_text_order_paid: approved wording replacement only
+dance-with-dd-dev/mail_text_order_placed: approved wording replacement only
+dance-with-dd-dev/mail_text_order_placed_require_approval: approved wording replacement only
+dance-with-dd-dev/mail_text_resend_link: approved wording replacement only
+Verified
+street-dance-workshop-dd-dev/mail_text_order_approved_free: already matches
+street-dance-workshop-dd-dev/mail_text_order_custom_mail: already matches
+street-dance-workshop-dd-dev/mail_text_order_free: already matches
+street-dance-workshop-dd-dev/mail_text_order_paid: already matches
+street-dance-workshop-dd-dev/mail_text_order_placed: already matches
+street-dance-workshop-dd-dev/mail_text_order_placed_require_approval: already matches
+street-dance-workshop-dd-dev/mail_text_resend_link: already matches
+dance-with-dd-dev/mail_text_order_approved_free: already matches
+dance-with-dd-dev/mail_text_order_custom_mail: already matches
+dance-with-dd-dev/mail_text_order_free: already matches
+dance-with-dd-dev/mail_text_order_paid: already matches
+dance-with-dd-dev/mail_text_order_placed: already matches
+dance-with-dd-dev/mail_text_order_placed_require_approval: already matches
+dance-with-dd-dev/mail_text_resend_link: already matches
+Verified
+PASS actual inherited gettext email defaults + all-language preservation + idempotence
+street-dance-workshop-dd-dev/mail_text_order_approved_free: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_custom_mail: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_free: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_paid: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_placed: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_placed_require_approval: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_resend_link: approved wording replacement only
+dance-with-dd-dev/mail_text_order_approved_free: approved wording replacement only
+dance-with-dd-dev/mail_text_order_custom_mail: approved wording replacement only
+dance-with-dd-dev/mail_text_order_free: approved wording replacement only
+dance-with-dd-dev/mail_text_order_paid: approved wording replacement only
+dance-with-dd-dev/mail_text_order_placed: approved wording replacement only
+dance-with-dd-dev/mail_text_order_placed_require_approval: approved wording replacement only
+dance-with-dd-dev/mail_text_resend_link: approved wording replacement only
+Inspection only; no settings written
+street-dance-workshop-dd-dev/mail_text_order_approved_free: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_custom_mail: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_free: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_paid: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_placed: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_order_placed_require_approval: approved wording replacement only
+street-dance-workshop-dd-dev/mail_text_resend_link: approved wording replacement only
+dance-with-dd-dev/mail_text_order_approved_free: approved wording replacement only
+dance-with-dd-dev/mail_text_order_custom_mail: approved wording replacement only
+dance-with-dd-dev/mail_text_order_free: approved wording replacement only
+dance-with-dd-dev/mail_text_order_paid: approved wording replacement only
+dance-with-dd-dev/mail_text_order_placed: approved wording replacement only
+dance-with-dd-dev/mail_text_order_placed_require_approval: approved wording replacement only
+dance-with-dd-dev/mail_text_resend_link: approved wording replacement only
+Verified
+street-dance-workshop-dd-dev/mail_text_order_approved_free: already matches
+street-dance-workshop-dd-dev/mail_text_order_custom_mail: already matches
+street-dance-workshop-dd-dev/mail_text_order_free: already matches
+street-dance-workshop-dd-dev/mail_text_order_paid: already matches
+street-dance-workshop-dd-dev/mail_text_order_placed: already matches
+street-dance-workshop-dd-dev/mail_text_order_placed_require_approval: already matches
+street-dance-workshop-dd-dev/mail_text_resend_link: already matches
+dance-with-dd-dev/mail_text_order_approved_free: already matches
+dance-with-dd-dev/mail_text_order_custom_mail: already matches
+dance-with-dd-dev/mail_text_order_free: already matches
+dance-with-dd-dev/mail_text_order_paid: already matches
+dance-with-dd-dev/mail_text_order_placed: already matches
+dance-with-dd-dev/mail_text_order_placed_require_approval: already matches
+dance-with-dd-dev/mail_text_resend_link: already matches
+Verified
+PASS explicit native email settings activation + extra-language preservation + idempotence
+PASS actual native email constructors/settings street-dance-workshop-dd-dev
+PASS actual native email constructors/settings dance-with-dd-dev
+PASS isolated native verification complete; no payments/orders/mail sends

@@ -466,3 +466,77 @@ baseline before any host-file write or service command. All 11 mocked installer
 tests pass. Candidate target hashes, runtime gates and application behavior are
 unchanged. Do not run the old b285cbf installer; stage the corrected package.
 Safe baseline evidence: ttd-candidate/vps-before-ttd-release.json.
+
+
+## Hosted adapter installed — 2 October 2026
+
+PR29 merged as 3e72b830ff4d927f5237e4cafbb191b471326d67 after all CI checks
+and three image builds passed. Owner ran the checksum-verified corrected
+a787c81 host package, independently compared byte-for-byte to merged main.
+Installer PASS reports host configuration 148e0d8d70c75ea806d6a5c2734870a015269938102b82832dbb0728c560ba91
+and preservation of application images. Independent owner commands found both
+Pretix web/cron mounted adapter hashes equal the reviewed
+6f5090eeb05be4460299bdec3fdcbc98604e2bb69eb0dfee965a1038779d4123.
+Pinned Pretix image unchanged; web supervised processes RUNNING. Booking,
+communications/worker remain healthy at c02936ab; primary remains independently
+at be350a1. Roots/health/Pretix availability are 200, all 16 existing orders and
+configuration cardinalities unchanged, backup fresh and sandbox/restricted-mail
+gates preserved. Successful current application manifest still records the old
+configuration as expected between adapter install and new image deployment;
+config-install.json separately records the installed target.
+
+Application publication/deployment, native settings/email activation, actual
+response CSP/card behavior and final hosted human acceptance remain pending.
+Safe evidence: ttd-candidate/vps-after-adapter-install.json.
+
+Main publication 36933094466 succeeded for exact merge 3e72b830ff4d927f5237e4cafbb191b471326d67; validated three immutable artifact digests and host config148e0d8d against the installed owner status. Manual exact-digest deployment dispatched with release_run_id36933094466, while DEPLOY_ENABLED remains false. Running-release owner verification is still pending. Manifest: ttd-candidate/main-3e72b83-release.json.
+
+Manual exact-digest deployment 36933697419 completed successfully for merge 3e72b830ff4d927f5237e4cafbb191b471326d67 and publication36933094466. The workflow validated the successful source publication and used all three immutable digests without rebuilding. Independent owner running-image/config/mount verification and native settings inspection remain required; CI success is not human acceptance.
+
+
+## Running application release verified; native inspection permission issue — 2 October 2026
+
+Owner status independently verifies all three running revisions/image references/
+image IDs exactly match the published merge3e72b83 manifest, healthy with zero
+restarts. Actual mounted runtime hashes and startup match host files. Current/
+successful attempt manifests and installed host config148e0d8d agree; failed.json
+is absent. Primary remains healthy on be350a1/digest45d721e8. Sandbox/payment/mail
+gates and webhook restrictions remain preserved; Pretix order count16 and all
+configuration cardinalities unchanged. Probes200, backup fresh, supervised
+Pretix processes RUNNING. Evidence: ttd-candidate/vps-after-application-deploy.json.
+
+Native inspection failed before script execution: docker cp preserved staged
+root-only permissions and the unprivileged pinned-image user could not read
+configure-ttd-checkout.py. Neither activator ran and no settings/templates
+changed. Correct only the four temporary non-secret package files: root-owned,
+Pretix group15371, directory0750/files0440. Then rerun read-only inspection.
+This is a staging/instructions issue, not an application/payment failure.
+Actual native policy/email and CSP/card/mail acceptance remain unverified.
+
+
+## Native inherited email defaults correction — 2 October 2026
+
+Owner policy inspection succeeded and reports only approved DK/colour/customer
+policy deltas. No apply flag was used. Native email inspection failed before
+any writes because default LazyI18nString.data is upstream LazyGettextProxy,
+not the explicit dictionary seeded in the earlier local fixture. Independent
+inspection of pinned 2026.7.0 confirms this representation. Corrected reader
+resolves all supported native translations via localize(); explicit mappings
+retain all their existing keys. EN/DA before/after drift validation remains
+strict and both events validate atomically before writes. Only the originally
+approved EN/DA phrase changes; non-EN/DA effective copy remains identical.
+Inherited defaults become explicit snapshots on approved activation to retain
+all supported translations. Setting keys, placeholders, artwork, signatures,
+attachments, payments and application release identity are unchanged.
+
+Five email tests pass, including inherited-default handling, extra-language
+preservation, idempotence and late inherited drift rejecting all writes. A new
+isolated no-network/read-only pinned Pretix runtime with ephemeral SQLite
+passed real inherited-default inspection/apply/idempotence, checking every
+supported language before and after; also passed explicit snapshots/extra
+German copy/idempotence, actual native email constructors/settings in both
+events, actual card/response CSP in all three events EN/DA and scoped checkout
+settings activation. No orders/payments/mail sends. Separate 5 adapter/settings,
+1 response-CSP and 11 mocked installer tests also pass. The earlier test
+coverage limitation is preserved as review history; hosted inspection and
+activation remain pending. Evidence: ttd-candidate/inherited-email-runtime.txt.

@@ -58,6 +58,11 @@ sudo docker cp infra/configure-ttd-checkout.py dd-hosted-pretix-1:/tmp/ttd-nativ
 sudo docker cp infra/ttd-checkout-settings.json dd-hosted-pretix-1:/tmp/ttd-native-review/ttd-checkout-settings.json
 sudo docker cp infra/configure-ttd-event-emails.py dd-hosted-pretix-1:/tmp/ttd-native-review/configure-ttd-event-emails.py
 sudo docker cp infra/ttd-event-email-settings.json dd-hosted-pretix-1:/tmp/ttd-native-review/ttd-event-email-settings.json
+# docker cp preserves root-only staging permissions. Give only the pinned
+# Pretix group read access to these four non-secret, root-owned package files.
+sudo docker exec -u 0 dd-hosted-pretix-1 chown -R 0:15371 /tmp/ttd-native-review
+sudo docker exec -u 0 dd-hosted-pretix-1 chmod 0750 /tmp/ttd-native-review
+sudo docker exec -u 0 dd-hosted-pretix-1 sh -c 'chmod 0440 /tmp/ttd-native-review/*.py /tmp/ttd-native-review/*.json'
 sudo docker exec -w /pretix/src dd-hosted-pretix-1 python /tmp/ttd-native-review/configure-ttd-checkout.py
 sudo docker exec -w /pretix/src dd-hosted-pretix-1 python /tmp/ttd-native-review/configure-ttd-event-emails.py
 ```

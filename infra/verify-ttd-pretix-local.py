@@ -49,11 +49,6 @@ for slug in ['studio', *snapshot['events']]:
     event.settings.set('locales', ['en','da'])
     event.settings.set('primary_color', '#116E3A' if slug == 'studio' else '#7349CD')
     event.settings.set('mail_html_renderer', 'classic')
-    if slug in snapshot['events']:
-        grouped = {}
-        for item in snapshot['events'][slug]:
-            grouped.setdefault(item['name'][:-2], {})['da' if item['name'].endswith('_1') else 'en'] = item['value']
-        for key, value in grouped.items(): event.settings.set(key, LazyI18nString(value))
     events[slug] = event
 
 # Native card renderer, trusted prefill, actual presale signal and actual response
@@ -99,10 +94,38 @@ print('PASS real checkout settings activation + idempotence', flush=True)
 # Actual inherited settings and JSON patch activator, not a settings stub.
 spec = importlib.util.spec_from_file_location('email_patch', root / 'infra/configure-ttd-event-emails.py')
 module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+# Start with actual upstream inherited gettext defaults, without pre-seeding them.
+prior = {}
+for slug in snapshot['events']:
+    with scope(organizer=organizer):
+        event = Event.objects.get(pk=events[slug].pk)
+        for key in module.PATCH['events'][slug]:
+            value = event.settings.get(key, as_type=LazyI18nString)
+            assert isinstance(value.data, LazyI18nString.LazyGettextProxy)
+            prior[(slug, key)] = {language: value.localize(language) for language, _ in settings.LANGUAGES}
 module.configure(False)
 module.configure(True)
 module.configure(True)
-print('PASS real native email settings activation + idempotence', flush=True)
+for (slug, key), before in prior.items():
+    with scope(organizer=organizer):
+        value = Event.objects.get(pk=events[slug].pk).settings.get(key, as_type=LazyI18nString)
+        for language, original in before.items():
+            assert value.localize(language) == (module.PATCH['events'][slug][key][language]['after'] if language in ('en', 'da') else original)
+print('PASS actual inherited gettext email defaults + all-language preservation + idempotence', flush=True)
+
+# Also retain coverage of explicit effective EN/DA settings plus extra languages.
+for slug in snapshot['events']:
+    grouped = {}
+    for item in snapshot['events'][slug]:
+        grouped.setdefault(item['name'][:-2], {})['da' if item['name'].endswith('_1') else 'en'] = item['value']
+    with scope(organizer=organizer):
+        event = Event.objects.get(pk=events[slug].pk)
+        for key, value in grouped.items():
+            event.settings.set(key, LazyI18nString({**value, 'de': 'Unchanged extra language {url}'}))
+module.configure(False)
+module.configure(True)
+module.configure(True)
+print('PASS explicit native email settings activation + extra-language preservation + idempotence', flush=True)
 
 # Actual pinned ClassicMailRenderer, Markdown, Django template and CSS inliner,
 # plus the installed candidate branding wrapper. No order/ticket fixture is

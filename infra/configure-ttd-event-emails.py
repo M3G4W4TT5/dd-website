@@ -30,6 +30,22 @@ def approved_text(text, language):
     return text
 
 
+def effective_translations(value):
+    """Preserve explicit translations or resolve native inherited gettext defaults.
+
+    Pretix defaults use LazyGettextProxy, not a dict. Snapshot every supported
+    translation before overriding EN/DA so other native languages retain their
+    exact effective copy. Unknown representations fail before any writes.
+    """
+    from django.conf import settings
+    from i18nfield.strings import LazyI18nString
+    if isinstance(value.data, dict):
+        return dict(value.data)
+    if isinstance(value.data, (str, LazyI18nString.LazyGettextProxy)):
+        return {language: value.localize(language) for language, _ in settings.LANGUAGES}
+    raise RuntimeError('Unsupported native email translation representation')
+
+
 def configure(apply=False):
     from django.db import transaction
     from i18nfield.strings import LazyI18nString
@@ -50,7 +66,7 @@ def configure(apply=False):
                 if set(languages) != {'en', 'da'}:
                     raise RuntimeError('Unreviewed languages')
                 # get() resolves event/organizer/default inheritance. Retain all other languages.
-                current = dict(event.settings.get(key, as_type=LazyI18nString).data)
+                current = effective_translations(event.settings.get(key, as_type=LazyI18nString))
                 updated = dict(current)
                 for language, change in languages.items():
                     if change['after'] != approved_text(change['before'], language) or change['before'] == change['after']:
