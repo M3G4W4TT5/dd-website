@@ -1,0 +1,43 @@
+Candidate commit: 892b68b04605a6099f19c1caa36d5ce6171b5dc3
+Build ID: NDuWlv9KP8yBfxVrusiMQ
+Baseline: be350a1d320136abdc1592b350e5f32257f91a17
+Local-only verification; no hosted activation/delivery/payment acceptance.
+200 http://127.0.0.1:3041/?lang=en
+200 http://127.0.0.1:3040/ttd-emails/
+200 http://127.0.0.1:3042/manage/preview?lang=en
+200 http://127.0.0.1:3042/review-fixtures/events?lang=en
+
+72/72 booking tests; 21/21 server tests; 5/5 adapter/settings; 1/1 CSP response; 3/3 email package; 9/9 mocked installer.
+All workspace typechecks, booking production build and server builds passed.
+
+PASS ephemeral SQLite migrations
+PASS native card + response CSP studio/en
+PASS native card + response CSP studio/da
+PASS native card + response CSP street-dance-workshop-dd-dev/en
+PASS native card + response CSP street-dance-workshop-dd-dev/da
+PASS native card + response CSP dance-with-dd-dev/en
+PASS native card + response CSP dance-with-dd-dev/da
+PASS real checkout settings activation + idempotence
+PASS real native email settings activation + idempotence
+PASS actual native email constructors/settings street-dance-workshop-dd-dev
+PASS actual native email constructors/settings dance-with-dd-dev
+PASS isolated native verification complete; no payments/orders/mail sends
+
+Owner mobile refinement candidate: da760d44a12b3f24ec92d7f50558771210051acc
+Build: JgXXBXg-NuPa6sECrp_qJ
+Fresh 72/72 booking tests, booking typecheck and production build passed.
+Browser checks: red/disabled dates, blocked Continue, red unavailable start hours, same start/end grid with invalid ends grey, compact EN/DA details, retained name/consents, modification no-times dates disabled.
+Native/server package unchanged; prior native/server evidence retained above.
+
+Desktop details/contact candidate: f0beaa99b75675a4977ddaf2a4c7792b7d167d58
+Build: FtUisR8hPDn6Q_UM4zRhK
+Fresh booking typecheck and production build passed.
+Browser: EN/DA desktop details has new heading/no eyebrow/top margin 0; contact heading row removed, divider-to-form 17px at desktop1440/mobile390; no overflow; no message submitted.
+Prior automated test results retained; copy/spacing follow-up did not modify server/native behavior.
+
+Desktop readability candidate: 36fba64a127f1983cd1d9436c40d27c2ae0f4709
+Build: if-nibSY1tX8TWw1uy4jV
+Fresh booking typecheck and production build passed.
+Browser: all seven desktop details labels 17px; overview rows/facts 16px, Total price label17px, icons22px; eyebrow removed and vertical centers aligned at1440; narrow desktop821 EN/DA no overflow or title/fact overlap,1024 fit. Temporary viewport reset.
+Screenshots: desktop-overview-readable.jpg, desktop-details-readable.jpg.
+Prior automated suites retained; typography-only change did not modify native/server behavior. Hosted acceptance remains unverified.

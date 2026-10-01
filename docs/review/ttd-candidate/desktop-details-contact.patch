@@ -1,0 +1,72 @@
+diff --git a/apps/booking/src/app/styles.css b/apps/booking/src/app/styles.css
+index a5ccf24..7faf69b 100644
+--- a/apps/booking/src/app/styles.css
++++ b/apps/booking/src/app/styles.css
+@@ -1375,14 +1375,12 @@ h3 {
+ 
+ .contact-main { min-height: 68vh; padding: 42px 2.3vw 0; background: var(--red-bg); }
+ 
+-.contact-layout { border-top: 1px solid var(--line); padding: 28px 0 80px; }
++.contact-layout { border-top: 1px solid var(--line); padding: 16px 0 80px; }
+ 
+ .studio-contact-form { width: min(100%, 850px); }
+ 
+ .contact-visual-placeholder { display: none; }
+ 
+-.contact-form-heading { display: flex; align-items: center; justify-content: space-between; padding-bottom: 30px; }
+-
+ .contact-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 25px 18px; }
+ 
+ .contact-field-grid label {
+@@ -2380,3 +2378,6 @@ body:has(.legal-main) .legal-main {
+ .mobile-month-days button.is-unavailable:disabled,.journey-times button.is-unavailable:disabled { color:#a92323; border-color:#a92323; background:#fbe4e4; opacity:1; }
+ .journey-times button:disabled:not(.is-unavailable) { color:#666; border-color:#999; background:#e6e6e6; opacity:1; }
+ .mobile-booking-flow #booking-details .details-form { margin-top:0; }
++
++/* Studio details heading occupies the former desktop eyebrow position. */
++#booking-details .details-intro h3 { margin-top:0; }
+diff --git a/apps/booking/src/components/ContactExperience.tsx b/apps/booking/src/components/ContactExperience.tsx
+index f7f5a21..ff63aeb 100644
+--- a/apps/booking/src/components/ContactExperience.tsx
++++ b/apps/booking/src/components/ContactExperience.tsx
+@@ -104,7 +104,6 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
+       <div className="events-heading"><h1>{t.title}</h1><p>{t.intro}</p></div>
+       <section className="contact-layout" aria-label={t.form}>
+         <form className="studio-contact-form" noValidate onInput={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onChange={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onSubmit={submit}>
+-          <div className="contact-form-heading"><span className="section-kicker">01 / {t.form}</span><ArrowUpRight size={25} strokeWidth={1.5} /></div>
+           <div className="contact-field-grid">
+             <label>{t.name}<input name="name" type="text" autoComplete="name" minLength={2} maxLength={120} required aria-invalid={invalidFields.includes("name")} /></label>
+             <label>{t.email}<input name="email" type="email" autoComplete="email" maxLength={254} required aria-invalid={invalidFields.includes("email")} /></label>
+diff --git a/apps/booking/src/components/CustomerDetailsPreview.tsx b/apps/booking/src/components/CustomerDetailsPreview.tsx
+index e12cccc..b47ba36 100644
+--- a/apps/booking/src/components/CustomerDetailsPreview.tsx
++++ b/apps/booking/src/components/CustomerDetailsPreview.tsx
+@@ -12,8 +12,7 @@ export type BookingDetailsDraft = { fields: Record<string, string>; termsAccepte
+ 
+ const copy = {
+   da: {
+-    eyebrow: "04 / DINE OPLYSNINGER",
+-    title: "Gør din booking klar.",
++    title: "Indtast dine oplysninger",
+     intro: "Indtast dine oplysninger, og gennemgå din booking, før du fortsætter til betaling.",
+     name: "Navn",
+     email: "E-mail",
+@@ -49,8 +48,7 @@ const copy = {
+     checkout: "Betaling sker på næste trin.",
+   },
+   en: {
+-    eyebrow: "04 / YOUR DETAILS",
+-    title: "Prepare your booking.",
++    title: "Enter your details",
+     intro: "Enter your details and review your booking before continuing to payment.",
+     name: "Name",
+     email: "Email",
+@@ -206,7 +204,7 @@ export function CustomerDetailsPreview({
+ 
+   return (
+     <section className="details-preview" id="booking-details" aria-labelledby="details-title">
+-      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button>{!guided && <span className="section-kicker">{t.eyebrow}</span>}<h3 id="details-title" tabIndex={-1}>{guided ? (language === "da" ? "Indtast dine oplysninger" : "Enter your details") : t.title}</h3>{!guided && <><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></>}</div>
++      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button><h3 id="details-title" tabIndex={-1}>{t.title}</h3>{!guided && <><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></>}</div>
+       <form ref={formRef} className="details-form" noValidate onInput={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
+         <div className="details-fields">
+           <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} defaults={draft.fields} />

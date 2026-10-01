@@ -1,5 +1,12 @@
 # TTD native activation package — held for release approval
 
+**1 October owner instruction:** deployment to the private VPS sandbox and
+in-situ review are now authorized. This supersedes the historical predeployment
+hold below. Follow PR/main checks and root-owned exact-release installation;
+inspect effective native packages before applying them. No public-launch,
+live-payment or unrestricted-mail authorization is implied.
+
+
 Do not run these hosted commands during Step 6 review. Separate predeployment
 review, reconciliation/verification and explicit owner release approval are all
 required first. The application release does not activate these native changes.
