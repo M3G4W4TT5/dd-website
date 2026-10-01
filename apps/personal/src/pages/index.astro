@@ -2,10 +2,12 @@
 import { ArrowUpRight } from "lucide-react";
 import { Image, getImage } from "astro:assets";
 import ddFlower from "../assets/branding/dd-flower-sharp-corners.png";
+import flower from "../assets/branding/flower.png";
 import BrandWordmark from "../components/BrandWordmark.astro";
 import SiteFavicon from "../components/SiteFavicon.astro";
 import { ContactPreview } from "../components/ContactPreview";
 import { EditorialMotion } from "../components/EditorialMotion";
+import { DesktopFlower } from "../components/DesktopFlower";
 import { WorkSwitcher } from "../components/WorkSwitcher";
 import { ClipReel } from "../components/ClipReel";
 import { NewsletterSignup } from "../components/NewsletterSignup";
@@ -16,12 +18,24 @@ import "@fontsource/montserrat/900.css";
 import "../styles/site.css";
 
 const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000";
-const heroLogo = await getImage({ src: ddFlower, width: 2048, format: "png" });
+const flowerMask = await getImage({ src: flower, width: 512, format: "png" });
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
+    <script is:inline>
+      if (matchMedia("(min-width:761px)").matches && !matchMedia("(prefers-reduced-motion:reduce)").matches) {
+        document.documentElement.classList.add("desktop-intro-active");
+        // Release the page even if a client script or graphics resource cannot load.
+        setTimeout(() => {
+          if (!document.documentElement.classList.contains("desktop-intro-active")) return;
+          if (document.documentElement.classList.contains("desktop-intro-running")) return;
+          document.documentElement.classList.remove("desktop-intro-active", "desktop-intro-running");
+          window.dispatchEvent(new Event("dd:intro-complete"));
+        }, 4000);
+      }
+    </script>
     <SiteFavicon />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32,8 +46,14 @@ const heroLogo = await getImage({ src: ddFlower, width: 2048, format: "png" });
   </head>
   <body>
     <div class="site-intro" aria-hidden="true">
-      <div class="dd-loader-mark site-intro-mark"><span>D</span><span>D</span><i>.</i></div>
+      <div class="dd-loader-mark site-intro-mark"><span>D</span><span>D</span><i>.<b class="site-intro-baseline"></b></i></div>
     </div>
+    <div class="site-intro-flower site-intro-flower-pink" aria-hidden="true" style={`--intro-flower-mask:url("${flowerMask.src}")`}></div>
+    <div class="site-intro-flower site-intro-flower-negative" aria-hidden="true" style={`--intro-flower-mask:url("${flowerMask.src}")`}></div>
+    <script>
+      import { startDesktopIntro } from "../components/DesktopIntro";
+      void startDesktopIntro();
+    </script>
     <EditorialMotion client:load />
     <header class="site-header">
       <BrandWordmark href="#top" />
@@ -42,12 +62,13 @@ const heroLogo = await getImage({ src: ddFlower, width: 2048, format: "png" });
       <details class="mobile-menu"><summary>MENU <span>+</span></summary><nav aria-label="Mobile navigation"><a href="#work">Work</a><a href="#contact">Contact</a><a href={bookingUrl}>Studio booking</a></nav></details>
     </header>
 
-    <main id="top">
+    <main id="top" class="desktop-flower-page">
+      <DesktopFlower client:load maskSrc={flowerMask.src} modelSrc="/branding/flower-globe-coin.glb" />
       <section class="hero" aria-labelledby="hero-heading">
         <div class="hero-name"><h1 id="hero-heading">IN MOTION.</h1></div>
         <div class="hero-image" data-reveal>
           <img src={media.heroPortrait} alt="Close-up portrait of DD looking into the camera" fetchpriority="high" />
-          <div class="hero-overlay-type" aria-hidden="true" style={`--hero-logo: url("${heroLogo.src}")`}></div>
+          <div class="hero-overlay-type" aria-hidden="true">DD.</div>
           <div class="hero-image-caption"><span>DD / HALO</span></div>
         </div>
       </section>

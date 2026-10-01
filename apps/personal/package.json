@@ -19,12 +19,14 @@
     "motion": "13.4.2",
     "ogl": "1.0.11",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
+    "@types/three": "0.186.0",
     "typescript": "5.9.3"
   }
 }

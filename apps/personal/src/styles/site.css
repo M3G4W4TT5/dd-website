@@ -35,6 +35,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 }
 @keyframes dd-intro-screen { 0%,62% { opacity:1; visibility:visible; } 100% { opacity:0; visibility:hidden; } }
 @keyframes dd-page-enter { 0%,64% { opacity:0; filter:blur(18px); } 100% { opacity:1; filter:none; } }
+.site-intro-baseline { display:inline-block; width:0; height:0; }
+.site-intro-flower { display:none; }
+@media(min-width:761px) {
+  html.desktop-intro-active { overflow:hidden; overscroll-behavior:none; scrollbar-gutter:stable; }
+  .desktop-intro-active body { padding-right:var(--intro-scrollbar-width,0px); }
+  .desktop-intro-active .site-intro { right:var(--intro-scrollbar-width,0px); }
+  .desktop-intro-active .site-intro,.desktop-intro-active .site-intro .dd-loader-mark span,.desktop-intro-active :is(.site-header,main,.site-footer) { animation-play-state:paused; }
+  .desktop-intro-running .site-intro,.desktop-intro-running .site-intro .dd-loader-mark span,.desktop-intro-running :is(.site-header,main,.site-footer) { animation-play-state:running; }
+  .desktop-intro-active .site-intro .dd-loader-mark i { color:transparent; animation:none; }
+  .desktop-intro-active .site-intro-flower { display:block; position:fixed; z-index:101; opacity:0; pointer-events:none; transform-origin:0 0; -webkit-mask:var(--intro-flower-mask) center / 122.488% 110.345% no-repeat; mask:var(--intro-flower-mask) center / 122.488% 110.345% no-repeat; }
+  .site-intro-flower-pink { background:var(--pink); }
+  .site-intro-flower-negative { background:#fff; mix-blend-mode:difference; }
+  .desktop-intro-active .site-intro-flower-docked { position:absolute; z-index:1; mix-blend-mode:normal; }
+  .desktop-intro-active .desktop-flower canvas,.desktop-intro-active .desktop-flower::before { visibility:hidden; }
+  .desktop-intro-active .desktop-flower-intro-landed canvas,.desktop-intro-active .desktop-flower-intro-landed::before { visibility:visible; }
+}
 
 .site-header { position:sticky; top:0; z-index:35; display:flex; align-items:center; justify-content:space-between; gap:30px; min-height:75px; padding:0 2.3vw; background:rgba(9,9,11,.94); backdrop-filter:blur(15px); border-bottom:1px solid #2b292e; transition:transform .36s ease; }
 .site-header.is-scroll-hidden { transform:translateY(-100%); pointer-events:none; }
@@ -59,8 +75,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .hero-image { position:relative; height:clamp(560px,61vw,930px); overflow:hidden; background:#1c1c22; }
 .hero-image>img { display:block; width:100%; height:100%; object-fit:cover; object-position:center; transform:scale(1.06) translate3d(var(--image-x,0px),var(--image-y,0px),0); will-change:transform; transition:filter .9s ease,opacity .9s ease; }
 .hero-image:after { content:""; position:absolute; z-index:3; inset:auto 0 0; height:130px; background:linear-gradient(transparent,rgba(0,0,0,.68)); pointer-events:none; }
-/* Match the original text's visible footprint and exclude the PNG's transparent padding. */
-.hero-overlay-type { position:absolute; top:35%; left:4%; z-index:2; width:1.66em; aspect-ratio:5004 / 2116; font-size:clamp(180px,30vw,540px); transform:translate(.057em,.058em); background:#fff; -webkit-mask:var(--hero-logo) center / 105.1159% 112.0983% no-repeat; mask:var(--hero-logo) center / 105.1159% 112.0983% no-repeat; mix-blend-mode:difference; pointer-events:none; }
+.hero-overlay-type { position:absolute; top:35%; left:4%; z-index:2; color:#fff; font-size:clamp(180px,30vw,540px); line-height:.8; letter-spacing:-.1em; font-weight:900; mix-blend-mode:difference; pointer-events:none; }
 .hero-image-caption { position:absolute; z-index:4; bottom:23px; left:26px; right:26px; display:flex; justify-content:space-between; gap:16px; color:#f7f4f7; font-size:10px; font-weight:700; letter-spacing:.12em; }
 .hero-image-caption a,.mega-heading a { display:inline-flex; align-items:center; gap:4px; text-decoration:underline; text-underline-offset:4px; }
 .hero-image-caption a:hover:hover,.mega-heading a:hover { color:var(--pink); }
