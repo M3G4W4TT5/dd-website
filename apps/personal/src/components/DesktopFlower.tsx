@@ -7,14 +7,19 @@ const clamp = (value: number, low: number, high: number) => Math.max(low, Math.m
 export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc: string }) {
   const flowerRef = useRef<HTMLButtonElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const glowRef = useRef<HTMLDivElement>(null);
+  const glowCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const flower = flowerRef.current;
     const canvas = canvasRef.current;
+    const glow = glowRef.current;
+    const glowCanvas = glowCanvasRef.current;
     const page = document.querySelector<HTMLElement>(".desktop-flower-page");
     const hero = document.querySelector<HTMLElement>(".hero-image");
     const links = document.querySelector<HTMLElement>(".links-section");
-    if (!flower || !canvas || !page || !hero || !links) return;
+    if (!flower || !canvas || !glow || !glowCanvas || !page || !hero || !links) return;
+    const glowContext = glowCanvas.getContext("2d");
 
     const desktop = window.matchMedia("(min-width:761px)");
     const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
@@ -23,6 +28,10 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     let initialized = false;
     let pointerX = 0;
     let pointerY = 0;
+    let mouseX = NaN;
+    let mouseY = NaN;
+    let hoverGlow = 0;
+    let clickGlow = 0;
     let x = 0;
     let y = 0;
     let velocityX = 0;
@@ -34,10 +43,13 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     let settlingClick = false;
     let lastScrollTime = -Infinity;
     let pageTop = 0;
+    let pageLeft = 0;
     let startX = 0;
     let startY = 0;
     let viewportY = 0;
     let linksTop = 0;
+    let linksBottom = 0;
+    let dockThreshold = 0;
     let endX = 0;
     let endY = 0;
     let flowerHeight = 0;
@@ -59,15 +71,20 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       const heroRect = hero.getBoundingClientRect();
       const linksRect = links.getBoundingClientRect();
       pageTop = pageRect.top + window.scrollY;
+      pageLeft = pageRect.left;
       const originalX = heroRect.left - pageRect.left + heroRect.width * .835 - flower.offsetWidth / 2;
       const rightGap = heroRect.right - pageRect.left - originalX - flower.offsetWidth;
       startX = originalX + rightGap / 2;
       startY = heroRect.top - pageRect.top + heroRect.height * .7 - flower.offsetHeight / 2;
       viewportY = Math.min(pageTop + startY, window.innerHeight - flower.offsetHeight - 40);
       linksTop = linksRect.top - pageRect.top;
+      linksBottom = linksRect.bottom - pageRect.top;
+      dockThreshold = linksTop + linksRect.height / 2 - flower.offsetHeight / 2;
       endX = linksRect.right - pageRect.left - window.innerWidth * .023 - flower.offsetWidth;
       endY = linksRect.bottom - pageRect.top - flower.offsetHeight - 48;
       flowerHeight = flower.offsetHeight;
+      glow.style.width = `${flower.offsetWidth + 48}px`;
+      glow.style.height = `${flowerHeight + 48}px`;
       // Difference blending yields the site's black when this ink is over pink.
       const pink = getComputedStyle(links).backgroundColor.match(/\d+/g)?.map(Number);
       const black = getComputedStyle(document.body).backgroundColor.match(/\d+/g)?.map(Number);
@@ -80,7 +97,11 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
 
     const target = () => {
       const introActive = document.documentElement.classList.contains("desktop-intro-active");
-      const targetY = clamp(window.scrollY + viewportY - pageTop, startY, endY);
+      const followY = clamp(window.scrollY + viewportY - pageTop, startY, endY);
+      // Commit to the resting position halfway through Links. Tall viewports
+      // can reveal its bottom before the follower reaches that threshold.
+      const sectionBottomVisible = followY > startY && window.scrollY + window.innerHeight - pageTop >= linksBottom;
+      const targetY = followY >= dockThreshold || sectionBottomVisible ? endY : followY;
       const progress = clamp((targetY - linksTop) / Math.max(1, endY - linksTop), 0, 1);
       const ease = progress * progress * (3 - 2 * progress);
       // Finish at a full turn, easing into a front-facing pose over the last 320px.
@@ -97,8 +118,8 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       // After an impulse, the final idle pose is flat. Active scrolling still drives the angle.
       if (settlingClick && performance.now() - lastScrollTime > 120) goalAngle = Math.round(goalAngle / fullTurn) * fullTurn;
       return {
-        x: startX + (endX - startX) * ease + (reduced.matches || introActive ? 0 : pointerX * 14),
-        y: clamp(targetY + (reduced.matches || introActive ? 0 : pointerY * 12), startY, endY),
+        x: startX + (endX - startX) * ease + (reduced.matches || introActive ? 0 : pointerX * 14 * (1 - dockEase)),
+        y: clamp(targetY + (reduced.matches || introActive ? 0 : pointerY * 12 * (1 - dockEase)), startY, endY),
         angle: introActive || reduced.matches ? normalAngle : goalAngle,
         normalAngle,
         dockEase
@@ -111,7 +132,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       rotationPhase = goal.dockEase < .999999 ? (offset - rotationTurns) / (1 - goal.dockEase) : 0;
     };
 
-    const paint = () => {
+    const paint = (elapsed: number) => {
       // Clamp the visible spring overshoot to the page, keeping it out of the footer.
       const visibleY = clamp(y, startY, endY);
       flower.style.transform = `translate3d(${x.toFixed(2)}px,${visibleY.toFixed(2)}px,0)`;
@@ -122,6 +143,36 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
         lastPinkSplit = split;
       }
       model?.render(angle, split, pinkInk);
+      // Copy the freshly rendered alpha silhouette, so the glow follows every
+      // petal, cutout and rotation. A separate normal-blend layer keeps it pink.
+      const dx = mouseX - (pageLeft + x + flower.offsetWidth / 2);
+      const dy = mouseY - (pageTop + visibleY - window.scrollY + flowerHeight / 2);
+      const distance = Math.hypot(Math.max(Math.abs(dx) - flower.offsetWidth / 2, 0), Math.max(Math.abs(dy) - flowerHeight / 2, 0));
+      const edge = clamp(Math.hypot(dx / (flower.offsetWidth / 2), dy / (flowerHeight / 2)), 0, 1);
+      const enabled = !!model && !reduced.matches && !document.documentElement.classList.contains("desktop-intro-active");
+      const desiredGlow = enabled && Number.isFinite(distance) ? (1 - clamp(distance / 160, 0, 1)) ** 2 * edge ** 2 : 0;
+      hoverGlow += (desiredGlow - hoverGlow) * (1 - Math.exp(-elapsed * 16));
+      if (Math.abs(desiredGlow - hoverGlow) < .001) hoverGlow = desiredGlow;
+      // The click lights the whole rim, then its speed controls the fade.
+      // Hover illumination remains directional after the spin has settled.
+      const desiredClickGlow = enabled && settlingClick ? clamp(Math.abs(angularVelocity) / 12, 0, 1) : 0;
+      clickGlow += (desiredClickGlow - clickGlow) * (1 - Math.exp(-elapsed * 10));
+      if (Math.abs(desiredClickGlow - clickGlow) < .001) clickGlow = desiredClickGlow;
+      const strength = enabled ? Math.max(hoverGlow, clickGlow) : 0;
+      glow.style.opacity = String(strength);
+      glow.style.transform = `translate3d(${(x - 24).toFixed(2)}px,${(visibleY - 24).toFixed(2)}px,0)`;
+      // Put a soft spotlight outside the contour, even when the pointer is
+      // inside it. This shines inward from the rim instead of slicing from its centre.
+      const direction = Number.isFinite(dx) ? Math.atan2(dy, dx) : 0;
+      glow.style.setProperty("--glow-x", `${24 + flower.offsetWidth / 2 + Math.cos(direction) * (flower.offsetWidth / 2 + 18)}px`);
+      glow.style.setProperty("--glow-y", `${24 + flowerHeight / 2 + Math.sin(direction) * (flowerHeight / 2 + 18)}px`);
+      glow.style.setProperty("--glow-floor", String(strength > 0 ? clickGlow / strength : 0));
+      if (glowContext && strength > .001) {
+        if (glowCanvas.width !== canvas.width) glowCanvas.width = canvas.width;
+        if (glowCanvas.height !== canvas.height) glowCanvas.height = canvas.height;
+        glowContext.clearRect(0, 0, glowCanvas.width, glowCanvas.height);
+        glowContext.drawImage(canvas, 0, 0);
+      }
       flower.style.visibility = "visible";
       if (model || flower.dataset.modelFallback === "true") {
         const bounds = model?.frontBounds() || { width: 1, height: 1 };
@@ -130,11 +181,13 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
         if (flower.dataset.frontHeight !== height) flower.dataset.frontHeight = height;
         if (flower.dataset.introReady !== "true") flower.dataset.introReady = "true";
       }
+      return hoverGlow === desiredGlow && clickGlow === desiredClickGlow;
     };
 
     const tick = (time: number) => {
       frame = 0;
       if (!desktop.matches) return;
+      const elapsed = Math.min(Math.max((time - lastTime) / 1000, 0), .064);
       const goal = target();
       if (!initialized || reduced.matches || document.documentElement.classList.contains("desktop-intro-active")) {
         x = goal.x;
@@ -144,7 +197,6 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
         initialized = true;
       } else {
         // Substeps keep the underdamped spring stable during slower frames.
-        const elapsed = Math.min((time - lastTime) / 1000, .064);
         const steps = Math.max(1, Math.ceil(elapsed / .008));
         const dt = elapsed / steps;
         for (let i = 0; i < steps; i++) {
@@ -167,8 +219,8 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
         velocityX = velocityY = angularVelocity = 0;
         if (settlingClick) { alignRotation(angle, goal); settlingClick = false; }
       }
-      paint();
-      if (!resting && !reduced.matches) frame = window.requestAnimationFrame(tick);
+      const glowResting = paint(elapsed);
+      if ((!resting || !glowResting) && !reduced.matches) frame = window.requestAnimationFrame(tick);
     };
 
     const wake = () => {
@@ -178,6 +230,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     };
     const spin = () => {
       if (flower.disabled) return;
+      clickGlow = 1;
       // Add momentum on every click, with enough forward travel to dissipate it naturally.
       angularVelocity = Math.max(0, angularVelocity) + 48;
       const finishAngle = Math.ceil((angle + angularVelocity / Math.sqrt(45)) / fullTurn) * fullTurn;
@@ -229,6 +282,10 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
         initialized = false;
         settlingClick = false;
         rotationTurns = rotationPhase = angularVelocity = 0;
+        mouseX = mouseY = NaN;
+        hoverGlow = 0;
+        clickGlow = 0;
+        glow.style.opacity = "0";
         flower.style.visibility = "hidden";
         updateInteraction();
         return;
@@ -242,15 +299,21 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       if (!desktop.matches || reduced.matches || document.documentElement.classList.contains("desktop-intro-active") || event.pointerType === "touch") return;
       pointerX = clamp(event.clientX / window.innerWidth * 2 - 1, -1, 1);
       pointerY = clamp(event.clientY / window.innerHeight * 2 - 1, -1, 1);
+      mouseX = event.clientX;
+      mouseY = event.clientY;
       wake();
     };
     const leave = (event: PointerEvent) => {
       if (event.relatedTarget !== null) return;
       pointerX = pointerY = 0;
+      mouseX = mouseY = NaN;
       wake();
     };
     const motionChange = () => {
       pointerX = pointerY = 0;
+      mouseX = mouseY = NaN;
+      hoverGlow = 0;
+      clickGlow = 0;
       settlingClick = false;
       rotationTurns = rotationPhase = angularVelocity = 0;
       updateInteraction();
@@ -287,8 +350,25 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     };
   }, [modelSrc]);
 
-  return <button ref={flowerRef} type="button" className="desktop-flower-layer desktop-flower" aria-label="Spin the flower" disabled
+  return <><button ref={flowerRef} type="button" className="desktop-flower-layer desktop-flower" aria-label="Spin the flower" disabled
     style={{ "--flower-mask": `url("${maskSrc}")` } as CSSProperties}>
     <canvas ref={canvasRef} aria-hidden="true" />
-  </button>;
+  </button>
+    <div ref={glowRef} className="desktop-flower-layer desktop-flower-glow" aria-hidden="true">
+      <canvas ref={glowCanvasRef} />
+    </div>
+    <svg width="0" height="0" className="desktop-flower-glow-defs" aria-hidden="true">
+      <defs><filter id="desktop-flower-edge-glow" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
+        <feMorphology in="SourceAlpha" operator="dilate" radius="3" result="expanded" />
+        <feMorphology in="SourceAlpha" operator="erode" radius="1" result="contracted" />
+        <feComposite in="expanded" in2="contracted" operator="out" result="edge" />
+        <feFlood floodColor="var(--pink)" result="pink" />
+        <feComposite in="pink" in2="edge" operator="in" result="rim" />
+        <feGaussianBlur in="rim" stdDeviation="8" result="halo" />
+        <feComponentTransfer in="halo" result="softHalo"><feFuncA type="linear" slope="2.5" /></feComponentTransfer>
+        <feGaussianBlur in="rim" stdDeviation="3" result="nearGlow" />
+        <feMerge><feMergeNode in="softHalo" /><feMergeNode in="nearGlow" /><feMergeNode in="rim" /></feMerge>
+      </filter></defs>
+    </svg>
+  </>;
 }
