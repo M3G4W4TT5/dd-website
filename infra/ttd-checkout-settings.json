@@ -1,0 +1,23 @@
+{
+  "organizer": "dd-studio",
+  "events": {
+    "studio": {
+      "region": "DK",
+      "primary_color": "#116E3A"
+    },
+    "street-dance-workshop-dd-dev": {
+      "region": "DK",
+      "primary_color": "#7349CD",
+      "allow_modifications": "no",
+      "cancel_allow_user": false,
+      "cancel_allow_user_paid": false
+    },
+    "dance-with-dd-dev": {
+      "region": "DK",
+      "primary_color": "#7349CD",
+      "allow_modifications": "no",
+      "cancel_allow_user": false,
+      "cancel_allow_user_paid": false
+    }
+  }
+}

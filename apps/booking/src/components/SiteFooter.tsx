@@ -15,15 +15,19 @@ export function SiteFooter({ language = "en" }: { language?: "da" | "en" }) {
     let frame = 0;
     const updateGradient = () => {
       frame = 0;
+      if (getComputedStyle(footer).position !== "fixed") {
+        footer.style.setProperty("--footer-progress", "1");
+        return;
+      }
       const bounds = revealSpace.getBoundingClientRect();
-      const progress = Math.min(Math.max((window.innerHeight - bounds.top) / bounds.height, 0), 1);
+      const progress = Math.min(Math.max((window.innerHeight - bounds.top) / Math.max(bounds.height, 1), 0), 1);
       footer.style.setProperty("--footer-progress", progress.toFixed(3));
     };
     const scheduleUpdate = () => {
       if (!frame) frame = window.requestAnimationFrame(updateGradient);
     };
     const measureFooter = () => {
-      revealSpace.style.height = `${footer.offsetHeight}px`;
+      revealSpace.style.height = getComputedStyle(footer).position === "fixed" ? `${footer.offsetHeight}px` : "0px";
       scheduleUpdate();
     };
     const resizeObserver = new ResizeObserver(measureFooter);
@@ -31,10 +35,14 @@ export function SiteFooter({ language = "en" }: { language?: "da" | "en" }) {
     measureFooter();
     window.addEventListener("scroll", scheduleUpdate, { passive: true });
     window.addEventListener("resize", measureFooter);
+    window.visualViewport?.addEventListener("resize", measureFooter);
+    window.visualViewport?.addEventListener("scroll", scheduleUpdate);
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", measureFooter);
+      window.visualViewport?.removeEventListener("resize", measureFooter);
+      window.visualViewport?.removeEventListener("scroll", scheduleUpdate);
       if (frame) window.cancelAnimationFrame(frame);
     };
   }, []);

@@ -1,0 +1,175 @@
+{
+  "organizer": "dd-studio",
+  "inspected_at": "2026-10-01",
+  "source": "Read-only effective email form values; both events independently inspected; all 40 text fields identical. Relevant draft templates below.",
+  "events": {
+    "street-dance-workshop-dd-dev": [
+      {
+        "name": "mail_text_download_reminder_0",
+        "value": "Hello,\n\nyou bought a ticket for {event}.\n\nIf you did not do so already, you can download your ticket here:\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_download_reminder_1",
+        "value": "Hej\n\nDu har købt en billet til {event}.\n\nHvis du ikke allerede har gjort det, så kan du hente din billet her:\n{url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_approved_free_0",
+        "value": "Hello,\n\nwe approved your order for {event} and will be happy to welcome you\nat our event. As you only ordered free products, no payment is required.\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_approved_free_1",
+        "value": "Hej,\n\nvi har godkendt din bestilling til arrangementet {event} og glæder os til at byde dig velkommen\ntil vores arrangement. Da du udelukkende har bestilt gratis produkter, skal du ikke betale noget.\n\nDu kan ændre dine bestillingsoplysninger og se status på din bestilling her:\n\n{url}\n\nMed venlig hilsen,  \n\nDit {event}-team"
+      },
+      {
+        "name": "mail_text_order_canceled_0",
+        "value": "Hello,\n\nyour order {code} for {event} has been canceled.\n\n{comment}\n\nYou can view the details of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_canceled_1",
+        "value": "Hej\n\nDin bestilling {code} til {event} er blevet annulleret.\n\n{comment}\n\nDu kan se detaljerne for din bestilling på\n{url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_custom_mail_0",
+        "value": "Hello,\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_custom_mail_1",
+        "value": "Hej\n\nDu kan ændre din bestilling og se dens status på\n{url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_free_0",
+        "value": "Hello,\n\nyour order for {event} was successful. As you only ordered free products,\nno payment is required.\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_free_1",
+        "value": "Hej\n\nVi har modtaget din bestilling til {event}. Din bestilling indeholder kun gratis produkter og kræver derfor ingen betaling.\n\nDu kan ændre informationer og se status på din bestilling på {url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_paid_0",
+        "value": "Hello,\n\nwe successfully received your payment for {event}. Thank you!\n\n{payment_info}\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_paid_1",
+        "value": "Hej\n\nVi har modtaget din betaling for {event}. Tak!\n\n{payment_info}\n\nDu kan ændre informationer og se status på din bestilling på {url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_payment_failed_0",
+        "value": "Hello,\n\nyour payment attempt for your order for {event} has failed.\n\nYour order is still valid and you can try to pay again using the same or a different payment method. Please complete your payment before {expire_date}.\n\nYou can retry the payment and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_payment_failed_1",
+        "value": "Hej,\n\ndit betalingsforsøg for din bestilling til arrangementet {event} mislykkedes.\n\nDin bestilling er stadig gyldig, og du kan prøve at betale igen med samme eller en anden betalingsmetode. Du bedes gennemføre betalingen inden {expire_date}.\n\nDu kan prøve at betale igen og se status på din bestilling her:\n\n{url}\n\nMed venlig hilsen,  \n\nDit {event}-team"
+      },
+      {
+        "name": "mail_text_order_placed_0",
+        "value": "Hello,\n\nwe successfully received your order for {event} with a total value\nof {total_with_currency}. Please complete your payment before {expire_date}.\n\n{payment_info}\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_placed_1",
+        "value": "Hej\n\nVi har modtaget din bestilling til {event} med en samlet pris på {total_with_currency}. Gennemfør venligst betalingen før {expire_date}.\n\n{payment_info}\n\nDu kan ændre din bestilling og dens status på {url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_placed_require_approval_0",
+        "value": "Hello,\n\nwe successfully received your order for {event}. Since you ordered\na product that requires approval by the event organizer, we ask you to\nbe patient and wait for our next email.\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_placed_require_approval_1",
+        "value": "Hej,\n\nvi har modtaget din bestilling til arrangementet {event}. Da du har bestilt\net produkt, der kræver godkendelse fra arrangøren, beder vi dig om\nat være tålmodig og afvente vores næste e-mail.\n\nDu kan ændre dine bestillingsoplysninger og se status på din bestilling her:\n\n{url}\n\nMed venlig hilsen,  \n\nDit {event}-team"
+      },
+      {
+        "name": "mail_text_resend_link_0",
+        "value": "Hello,\n\nyou receive this message because you asked us to send you the link\nto your order for {event}.\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_resend_link_1",
+        "value": "Hej\n\nDu modtager denne besked fordi du har bedt os om at sende et link til din bestilling til {event}.\n\nDu kan ændre informationer og se status på din bestilling på {url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      }
+    ],
+    "dance-with-dd-dev": [
+      {
+        "name": "mail_text_download_reminder_0",
+        "value": "Hello,\n\nyou bought a ticket for {event}.\n\nIf you did not do so already, you can download your ticket here:\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_download_reminder_1",
+        "value": "Hej\n\nDu har købt en billet til {event}.\n\nHvis du ikke allerede har gjort det, så kan du hente din billet her:\n{url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_approved_free_0",
+        "value": "Hello,\n\nwe approved your order for {event} and will be happy to welcome you\nat our event. As you only ordered free products, no payment is required.\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_approved_free_1",
+        "value": "Hej,\n\nvi har godkendt din bestilling til arrangementet {event} og glæder os til at byde dig velkommen\ntil vores arrangement. Da du udelukkende har bestilt gratis produkter, skal du ikke betale noget.\n\nDu kan ændre dine bestillingsoplysninger og se status på din bestilling her:\n\n{url}\n\nMed venlig hilsen,  \n\nDit {event}-team"
+      },
+      {
+        "name": "mail_text_order_canceled_0",
+        "value": "Hello,\n\nyour order {code} for {event} has been canceled.\n\n{comment}\n\nYou can view the details of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_canceled_1",
+        "value": "Hej\n\nDin bestilling {code} til {event} er blevet annulleret.\n\n{comment}\n\nDu kan se detaljerne for din bestilling på\n{url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_custom_mail_0",
+        "value": "Hello,\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_custom_mail_1",
+        "value": "Hej\n\nDu kan ændre din bestilling og se dens status på\n{url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_free_0",
+        "value": "Hello,\n\nyour order for {event} was successful. As you only ordered free products,\nno payment is required.\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_free_1",
+        "value": "Hej\n\nVi har modtaget din bestilling til {event}. Din bestilling indeholder kun gratis produkter og kræver derfor ingen betaling.\n\nDu kan ændre informationer og se status på din bestilling på {url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_paid_0",
+        "value": "Hello,\n\nwe successfully received your payment for {event}. Thank you!\n\n{payment_info}\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_paid_1",
+        "value": "Hej\n\nVi har modtaget din betaling for {event}. Tak!\n\n{payment_info}\n\nDu kan ændre informationer og se status på din bestilling på {url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_payment_failed_0",
+        "value": "Hello,\n\nyour payment attempt for your order for {event} has failed.\n\nYour order is still valid and you can try to pay again using the same or a different payment method. Please complete your payment before {expire_date}.\n\nYou can retry the payment and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_payment_failed_1",
+        "value": "Hej,\n\ndit betalingsforsøg for din bestilling til arrangementet {event} mislykkedes.\n\nDin bestilling er stadig gyldig, og du kan prøve at betale igen med samme eller en anden betalingsmetode. Du bedes gennemføre betalingen inden {expire_date}.\n\nDu kan prøve at betale igen og se status på din bestilling her:\n\n{url}\n\nMed venlig hilsen,  \n\nDit {event}-team"
+      },
+      {
+        "name": "mail_text_order_placed_0",
+        "value": "Hello,\n\nwe successfully received your order for {event} with a total value\nof {total_with_currency}. Please complete your payment before {expire_date}.\n\n{payment_info}\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_placed_1",
+        "value": "Hej\n\nVi har modtaget din bestilling til {event} med en samlet pris på {total_with_currency}. Gennemfør venligst betalingen før {expire_date}.\n\n{payment_info}\n\nDu kan ændre din bestilling og dens status på {url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      },
+      {
+        "name": "mail_text_order_placed_require_approval_0",
+        "value": "Hello,\n\nwe successfully received your order for {event}. Since you ordered\na product that requires approval by the event organizer, we ask you to\nbe patient and wait for our next email.\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_order_placed_require_approval_1",
+        "value": "Hej,\n\nvi har modtaget din bestilling til arrangementet {event}. Da du har bestilt\net produkt, der kræver godkendelse fra arrangøren, beder vi dig om\nat være tålmodig og afvente vores næste e-mail.\n\nDu kan ændre dine bestillingsoplysninger og se status på din bestilling her:\n\n{url}\n\nMed venlig hilsen,  \n\nDit {event}-team"
+      },
+      {
+        "name": "mail_text_resend_link_0",
+        "value": "Hello,\n\nyou receive this message because you asked us to send you the link\nto your order for {event}.\n\nYou can change your order details and view the status of your order at\n{url}\n\nBest regards,  \nYour {event} team"
+      },
+      {
+        "name": "mail_text_resend_link_1",
+        "value": "Hej\n\nDu modtager denne besked fordi du har bedt os om at sende et link til din bestilling til {event}.\n\nDu kan ændre informationer og se status på din bestilling på {url}\n\nVenlig hilsen  \nArrangøren af {event}"
+      }
+    ]
+  },
+  "effective_renderer": {
+    "street-dance-workshop-dd-dev": "classic",
+    "dance-with-dd-dev": "classic"
+  }
+}

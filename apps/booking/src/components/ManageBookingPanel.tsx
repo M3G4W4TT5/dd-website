@@ -4,6 +4,8 @@ import { DateTime } from "luxon";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { canManageBooking, cancellationDeadline } from "@/lib/cancellation";
+import { useMobileJourney } from "./useMobileJourney";
+import { JourneyProgress } from "./MobileStudioPicker";
 import { ReschedulePicker, type AvailableInterval } from "./ReschedulePicker";
 
 type Language = "da" | "en";
@@ -108,6 +110,10 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, onC
   onCancel?: (booking: ManagedBooking) => Promise<ManagedBooking>;
 }) {
   const t = copy[language];
+  const mobile = useMobileJourney();
+  const [changeDateAvailable, setChangeDateAvailable] = useState(false);
+  const [changeStep, setChangeStep] = useState<"date" | "start" | "review">("date");
+  const changeHeading = useRef<HTMLHeadingElement>(null);
   const [booking, setBooking] = useState(initialBooking);
   const [confirming, setConfirming] = useState(false);
   const [working, setWorking] = useState(false);
@@ -115,6 +121,11 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, onC
   const [changeError, setChangeError] = useState(false);
   const [changed, setChanged] = useState(false);
   const [flow, setFlow] = useState<"change" | null>(null);
+  useEffect(() => {
+    if (!mobile || flow !== "change") return;
+    changeHeading.current?.focus({ preventScroll: true });
+    changeHeading.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [mobile, flow, changeStep]);
   const [selectedInterval, setSelectedInterval] = useState<AvailableInterval | null>(null);
   const [changing, setChanging] = useState(false);
   const [nowIso, setNowIso] = useState(serverNowIso);
@@ -226,15 +237,21 @@ export function ManageBookingPanel({ initialBooking, serverNowIso, language, onC
       {!eligible ? <p className="manage-explanation">{booking.refund === "none" ? t.late : t.refundInProgress}</p> : !onChangeBooking && !onCancel ? <p className="manage-explanation">{t.unavailable} <a className="text-link" href={`/contact?lang=${language}`}>{t.contact}</a></p> : flow === null ? <>
         <h3 className="manage-choice-heading">{t.choose}</h3>
         <div className="manage-choice-grid">
-          {onChangeBooking && <button type="button" onClick={() => { const now = currentServerTime(); if (!canManageBooking(booking.firstHourIso, now)) { setNowIso(now); return; } setFlow("change"); setChanged(false); }}><strong>{t.change}</strong><span>{t.changeDescription}</span></button>}
+          {onChangeBooking && <button type="button" onClick={() => { const now = currentServerTime(); if (!canManageBooking(booking.firstHourIso, now)) { setNowIso(now); return; } setFlow("change"); setChangeStep("date"); setChanged(false); }}><strong>{t.change}</strong><span>{t.changeDescription}</span></button>}
           {onCancel && <button ref={cancelButtonRef} type="button" onClick={() => { const now = currentServerTime(); if (!canManageBooking(booking.firstHourIso, now)) { setNowIso(now); return; } setConfirming(true); setChanged(false); }}><strong>{t.cancel}</strong><span>{t.cancelDescription}</span></button>}
         </div>
       </> : <section className="manage-flow" aria-labelledby="change-booking-title">
-        <h3 id="change-booking-title">{t.changeTitle}</h3>
+        {mobile && <JourneyProgress language={language} labels={language === "da" ? ["Dato", "Starttid", "Overblik"] : ["Date", "Start time", "Review"]} index={["date", "start", "review"].indexOf(changeStep)} />}
+        <h3 ref={changeHeading} tabIndex={-1} id="change-booking-title">{t.changeTitle}</h3>
         <p>{t.changeIntro}</p>
-        <ReschedulePicker bookingStart={booking.firstHourIso} bookingEnd={booking.endIso} language={language} selected={selectedInterval} onSelect={setSelectedInterval} />
+        <ReschedulePicker bookingStart={booking.firstHourIso} bookingEnd={booking.endIso} language={language} selected={selectedInterval} onSelect={setSelectedInterval} onDateAvailabilityChange={mobile ? setChangeDateAvailable : undefined} guidedStep={mobile ? changeStep : undefined} />
         {changeError && <p className="manage-error" role="alert">{t.changeError}</p>}
-        <div className="manage-actions manage-flow-actions"><button type="button" className="manage-back-button" disabled={changing} onClick={() => { setFlow(null); setChangeError(false); }}><ArrowLeft size={18} strokeWidth={1.35} aria-hidden="true" />{t.backToChoices}</button><button type="button" className="button button-dark" disabled={!selectedInterval || changing} onClick={() => void confirmChange()}>{changing ? t.changing : t.confirmChange}</button></div>
+        {mobile ? <>
+          {changeStep === "review" && selectedInterval && <div className="journey-review"><p>{t.time}: <strong>{dateTime(selectedInterval.firstHourIso, language)} – {dateTime(selectedInterval.endIso, language)}</strong></p><p>{t.paid}: <strong>{money(booking.paidOre, language)}</strong></p><p>{t.changeDescription}</p></div>}
+          <div className="journey-actions"><button type="button" disabled={changing} onClick={() => { if (changeStep === "date") { setFlow(null); setChangeError(false); } else setChangeStep(changeStep === "review" ? "start" : "date"); }}>{language === "da" ? "Tilbage" : "Back"}</button><button type="button" disabled={changing || (changeStep === "date" ? !changeDateAvailable : !selectedInterval)} onClick={() => changeStep === "review" ? void confirmChange() : setChangeStep(changeStep === "date" ? "start" : "review")}>{changeStep === "review" ? (changing ? t.changing : t.confirmChange) : language === "da" ? "Fortsæt" : "Continue"}</button></div>
+        </> : (
+        <div className="manage-actions manage-flow-actions"><button type="button" className="manage-back-button" disabled={changing} onClick={() => { setFlow(null); setChangeError(false); }}><ArrowLeft size={18} strokeWidth={1.35} aria-hidden="true" />{t.backToChoices}</button><button type="button" className="button button-dark" disabled={!selectedInterval || changing} onClick={() => void confirmChange()}>{changing ? t.changing : t.confirmChange}</button></div>)}
+
       </section>}
       {!eligible && <a className="text-link" href={`/contact?lang=${language}`}>{t.contact}</a>}
     </>}

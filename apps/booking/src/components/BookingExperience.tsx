@@ -21,6 +21,9 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { MobileNavigation } from "@/components/MobileNavigation";
 import { HeaderBookingActions } from "@/components/HeaderBookingActions";
 import { HeaderBlur } from "@/components/HeaderBlur";
+import { useMobileJourney } from "./useMobileJourney";
+import { MobileStudioPicker, JourneyProgress } from "./MobileStudioPicker";
+import { studioProgress, type StudioStep } from "@/lib/mobile-journey";
 import { WarpText } from "@/components/WarpText";
 
 type Language = "da" | "en";
@@ -51,7 +54,6 @@ const copy = {
     taken: "Optaget",
     noTimes: "Ingen tider denne dag. Prøv en anden dato.",
     loading: "Henter tider…",
-    summaryEyebrow: "DIN TID I STUDIET",
     summaryTitle: "Overblik",
     selectedDay: "Dato",
     selectedHours: "Varighed",
@@ -91,7 +93,6 @@ const copy = {
     taken: "Unavailable",
     noTimes: "No times on this day. Try another date.",
     loading: "Loading times…",
-    summaryEyebrow: "YOUR STUDIO TIME",
     summaryTitle: "Overview",
     selectedDay: "Date",
     selectedHours: "Duration",
@@ -156,6 +157,9 @@ export function BookingExperience({
   const [error, setError] = useState(!initialAvailability);
   const availabilityRequest = useRef(0);
   const t = copy[language];
+  const mobile = useMobileJourney();
+  const [mobileStep, setMobileStep] = useState<StudioStep>("entry");
+  const [moreHours, setMoreHours] = useState<boolean | null>(null);
   const today = initialDate;
   const maxDay = DateTime.fromISO(initialDate).plus({ days: 45 }).toISODate()!;
 
@@ -258,6 +262,7 @@ export function BookingExperience({
     setDate(nextDate);
     setSelectedId(null);
     setHours(1);
+    setMoreHours(null);
     setEndSelected(false);
     setClearingSlotIds([]);
     setStatus("idle");
@@ -322,6 +327,7 @@ export function BookingExperience({
       if (response.status === 409) {
         setStatus("changed");
         await selectDate(date);
+        if (mobile) setMobileStep("date");
         setStatus("changed");
       } else if (!response.ok) {
         setStatus("error");
@@ -332,6 +338,7 @@ export function BookingExperience({
           result.quote.start !== quote.start || result.quote.end !== quote.end ||
           result.quote.slotIds.join(",") !== quote.slotIds.join(",")) {
           await selectDate(date);
+          if (mobile) setMobileStep("date");
           setStatus("changed");
         }
         else {
@@ -369,6 +376,12 @@ export function BookingExperience({
             <div><h1 id="booking-title">{t.bookingTitle.firstLine}{t.bookingTitle.secondLinePrefix && <br />}{t.bookingTitle.secondLinePrefix}<WarpText text={t.bookingTitle.lastWord} /></h1></div>
             <div className="booking-heading-side"><p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p></div>
           </div>
+          {mobile ? <div id="booking-flow" className="mobile-booking-flow" tabIndex={-1}>
+            {phase === "details" || phase === "details-out" ? <>
+              <JourneyProgress language={language} labels={studioProgress(moreHours).map(value => ({date: language === "da" ? "Dato" : "Date", start: language === "da" ? "Starttid" : "Start time", more: language === "da" ? "Varighed" : "Duration", end: language === "da" ? "Sluttid" : "End time", review: language === "da" ? "Overblik" : "Review", details: language === "da" ? "Dine oplysninger" : "Your details", payment: language === "da" ? "Betaling" : "Payment"})[value]!)} index={studioProgress(moreHours).indexOf("details")} />
+              <CustomerDetailsPreview language={language} date={date} startId={selectedId!} hours={hours} acceptedQuote={acceptedQuote!} draft={detailsDraft.current} guided onBack={() => { setMobileStep("review"); setPhase("details-out"); }} onConflict={async () => { await selectDate(date); setStatus("changed"); setMobileStep("date"); setPhase("selection"); }} />
+            </> : <MobileStudioPicker language={language} step={mobileStep} setStep={setMobileStep} more={moreHours} onMore={value => { setMoreHours(value); if (!value) setHours(1); }} date={date} today={today} maxDay={maxDay} availability={current} startId={selectedId} quote={quote} loading={loading} error={error} checking={checking} status={status} onDate={day => void selectDate(day)} onStart={id => { setSelectedId(id); setHours(1); setMoreHours(null); setAcceptedQuote(null); setStatus("idle"); }} onEnd={setHours} onCheck={() => void checkSelection()} />}
+          </div> : (
           <div id="booking-flow" className={`booking-layout booking-stage ${phase.endsWith("-out") ? "booking-stage--leaving" : phase === "details" || hasVisitedDetails ? "booking-stage--entering" : ""} ${phase === "details" || phase === "details-out" ? "booking-layout--details" : ""}`} tabIndex={-1} inert={phase.endsWith("-out")}>
             {phase === "details" || phase === "details-out" ? (
               <CustomerDetailsPreview key={`${date}:${selectedId}:${hours}`} language={language} date={date} startId={selectedId!} hours={hours} acceptedQuote={acceptedQuote!} draft={detailsDraft.current} onBack={() => setPhase("details-out")} onConflict={async () => { await selectDate(date); setStatus("changed"); setPhase("selection"); }} />
@@ -415,10 +428,10 @@ export function BookingExperience({
 
             <aside className="summary-panel" aria-labelledby="summary-title">
               <div className="summary-header">
-                <div className="summary-heading"><span className="section-kicker">{t.summaryEyebrow}</span><h3 id="summary-title">{t.summaryTitle}</h3></div>
-                <div className="summary-fact"><span className="metric-icon"><Clock3 size={17} strokeWidth={1.4} /></span><span>{t.metricTwo}</span></div>
-                <div className="summary-fact"><span className="metric-icon"><Coins size={17} strokeWidth={1.4} /></span><span>{current?.slots[0] ? `${money(current.slots[0].priceOre, language)}${t.perHour}` : "—"}</span></div>
-                <div className="summary-fact"><span className="metric-icon"><Maximize2 size={17} strokeWidth={1.4} /></span><span>{t.metricOne}</span></div>
+                <div className="summary-heading"><h3 id="summary-title">{t.summaryTitle}</h3></div>
+                <div className="summary-fact"><span className="metric-icon"><Clock3 size={22} strokeWidth={1.8} /></span><span>{t.metricTwo}</span></div>
+                <div className="summary-fact"><span className="metric-icon"><Coins size={22} strokeWidth={1.8} /></span><span>{current?.slots[0] ? `${money(current.slots[0].priceOre, language)}${t.perHour}` : "—"}</span></div>
+                <div className="summary-fact"><span className="metric-icon"><Maximize2 size={22} strokeWidth={1.8} /></span><span>{t.metricOne}</span></div>
               </div>
               <div className="summary-content">
                 <div className="summary-row"><span>{t.selectedDay}</span><strong>{dateLabel(date, language)}</strong></div>
@@ -432,7 +445,7 @@ export function BookingExperience({
               <div className="summary-footer"><ShieldCheck size={18} /><span>{t.policy} <a href={`/terms?lang=${language}`}>{language === "da" ? "Bookingvilkår" : "Booking terms"}</a></span></div>
             </aside>
             </>}
-          </div>
+          </div>)}
         </section>
 
         <section className="studio-gallery-section" aria-labelledby="studio-gallery-title">

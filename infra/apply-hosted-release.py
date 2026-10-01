@@ -44,10 +44,13 @@ TARGET = {
     'compose.hosted.yaml': '21b6df7f428132e39519db26b16aa28b7e85e4f597bbd896cc739f5f6caa8ba1',
     'proxy.conf': 'dc8a94afec5e67a49b23f41e83940aa04c8e23177d8736aa04b9ce545216022c',
     'pretix-nginx.conf': 'bdac328919966debe72e2f86cd4eba1442fc452cd43eb35a3fc7b41ef1e3a563',
-    'pretix-settings.py': 'e1b875ac535b52a69f3be42f64c873de6294642ca889e930652b1a52c6cad983',
+    'pretix-settings.py': '6f5090eeb05be4460299bdec3fdcbc98604e2bb69eb0dfee965a1038779d4123',
     'pretix-task.conf': '3e3036710bd4a0135c3f2743345fb4b5e6ad952aec1395859a516291fbc7abbb',
     'deploy.py': '78e929be92c9e808128b5f867425bbf7dd27d19482c9bac6d73442c38dc9d242',
 }
+# Verified running c02936ab / PR28 baseline before the TTD adapter upgrade.
+PRE_TTD_TARGET = {**TARGET,
+    'pretix-settings.py': 'e1b875ac535b52a69f3be42f64c873de6294642ca889e930652b1a52c6cad983'}
 CURRENT_INSTALLED = {**TARGET,
     'proxy.conf': '70b66a2c1635bf1cb5485dc57d03576cf801b8d36d4d569ade0e30d07f549609',
     'pretix-settings.py': '139ee2020dabbd2aac1a230c682d994197f6b0831a6767a432f4bd470fce7df2',
@@ -370,7 +373,7 @@ def install(source):
         if sha(candidate) != TARGET[name]:
             raise ValueError('Staged file differs from reviewed release: ' + name)
         if sha(destination) not in (BASELINE[name], PARTIAL[name], PREVIOUS_TARGET[name],
-                                    CURRENT_INSTALLED[name], PRE_PAGES_TARGET[name], TARGET[name]):
+                                    CURRENT_INSTALLED[name], PRE_PAGES_TARGET[name], PRE_TTD_TARGET[name], TARGET[name]):
             raise ValueError('Installed configuration version differs: ' + name)
     verify_bridge()
     verify_proxy_group()

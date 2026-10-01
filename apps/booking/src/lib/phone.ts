@@ -1,11 +1,13 @@
-import { getCountries, getCountryCallingCode, parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js/min";
+import { getCountries, parsePhoneNumberFromString, type CountryCode } from "libphonenumber-js/min";
+
+import labels from "./phone-countries.json";
 
 const countries = new Set<string>(getCountries());
 
 export function countryOptions(language: "da" | "en") {
-  const names = new Intl.DisplayNames([language], { type: "region" });
-  return getCountries().map(code => ({ code, label: `${names.of(code) || code} (+${getCountryCallingCode(code)})` }))
-    .sort((a, b) => a.label.localeCompare(b.label, language));
+  // Versioned names/order keep server and browser ICU differences from
+  // causing hydration failures and discarding entered customer details.
+  return labels[language];
 }
 
 export function normalizePhone(value: string, selectedCountry: string): string | null {

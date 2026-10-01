@@ -6,6 +6,9 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { DateTime } from "luxon";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BuyerDetailsFields, DetailsConsent, invalidDetailFields } from "./BookingFormFields";
+import { useMobileJourney } from "./useMobileJourney";
+import { JourneyProgress } from "./MobileStudioPicker";
+import type { BookingDetailsDraft } from "./CustomerDetailsPreview";
 import { ticketLimit } from "@/lib/event-registration";
 import { ZONE, type Language, type Occurrence } from "@/lib/events-model";
 
@@ -54,27 +57,35 @@ function submitCart(handoff: Handoff) {
   form.remove();
 }
 
-export function EventSignupForm({ occurrence, language, onBack }: {
-  occurrence: Occurrence; language: Language; onBack: () => void;
+export function EventSignupForm({ occurrence, language, onBack, draft }: {
+  occurrence: Occurrence; language: Language; onBack: () => void; draft: BookingDetailsDraft;
 }) {
   const t = copy[language];
+  const mobile = useMobileJourney();
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const next = language === "da" ? "Fortsæt" : "Continue";
+  const back = language === "da" ? "Tilbage" : "Back";
+  const formRef = useRef<HTMLFormElement>(null);
   const submission = useRef<ReturnType<typeof submissionIdentity> | null>(null);
   submission.current ??= submissionIdentity();
   const titleRef = useRef<HTMLHeadingElement>(null);
   const eligible = occurrence.tickets.filter(ticket => !ticket.hasVariations && ticketLimit(ticket, occurrence.remaining) >= ticket.minPerOrder);
-  const [itemId, setItemId] = useState(eligible[0]?.id);
+  const [itemId, setItemId] = useState(Number(draft.fields.itemId) || eligible[0]?.id);
   const ticket = eligible.find(item => item.id === itemId) || eligible[0];
-  const [quantity, setQuantity] = useState<string>(String(ticket?.minPerOrder ?? 1));
+  const [quantity, setQuantity] = useState<string>(draft.fields.quantity || String(ticket?.minPerOrder ?? 1));
   const [showQuantityLimit, setShowQuantityLimit] = useState(false);
   const maximum = ticket ? ticketLimit(ticket, occurrence.remaining) : 0;
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(draft.termsAccepted);
+  const [marketingOptIn, setMarketingOptIn] = useState(draft.marketingOptIn);
   const [showTermsError, setShowTermsError] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "working" | "invalid" | "changed" | "error" | "rate" | "phoneInvalid">("idle");
   const [handoff, setHandoff] = useState<Handoff | null>(null);
   const submitting = useRef(false);
-  useEffect(() => { titleRef.current?.focus(); }, []);
+  useEffect(() => { titleRef.current?.focus({ preventScroll: true }); if (mobile) titleRef.current?.closest(".event-signup")?.scrollIntoView({ block: "start", behavior: "instant" }); }, [step, mobile]);
+  useEffect(() => { draft.fields.itemId = String(itemId ?? ""); draft.fields.quantity = quantity; draft.termsAccepted = termsAccepted; draft.marketingOptIn = marketingOptIn; }, [draft, itemId, quantity, termsAccepted, marketingOptIn]);
+  function remember(form: HTMLFormElement) { for (const [name, value] of new FormData(form)) if (typeof value === "string") draft.fields[name] = value; }
+
   const formatPrice = (price: number) => new Intl.NumberFormat(language === "da" ? "da-DK" : "en-US", { style: "currency", currency: "DKK" }).format(price);
   const start = DateTime.fromISO(occurrence.start, { setZone: true }).setZone(ZONE).setLocale(language);
   const end = DateTime.fromISO(occurrence.end, { setZone: true }).setZone(ZONE);
@@ -83,6 +94,7 @@ export function EventSignupForm({ occurrence, language, onBack }: {
 
   async function checkout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (mobile && step !== 3) { if (validQuantity) setStep(step === 1 ? 2 : 3); return; }
     if (submitting.current || !ticket) return;
     const form = event.currentTarget;
     const invalid = invalidDetailFields(form);
@@ -117,36 +129,40 @@ export function EventSignupForm({ occurrence, language, onBack }: {
     finally { submitting.current = false; }
   }
 
-  return <section className="details-preview event-signup" aria-labelledby="event-signup-title">
+  return <section className={`details-preview event-signup ${mobile ? "event-signup--guided" : ""}`} aria-labelledby="event-signup-title">
+    {mobile && <JourneyProgress language={language} labels={language === "da" ? ["Event og dato", "Billetter", "Overblik", "Dine oplysninger", "Betaling"] : ["Event and date", "Tickets", "Review", "Your details", "Payment"]} index={step} />}
     <div className="details-intro event-signup-heading">
-      <button className="details-back" type="button" onClick={onBack} disabled={status === "working"}><ArrowLeft size={17} aria-hidden="true" />{t.back}</button>
-      <span className="section-kicker">{t.eyebrow}</span>
-      <h3 id="event-signup-title" ref={titleRef} tabIndex={-1}>{t.title}</h3>
+      <button className="details-back" type="button" onClick={() => mobile && step > 1 ? setStep(step === 3 ? 2 : 1) : onBack()} disabled={status === "working"}><ArrowLeft size={17} aria-hidden="true" />{mobile ? back : t.back}</button>
+      <span className="section-kicker">{mobile && step < 3 ? (step === 1 ? t.ticket : language === "da" ? "OVERBLIK" : "REVIEW") : t.eyebrow}</span>
+      <h3 id="event-signup-title" ref={titleRef} tabIndex={-1}>{mobile && step < 3 ? (step === 1 ? t.ticket : language === "da" ? "Gennemgå dine billetter" : "Review your tickets") : t.title}</h3>
       </div>
-    <div className="details-intro">
-      <p>{t.intro}</p>
+    <div className="details-intro" hidden={mobile && step === 1}>
+      {(!mobile || step === 3) && <p>{t.intro}</p>}
       <div className="event-signup-summary">
         <strong>{language === "da" ? occurrence.title : occurrence.titleEn}</strong>
         <p>{start.toLocaleString({ weekday: "long", day: "numeric", month: "long", year: "numeric" })}<br />{start.toFormat("HH:mm")}–{end.toFormat("HH:mm")}</p>
         <p>{(language === "da" ? occurrence.location : occurrence.locationEn) || "TTD Studio"}</p>
+        {mobile && ticket && <p className="event-selected-ticket">{language === "da" ? ticket.name : ticket.nameEn}</p>}
         {ticket && <p>{validQuantity ? `${count} × ${formatPrice(Number(ticket.price))}` : formatPrice(Number(ticket.price))}</p>}
         <div className="event-signup-total" aria-live="polite"><span>{t.total}</span><strong>{validQuantity ? formatPrice(count * Number(ticket.price)) : "—"}</strong></div>
       </div>
     </div>
-    <form className="details-form" noValidate onSubmit={event => void checkout(event)} onInput={event => { if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); setHandoff(null); }}>
+    <form ref={formRef} className="details-form" noValidate onSubmit={event => void checkout(event)} onInput={event => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); setHandoff(null); }}>
       <fieldset className="event-signup-fields" disabled={status === "working"}>
         <div className="details-fields">
-          <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} />
+          <div className="event-buyer-fields" hidden={mobile && step !== 3}><BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} defaults={draft.fields} /></div>
+          <div className="event-ticket-fields" hidden={mobile && step !== 1}>
           {eligible.length > 1 && <label>{t.ticket}<select name="itemId" value={ticket?.id} onChange={event => { const item = eligible.find(item => item.id === Number(event.target.value))!; setItemId(item.id); setQuantity(String(item.minPerOrder)); setShowQuantityLimit(false); }}>
             {eligible.map(item => <option key={item.id} value={item.id}>{language === "da" ? item.name : item.nameEn} · {formatPrice(Number(item.price))}</option>)}
           </select></label>}
           <label>{t.quantity}<input name="quantity" type="number" inputMode="numeric" min={ticket?.minPerOrder ?? 1} max={maximum} aria-describedby={showQuantityLimit ? "event-quantity-limit" : undefined} step={1} required value={quantity} onChange={event => { const value = event.target.value; const overMaximum = Number(value) > maximum; setQuantity(overMaximum ? String(maximum) : value); setShowQuantityLimit(overMaximum); if (overMaximum) setInvalidFields(fields => fields.filter(field => field !== "quantity")); }} aria-invalid={invalidFields.includes("quantity")} /></label>
+          </div>
         </div>
         {showQuantityLimit && <p id="event-quantity-limit" className="form-field-error" role="alert">{maximum} {t.max}</p>}
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.invalid}</p>}
         {invalidFields.includes("phone") && <p id="phone-field-error" className="form-field-error" role="alert">{t.phoneInvalid}</p>}
-        <DetailsConsent idPrefix="event" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {language === "en" ? "&" : "og"} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={setMarketingOptIn} onTermsChange={checked => { setTermsAccepted(checked); if (checked) setShowTermsError(false); }} />
-        <div className="details-actions"><button type="submit" disabled={!ticket || status === "working" || !!handoff}>{status === "working" ? t.working : t.submit}<ArrowUpRight size={19} aria-hidden="true" /></button></div>
+        <div hidden={mobile && step !== 3}><DetailsConsent idPrefix="event" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {language === "en" ? "&" : "og"} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={setMarketingOptIn} onTermsChange={checked => { setTermsAccepted(checked); if (checked) setShowTermsError(false); }} /></div>
+        {mobile && step < 3 ? <div className="journey-actions"><button type="button" disabled={!validQuantity} onClick={() => setStep(step === 1 ? 2 : 3)}>{next}</button></div> : <div className="details-actions"><button type="submit" disabled={!ticket || status === "working" || !!handoff}>{status === "working" ? t.working : t.submit}<ArrowUpRight size={19} aria-hidden="true" /></button></div>}
       </fieldset>
       {status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="alert">{t[status]}</p>}
       {handoff && <div className="marketing-result" role="status"><p>{t.marketingFailed}</p><div className="details-actions"><button type="button" onClick={() => submitCart(handoff)}>{t.continue}<ArrowUpRight size={19} aria-hidden="true" /></button></div></div>}

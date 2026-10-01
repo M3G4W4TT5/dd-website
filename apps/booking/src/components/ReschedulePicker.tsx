@@ -4,6 +4,8 @@ import { DateTime } from "luxon";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { MAX_HOURS, quoteInterval, STUDIO_ZONE, type Availability } from "@/lib/booking";
+import { MobileMonthCalendar } from "./MobileMonthCalendar";
+import { mobileMonthCells } from "@/lib/mobile-calendar";
 export type AvailableInterval = { firstHourIso: string; endIso: string };
 
 type Language = "da" | "en";
@@ -43,7 +45,9 @@ function availableStarts(availability: Availability | undefined, hours: number, 
   });
 }
 
-export function ReschedulePicker({ bookingStart, bookingEnd, language, selected, onSelect }: {
+export function ReschedulePicker({ bookingStart, bookingEnd, language, selected, onSelect, guidedStep, onDateAvailabilityChange }: {
+  guidedStep?: "date" | "start" | "review";
+  onDateAvailabilityChange?: (available: boolean) => void;
   bookingStart: string;
   bookingEnd: string;
   language: Language;
@@ -56,6 +60,7 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
   const bookedDay = DateTime.fromISO(bookingStart, { setZone: true }).setZone(STUDIO_ZONE).startOf("day");
   const initialDay = bookedDay >= today && bookedDay.toISODate()! <= maxDate ? bookedDay : today;
   const [weekStart, setWeekStart] = useState(initialDay.startOf("week").toISODate()!);
+  const [month, setMonth] = useState(initialDay.startOf("month").toISODate()!);
   const [date, setDate] = useState(initialDay.toISODate()!);
   const [days, setDays] = useState<Record<string, Availability | null>>({});
   const [loading, setLoading] = useState(false);
@@ -64,32 +69,41 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
   const validDuration = Number.isInteger(hours) && hours >= 1 && hours <= MAX_HOURS;
   const week = useMemo(() => Array.from({ length: 7 }, (_, i) => DateTime.fromISO(weekStart, { zone: STUDIO_ZONE }).plus({ days: i }).toISODate()!), [weekStart]);
 
+  const guided = !!guidedStep;
+  const visibleDays = useMemo(() => guided ? mobileMonthCells(month).filter((day): day is string => !!day) : week, [guided, month, week]);
+
   useEffect(() => {
-    const pending = week.filter((day) => day >= todayDate && day <= maxDate && !days[day]);
+    const pending = visibleDays.filter((day) => day >= todayDate && day <= maxDate && !days[day]);
     if (pending.length === 0) {
       setLoading(false);
       return;
     }
     const controller = new AbortController();
     setLoading(true);
-    void Promise.all(pending.map(async (day) => {
+    async function loadDay(day: string) {
       try {
         const response = await fetch(`/api/availability?date=${encodeURIComponent(day)}`, { cache: "no-store", signal: controller.signal });
         if (!response.ok) throw new Error("Availability request failed");
-        const result = (await response.json()) as Availability;
-        return [day, result] as const;
+        return [day, (await response.json()) as Availability] as const;
       } catch {
         return [day, null] as const;
       }
-    })).then((results) => {
-      if (controller.signal.aborted) return;
-      setDays((previous) => ({ ...previous, ...Object.fromEntries(results) }));
-      setLoading(false);
-    });
+    }
+    void (async () => {
+      // A month must not burst 31 upstream reads at once. Desktop keeps its
+      // existing seven-day request behavior; mobile loads four days per batch.
+      const batchSize = guided ? 4 : pending.length;
+      for (let i = 0; i < pending.length && !controller.signal.aborted; i += batchSize) {
+        const results = await Promise.all(pending.slice(i, i + batchSize).map(loadDay));
+        if (controller.signal.aborted) return;
+        setDays(previous => ({ ...previous, ...Object.fromEntries(results) }));
+      }
+      if (!controller.signal.aborted) setLoading(false);
+    })();
     return () => controller.abort();
-    // Cache entries are intentionally read only when the visible week changes.
+    // Cache entries are intentionally read only when the visible calendar changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weekStart, todayDate, maxDate]);
+  }, [visibleDays, todayDate, maxDate]);
 
   function showWeek(nextStart: string, preferredDate?: string) {
     const bounded = nextStart < todayDate ? today.startOf("week").toISODate()! : nextStart;
@@ -112,6 +126,7 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
 
   const current = days[date];
   const starts = validDuration ? availableStarts(current || undefined, hours, bookingStart) : [];
+  useEffect(() => { onDateAvailabilityChange?.(starts.length > 0); }, [starts.length, onDateAvailabilityChange]);
   const monthLabel = DateTime.fromISO(date).setLocale(language).toFormat("LLLL yyyy");
   const latestWeek = DateTime.fromISO(maxDate).startOf("week").toISODate()!;
   const earliestWeek = today.startOf("week").toISODate()!;
@@ -120,6 +135,12 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
 
   return <div className="reschedule-picker">
     <p className="reschedule-duration">{t.duration} <strong>{hours === MAX_HOURS ? t.fullDay : `${hours} ${hours === 1 ? t.hour : t.hours}`}</strong></p>
+    <div hidden={!!guidedStep && guidedStep !== "date"}>
+    {guided ? <MobileMonthCalendar language={language} month={month} onMonth={setMonth} date={date} min={todayDate} max={maxDate} onDate={day => { if (day !== date) { setDate(day); onSelect(null); } }} status={day => {
+      const entry = days[day];
+      const count = validDuration ? availableStarts(entry || undefined, hours, bookingStart).length : 0;
+      return {disabled: !entry || !count, unavailable: !!entry && !count, text: entry === undefined ? "…" : entry === null ? "!" : count ? String(count) : "–", description: entry === undefined ? t.loading : entry === null ? t.error : count ? `${count} ${t.available}` : t.full};
+    }} /> : <>
     <div className="reschedule-navigation" aria-label={t.chooseDate}>
       <div className="reschedule-nav-group">
         <button type="button" onClick={() => shiftMonth(-1)} disabled={previousMonth.endOf("month").toISODate()! < todayDate} aria-label={t.previousMonth}><ChevronLeft size={17} /><ChevronLeft size={17} /></button>
@@ -139,17 +160,22 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
         const count = validDuration ? availableStarts(entry || undefined, hours, bookingStart).length : 0;
         const status = outOfRange ? "" : entry === undefined ? "…" : entry === null ? "!" : count ? String(count) : "–";
         const description = entry === undefined ? t.loading : entry === null ? t.error : count ? `${count} ${t.available}` : t.full;
-        return <button key={day} type="button" disabled={outOfRange} aria-pressed={date === day} aria-label={`${value.toFormat("cccc d. LLLL")}: ${description}`} className={date === day ? "reschedule-day selected" : "reschedule-day"} onClick={() => { setDate(day); onSelect(null); }}>
+        return <button key={day} type="button" disabled={outOfRange} aria-pressed={date === day} aria-label={`${value.toFormat("cccc d. LLLL")}: ${description}`} className={date === day ? "reschedule-day selected" : "reschedule-day"} onClick={() => { if (day !== date) { setDate(day); onSelect(null); } }}>
           <span>{value.toFormat("ccc")}</span><strong>{value.day}</strong><small>{status}</small>
         </button>;
       })}
     </div>
+    </>}
     <p className="reschedule-key">{language === "da" ? "Tal viser antal ledige starttider · – betyder ingen plads" : "Numbers show available start times · – means no space"}</p>
+    </div>
+    <div hidden={!!guidedStep && guidedStep !== "start"}>
+    {guidedStep && <p>{language === "da" ? "Nuværende starttid" : "Current start time"}: <strong>{DateTime.fromISO(bookingStart).setZone(STUDIO_ZONE).toFormat("HH:mm")}</strong></p>}
     <h4>{t.chooseTime} · {DateTime.fromISO(date).setLocale(language).toFormat("d. LLLL")}</h4>
     {loading && current === undefined ? <p role="status">{t.loading}</p> : current === null ? <p className="manage-error" role="alert">{t.error}</p> : starts.length === 0 ? <p>{t.noTimes}</p> : <div className="reschedule-times">
       {starts.map((interval) => <button key={interval.firstHourIso} type="button" aria-pressed={selected?.firstHourIso === interval.firstHourIso} className={selected?.firstHourIso === interval.firstHourIso ? "selected" : ""} onClick={() => onSelect(interval)}>
         {DateTime.fromISO(interval.firstHourIso, { setZone: true }).setZone(STUDIO_ZONE).toFormat("HH:mm")}–{DateTime.fromISO(interval.endIso, { setZone: true }).setZone(STUDIO_ZONE).toFormat("HH:mm")}
       </button>)}
     </div>}
+    </div>
   </div>;
 }

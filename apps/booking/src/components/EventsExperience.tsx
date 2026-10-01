@@ -10,6 +10,9 @@ import { HeaderBookingActions } from "./HeaderBookingActions";
 import { HeaderBlur } from "./HeaderBlur";
 import { ZONE, type Language, type Occurrence } from "@/lib/events-model";
 import type { Catalog } from "@/lib/events";
+import { JourneyProgress } from "./MobileStudioPicker";
+import { useMobileJourney } from "./useMobileJourney";
+import type { BookingDetailsDraft } from "./CustomerDetailsPreview";
 import { EventSignupForm } from "./EventSignupForm";
 import { ticketLimit } from "@/lib/event-registration";
 
@@ -29,6 +32,8 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
   const [month, setMonth] = useState(() => catalog.occurrences.length ? localDay(catalog.occurrences[0].start).startOf("month") : DateTime.now().setZone(ZONE).startOf("month"));
   const [listPage, setListPage] = useState(0);
   const [showSignup, setShowSignup] = useState(false);
+  const mobile = useMobileJourney();
+  const signupDraft = useRef<BookingDetailsDraft>({fields: {}, termsAccepted: false, marketingOptIn: false});
   const signupRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   useVisualEffects();
@@ -74,9 +79,10 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
       <HeaderBookingActions language={language} onLanguageChange={setLanguage} />
     </header>
     <main className="events-main">
+      {mobile && !showSignup && <JourneyProgress language={language} labels={language === "da" ? ["Event og dato", "Billetter", "Overblik", "Dine oplysninger", "Betaling"] : ["Event and date", "Tickets", "Review", "Your details", "Payment"]} index={0} />}
       {selected ? <>
         <div className="events-heading"><a className="events-back" href={`/events?lang=${language}`}>← {t.back}</a><span className="section-kicker">{t.upcoming}</span><h1>{language === "da" ? selected.title : selected.titleEn}</h1><p>{dateText(selected.start, language)} · {timeText(selected.start)}–{timeText(selected.end)}</p></div>
-        {showSignup && canSignUp ? <EventSignupForm key={selected.key} occurrence={selected} language={language} onBack={closeSignup} /> : <div className="event-detail-grid">
+        {showSignup && canSignUp ? <EventSignupForm key={selected.key} occurrence={selected} language={language} draft={signupDraft.current} onBack={closeSignup} /> : <div className="event-detail-grid">
           <div>{selected.image && <div className="image-frame event-image" data-image-shadow data-reveal><img src={selected.image} alt={`${language === "da" ? "Foto til" : "Photo for"} ${language === "da" ? selected.title : selected.titleEn}`} /></div>}</div><section className="event-description"><p>{(language === "da" ? selected.description : selected.descriptionEn) || t.description}</p></section>
           <aside className="event-facts"><div><span>{t.time}</span><strong>{dateText(selected.start, language)}<br />{timeText(selected.start)}–{timeText(selected.end)} · Copenhagen</strong></div><div><span>{t.location}</span><strong>{(language === "da" ? selected.location : selected.locationEn) || "TTD Studio"}</strong></div><div><span>{t.tickets}</span>{selected.tickets.length ? selected.tickets.map((ticket, index) => <strong key={index}>{language === "da" ? ticket.name : ticket.nameEn} · {priceText(ticket.price, language)}{ticket.remaining !== null && <> · {ticket.remaining === 0 ? t.noSlots : `${ticket.remaining} ${t.places}`}</>}</strong>) : <strong>—</strong>}</div>
             <button ref={signupRef} className="event-cta" type="button" disabled={!canSignUp} onClick={() => setShowSignup(true)}>{canSignUp ? t.signup : selected.status === "sold-out" || selected.remaining === 0 ? t.sold : selected.status === "not-on-sale" ? t.closed : selected.status === "room-conflict" ? t.conflict : t.gate}{canSignUp && <ArrowUpRight size={20} aria-hidden="true" />}</button>
