@@ -70,7 +70,7 @@ export function MarketingAction({
             : `Stop ${isPersonal ? "my newsletter" : "TTD Studio promotional"} emails to this address.`}
       </p>
       {(state === "ready" || state === "error") && /^[A-Za-z0-9_-]{43}$/.test(token) && (
-        <button type="button" disabled={!available} onClick={() => void submit()}>
+        <button className={isPersonal ? "marketing-action-button" : undefined} type="button" disabled={!available} onClick={() => void submit()}>
           {purpose === "confirm"
             ? da
               ? "Bekræft tilmelding"
@@ -85,9 +85,6 @@ export function MarketingAction({
           Open the {purpose === "confirm" ? "confirmation" : "unsubscribe"} link
           from your email. If you have just signed in, reopen that link to continue.
         </p>
-      )}
-      {state === "ready" && !/^[A-Za-z0-9_-]{43}$/.test(token) && (
-        <p role="alert">{da ? "Linket er ugyldigt eller mangler." : "This link is missing or invalid. Please use the full link from your email."}</p>
       )}
       {state === "working" && (
         <p role="status">{da ? "Arbejder…" : "Working…"}</p>
@@ -118,7 +115,7 @@ export function MarketingAction({
         </p>
       )}
       {isPersonal && (state === "expired" || (state === "ready" && !/^[A-Za-z0-9_-]{43}$/.test(token))) && (
-        <p><a href={purpose === "unsubscribe" ? "/unsubscribe" : "/#contact"}>{purpose === "unsubscribe" ? "Request a new unsubscribe link" : "Sign up again for a new confirmation link"}</a></p>
+        <p><a href={purpose === "unsubscribe" ? "/unsubscribe" : "/#newsletter"}>{purpose === "unsubscribe" ? "Request a new unsubscribe link" : "Sign up again for a new confirmation link"}</a></p>
       )}
       <a href={isPersonal ? "https://didde-mie.com" : "/"}>
         {da

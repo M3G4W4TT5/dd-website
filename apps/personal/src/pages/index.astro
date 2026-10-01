@@ -74,25 +74,21 @@ const flowerMask = await getImage({ src: flower, width: 512, format: "png" });
       </section>
 
       <section class="intro-statement" aria-label="Introduction">
-        <div class="section-index"><span>01 / INTRODUCTION</span></div>
         <p>DANCE.<br />CHOREOGRAPHY.<br /><em>MODELLING.</em></p>
         <ClipReel client:visible clips={clips} />
       </section>
 
       <section class="work-section" id="work" aria-labelledby="work-title">
-        <div class="section-index"><span>02 / SELECTED WORK</span><span>PERFORMANCE / CAMPAIGNS</span></div>
         <div class="mega-heading"><h2 id="work-title">SELECTED<br /><span>WORK.</span></h2><p>Live dance, music films and modelling campaigns. Select a project for its credits and source.</p></div>
         <WorkSwitcher client:load items={work} />
       </section>
 
       <section class="contact-section" id="contact" aria-labelledby="contact-title" style={`--contact-image: url("${media.lowerBanner}")`}>
-        <div class="section-index"><span>03 / GET IN TOUCH</span><span>DANCE / CHOREOGRAPHY / CAMPAIGNS</span></div>
         <div class="contact-layout"><div class="contact-copy"><h2 id="contact-title"><span>WORK<br />WITH</span><span class="contact-title-logo"><Image src={ddFlower} alt="DD." width={600} widths={[240, 360, 600]} sizes="(max-width: 500px) 26vw, (max-width: 760px) 184px, (max-width: 1653px) 17vw, 275px" format="webp" quality={95} loading="lazy" /></span></h2><p>For dance, choreography and campaign inquiries.</p></div><ContactPreview client:load /></div>
         <p class="contact-image-credit">DD / HALO</p>
       </section>
 
       <section class="links-section" aria-labelledby="links-title">
-        <div class="section-index"><span>04 / LINKS</span><span>DD / ONLINE</span></div>
         <div class="links-layout">
           <div class="links-intro"><h2 id="links-title">FOLLOW<br />THE <span>WORK.</span></h2><NewsletterSignup client:load /></div>
           <div class="links-list">

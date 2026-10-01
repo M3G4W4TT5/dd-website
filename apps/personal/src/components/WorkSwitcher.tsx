@@ -180,7 +180,6 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
               transition={{ duration: reducedMotion ? 0 : .42, ease: "easeOut" }}
             />}
           </AnimatePresence>
-          <span className="work-visual-index">{current.number} / {items.length.toString().padStart(2, "0")}</span>
         </a>
         <div className="work-visual-info">
           <p><strong>{current.role}</strong></p>
@@ -219,7 +218,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
             <div
               className={index === active ? "work-item active" : "work-item"}
             >
-              <span className="work-item-top"><span>{item.number} / {item.category}</span><ArrowUpRight size={20} /></span>
+              <ArrowUpRight className="work-item-link-icon" size={20} aria-hidden="true" />
               <strong>{item.title}</strong>
               <span className="work-item-role">{item.role}</span>
               <span className="work-item-note">{item.note}</span>

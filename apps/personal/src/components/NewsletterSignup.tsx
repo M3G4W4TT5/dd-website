@@ -28,7 +28,7 @@ export function NewsletterSignup() {
     } finally { setSending(false); }
   }
 
-  return <div className="newsletter-signup">
+  return <div className="newsletter-signup" id="newsletter">
     <p>Sign up for my newsletter where I share updates on my work and dance videos!</p>
     <PreviewFormsNotice available={available} />
     <form onSubmit={submit}>
