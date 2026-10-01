@@ -41,3 +41,5 @@ Fresh booking typecheck and production build passed.
 Browser: all seven desktop details labels 17px; overview rows/facts 16px, Total price label17px, icons22px; eyebrow removed and vertical centers aligned at1440; narrow desktop821 EN/DA no overflow or title/fact overlap,1024 fit. Temporary viewport reset.
 Screenshots: desktop-overview-readable.jpg, desktop-details-readable.jpg.
 Prior automated suites retained; typography-only change did not modify native/server behavior. Hosted acceptance remains unverified.
+
+Owner baseline status received2October: healthy current c02936ab; native adapter exactPR28 e1b875ac; identified and corrected missing installer baseline; 11/11 installer tests including drift rejection passed. Not corrected-release acceptance.

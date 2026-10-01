@@ -131,6 +131,27 @@ class UpgradePathTests(unittest.TestCase):
                     item.__exit__(*exc)
         return Scope()
 
+    def test_verified_pre_ttd_adapter_upgrade_preserves_application_images(self):
+        fixture = HERE / 'tests' / 'fixtures' / 'pretix-pre-ttd-settings.py'
+        self.assertEqual(release.sha(fixture), release.PRE_TTD_TARGET['pretix-settings.py'])
+        (self.root / 'pretix-settings.py').write_bytes(fixture.read_bytes())
+        with self.context():
+            release.install(self.source)
+        self.assertEqual(release.sha(self.root / 'pretix-settings.py'), release.TARGET['pretix-settings.py'])
+        report = json.loads((self.state / 'config-install.json').read_text())
+        self.assertEqual(report['status'], 'installed')
+        self.assertEqual(report['running_revisions'], self.running['revisions'])
+        self.assertTrue(any(cmd[-2:] == ['pretix', 'pretix-cron'] for cmd in self.commands))
+
+    def test_pre_ttd_adapter_drift_stops_before_host_mutation(self):
+        fixture = HERE / 'tests' / 'fixtures' / 'pretix-pre-ttd-settings.py'
+        (self.root / 'pretix-settings.py').write_bytes(fixture.read_bytes() + b'\n# unreviewed drift\n')
+        before = {p.name: p.read_bytes() for p in self.root.iterdir() if p.is_file()}
+        with self.context(), self.assertRaisesRegex(ValueError, 'Installed configuration version differs: pretix-settings.py'):
+            release.install(self.source)
+        self.assertEqual(before, {p.name: p.read_bytes() for p in self.root.iterdir() if p.is_file()})
+        self.assertEqual(self.commands, [])
+
     def test_stale_manifest_install_preserves_images_and_rotates_private_header(self):
         with self.context():
             release.install(self.source)

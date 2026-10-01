@@ -442,3 +442,27 @@ remain as history. No completed review/acceptance is inferred. Fresh pre-push
 9 mocked installer tests passed. Automatic deployment remains disabled.
 Native effective settings/templates must be inspected before application;
 Access, restricted mail, sandbox payment and launch gates remain unchanged.
+
+
+## Hosted pre-installation baseline — owner status received 2 October 2026
+
+Owner checksum-verified the root-owned b285cbf package and ran its sanitized
+status helper. Booking, communications and worker are healthy at c02936ab;
+primary communications remains independently at PR28 be350a1. Host config is
+076a1b0ea63269b1ec670b1ed46ec946967cb5bcd07953bc96a7d1c09f32e698.
+Pretix web/cron use pinned 2026.7.0 image 5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02;
+all three events are published test-mode. Booking roots, health and Pretix-backed
+availability respond 200. Backup reported fresh (19.4 hours) with active timer;
+supervised Pretix processes run. Sandbox/live-payment/unrestricted-mail gates
+remain restricted; communications/worker are controlled and booking captures.
+This is baseline evidence, not corrected-release or human acceptance.
+
+Found before installation: the installer did not accept the running adapter
+hash e1b875ac535b52a69f3be42f64c873de6294642ca889e930652b1a52c6cad983.
+Independent git comparison confirms exact matching bytes at c02936ab and PR28
+be350a1. Added only this identified baseline to the strict upgrade allowlist.
+Two new real install-path tests verify upgrade/recreation and reject a modified
+baseline before any host-file write or service command. All 11 mocked installer
+tests pass. Candidate target hashes, runtime gates and application behavior are
+unchanged. Do not run the old b285cbf installer; stage the corrected package.
+Safe baseline evidence: ttd-candidate/vps-before-ttd-release.json.
