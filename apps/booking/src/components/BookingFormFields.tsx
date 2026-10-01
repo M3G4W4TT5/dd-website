@@ -28,7 +28,7 @@ export function BuyerDetailsFields({ labels, invalidFields, language, defaults =
         <div className="phone-country">
         <span aria-hidden="true" className="phone-country-value">{options.find(country => country.code === phoneCountry)?.callingCode}</span>
         <select name="phoneCountry" value={phoneCountry} onChange={event => setPhoneCountry(event.target.value)} autoComplete="tel-country-code" aria-label={language === "da" ? "Landekode" : "Country code"}>
-          {options.map(country => <option key={country.code} value={country.code}>{country.callingCode} · {country.label}</option>)}
+          {options.map(country => <option key={country.code} value={country.code}>{country.label}</option>)}
         </select>
         </div>
         <span className="phone-field-divider" aria-hidden="true" />
