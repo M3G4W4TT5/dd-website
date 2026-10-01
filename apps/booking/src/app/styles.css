@@ -2045,7 +2045,7 @@ body:has(.legal-main) .legal-main {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(ellipse 36% 120% at 50% 100%,
+  background: radial-gradient(ellipse var(--footer-gradient-width, 36%) var(--footer-gradient-height, 120%) at 50% 100%,
     var(--theme-footer-gradient-max) 0%,
     color-mix(in srgb, var(--theme-footer-gradient-max) 96%, transparent) 12.5%,
     color-mix(in srgb, var(--theme-footer-gradient-max) 84%, transparent) 25%,
@@ -2348,4 +2348,9 @@ body:has(.legal-main) .legal-main {
  .footer-reveal-space { display:none; }
  .site-footer { position:relative; inset:auto; width:100%; --footer-progress:1 !important; }
  .footer-main,.footer-details,.footer-links { min-width:0; }
+}
+
+/* Broader mobile ellipse keeps the footer's colour wash from becoming a stripe. */
+@media (max-width:820px), (hover:none) and (pointer:coarse) {
+ .site-footer { --footer-gradient-width:100%; --footer-gradient-height:90%; }
 }
