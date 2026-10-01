@@ -56,21 +56,21 @@ export function MarketingAction({
     }
   }
   return (
-    <main className="marketing-page">
-      <span>{isPersonal ? "DD PRODUCTION" : "TTD STUDIO"}</span>
-      <h1>{title}</h1>
+    <main className={isPersonal ? "newsletter-unsubscribe-page marketing-page" : "marketing-page"}>
+      {isPersonal ? <a href="/" className="wordmark">DD<span>.</span></a> : <span>TTD STUDIO</span>}
+      <h1>{isPersonal ? purpose === "confirm" ? "CONFIRM SIGNUP." : "UNSUBSCRIBE." : title}</h1>
       <PreviewFormsNotice available={available} />
       <p>
         {purpose === "confirm"
           ? da
             ? "Bekræft, at du vil modtage e-mails om TTD Studio-tilbud, nye events og rabatter."
-            : `Confirm that you want ${isPersonal ? "DD's newsletter about her work and dance videos" : "TTD Studio emails about offers, new events and discounts"}.`
+            : `Confirm that you want ${isPersonal ? "my newsletter about my work and dance videos" : "TTD Studio emails about offers, new events and discounts"}.`
           : da
             ? "Stop e-mails om TTD Studio-tilbud, nye events og rabatter til denne adresse."
-            : `Stop ${isPersonal ? "DD newsletter" : "TTD Studio promotional"} emails to this address.`}
+            : `Stop ${isPersonal ? "my newsletter" : "TTD Studio promotional"} emails to this address.`}
       </p>
-      {state === "ready" && /^[A-Za-z0-9_-]{43}$/.test(token) && (
-        <button type="button" disabled={!available} onClick={() => void submit()}>
+      {(state === "ready" || state === "error") && /^[A-Za-z0-9_-]{43}$/.test(token) && (
+        <button className={isPersonal ? "marketing-action-button" : undefined} type="button" disabled={!available} onClick={() => void submit()}>
           {purpose === "confirm"
             ? da
               ? "Bekræft tilmelding"
@@ -113,6 +113,9 @@ export function MarketingAction({
             ? "Vi kunne ikke gennemføre anmodningen. Prøv igen senere."
             : "We could not complete this request. Please try again later."}
         </p>
+      )}
+      {isPersonal && (state === "expired" || (state === "ready" && !/^[A-Za-z0-9_-]{43}$/.test(token))) && (
+        <p><a href={purpose === "unsubscribe" ? "/unsubscribe" : "/#newsletter"}>{purpose === "unsubscribe" ? "Request a new unsubscribe link" : "Sign up again for a new confirmation link"}</a></p>
       )}
       <a href={isPersonal ? "https://didde-mie.com" : "/"}>
         {da

@@ -18,7 +18,8 @@
 .desktop-flower-page>.intro-statement .clip-reel { z-index:2; }
 @media(max-width:760px) {
   .desktop-flower-page { --mobile-flower-width:clamp(44px,14.4vw,96px); overflow-x:clip; }
-  .desktop-flower { width:var(--mobile-flower-width); }
+  .desktop-flower { width:var(--mobile-flower-width); touch-action:none; }
+  .desktop-flower.is-dragging { z-index:40; cursor:grabbing; }
   .desktop-flower-page>.links-section { padding-bottom:max(130px,calc(var(--mobile-flower-width) * 1.11 + 60px)); }
   .desktop-flower-page .work-switcher { position:relative; z-index:2; }
 }

@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { personalEmail } from "@dd/mail";
 
 const personalMailbox = "contact@didde-mie.com";
 const bookingMailbox = "booking@didde-mie.com";
@@ -27,14 +28,7 @@ export function personalAutoReply(name: string, email: string) {
     to: email,
     replyTo: personalMailbox,
     subject: "Thank you for your message",
-    text: `${greeting}\n\n${message}\n\nBest,\nDidde-Mie\nDD.`,
-    html:
-      `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#09090b;background:#ffffff">` +
-      `<p style="margin:0 0 20px">${escapeHtml(greeting)}</p>` +
-      `<p style="margin:0 0 20px">${message}</p>` +
-      `<p style="margin:0 0 12px">Best,<br>Didde-Mie</p>` +
-      `<div aria-label="DD." style="font-family:Arial,Helvetica,sans-serif;font-size:30px;font-weight:900;letter-spacing:-2px;line-height:1">` +
-      `<span style="color:#09090b">DD</span><span style="color:#ffb3eb">.</span></div></div>`,
+    ...personalEmail(`${greeting}\n\n${message}\n\nBest,\nDidde-Mie`),
     headers: {
       "Auto-Submitted": "auto-replied",
       "X-Auto-Response-Suppress": "All",

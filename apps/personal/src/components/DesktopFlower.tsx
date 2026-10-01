@@ -37,6 +37,9 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     let clickGlow = 0;
     let x = 0;
     let y = 0;
+    let drag: { pointerId: number; offsetX: number; offsetY: number; startX: number; startY: number; x: number; y: number; moved: boolean } | undefined;
+    let returningFromDrag = false;
+    let ignoreClickUntil = 0;
     let velocityX = 0;
     let velocityY = 0;
     let angle = .16;
@@ -64,6 +67,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     const abort = new AbortController();
     const fullTurn = Math.PI * 2;
     const updateInteraction = () => {
+      flower.setAttribute("aria-label", desktop.matches ? "Spin the flower" : "Spin or drag the flower");
       flower.disabled = !model || reduced.matches
         || document.documentElement.classList.contains("desktop-intro-active");
     };
@@ -139,8 +143,8 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       // After an impulse, the final idle pose is flat. Active scrolling still drives the angle.
       if (settlingClick && performance.now() - lastScrollTime > 120) goalAngle = Math.round(goalAngle / fullTurn) * fullTurn;
       return {
-        x: startX + (endX - startX) * ease + (reduced.matches || introActive ? 0 : pointerX * 14 * (1 - dockEase)),
-        y: clamp(targetY + (reduced.matches || introActive ? 0 : pointerY * 12 * (1 - dockEase)), startY, endY),
+        x: drag?.x ?? startX + (endX - startX) * ease + (reduced.matches || introActive ? 0 : pointerX * 14 * (1 - dockEase)),
+        y: drag?.y ?? clamp(targetY + (reduced.matches || introActive ? 0 : pointerY * 12 * (1 - dockEase)), startY, endY),
         angle: introActive || reduced.matches ? normalAngle : goalAngle,
         normalAngle,
         dockEase
@@ -155,7 +159,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
 
     const paint = (elapsed: number) => {
       // Clamp the visible spring overshoot to the page, keeping it out of the footer.
-      const visibleY = clamp(y, startY, endY);
+      const visibleY = drag || returningFromDrag ? clamp(y, 0, page.offsetHeight - flowerHeight) : clamp(y, startY, endY);
       flower.style.transform = `translate3d(${x.toFixed(2)}px,${visibleY.toFixed(2)}px,0)`;
       // Split at the section edge so only the part over pink becomes black.
       const split = clamp(linksTop - visibleY, 0, flowerHeight);
@@ -216,12 +220,16 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
         velocityX = velocityY = angularVelocity = 0;
         initialized = true;
       } else {
+        if (drag) { x = goal.x; y = goal.y; velocityX = velocityY = 0; }
+        // The same scroll spring also flies a released coin back to its live target.
         // Substeps keep the underdamped spring stable during slower frames.
         const steps = Math.max(1, Math.ceil(elapsed / .008));
         const dt = elapsed / steps;
         for (let i = 0; i < steps; i++) {
-          velocityX += ((goal.x - x) * 78 - velocityX * 12.5) * dt;
-          velocityY += ((goal.y - y) * 78 - velocityY * 12.5) * dt;
+          if (!drag) {
+            velocityX += ((goal.x - x) * 78 - velocityX * 12.5) * dt;
+            velocityY += ((goal.y - y) * 78 - velocityY * 12.5) * dt;
+          }
           // Separate, nearly critical damping lets rotation coast to a stop.
           angularVelocity += ((goal.angle - angle) * 45 - angularVelocity * 14) * dt;
           x += velocityX * dt;
@@ -237,6 +245,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       if (resting) {
         x = goal.x; y = goal.y; angle = goal.angle;
         velocityX = velocityY = angularVelocity = 0;
+        if (!drag) returningFromDrag = false;
         if (settlingClick) { alignRotation(angle, goal); settlingClick = false; }
       }
       const glowResting = paint(elapsed);
@@ -259,7 +268,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       wake();
     };
     const click = (event: MouseEvent) => {
-      if (flower.disabled || event.button !== 0) return;
+      if (flower.disabled || event.button !== 0 || performance.now() < ignoreClickUntil) return;
       // Listen before overlapping content handles the click, without changing
       // stacking or interfering with that content's links and controls.
       if (event.target instanceof Node && flower.contains(event.target)) {
@@ -270,6 +279,36 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       const bounds = flower.getBoundingClientRect();
       if (event.clientX >= bounds.left && event.clientX <= bounds.right
         && event.clientY >= bounds.top && event.clientY <= bounds.bottom) spin();
+    };
+    const releaseDrag = (event?: PointerEvent) => {
+      if (!drag || (event && event.pointerId !== drag.pointerId)) return;
+      const pointerId = drag.pointerId;
+      if (drag.moved || event?.type === "pointercancel") ignoreClickUntil = performance.now() + 500;
+      drag = undefined;
+      returningFromDrag = true;
+      flower.classList.remove("is-dragging");
+      if (flower.hasPointerCapture(pointerId)) flower.releasePointerCapture(pointerId);
+      velocityX = velocityY = 0;
+      wake();
+    };
+    const grab = (event: PointerEvent) => {
+      if (desktop.matches || flower.disabled || drag || !event.isPrimary || event.button !== 0) return;
+      // Capture only the coin itself; links, forms and carousels retain their gestures.
+      if (!(event.target instanceof Node) || !flower.contains(event.target)) return;
+      const bounds = flower.getBoundingClientRect();
+      drag = { pointerId: event.pointerId, offsetX: event.clientX - bounds.left, offsetY: event.clientY - bounds.top, startX: event.clientX, startY: event.clientY, x: bounds.left - pageLeft, y: bounds.top + window.scrollY - pageTop, moved: false };
+      returningFromDrag = false;
+      velocityX = velocityY = 0;
+      flower.setPointerCapture(event.pointerId);
+      flower.classList.add("is-dragging");
+      wake();
+    };
+    const dragMove = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      drag.moved ||= Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 6;
+      drag.x = clamp(event.clientX - drag.offsetX - pageLeft, 0, window.innerWidth - pageLeft - flower.offsetWidth);
+      drag.y = clamp(event.clientY - drag.offsetY + window.scrollY - pageTop, Math.max(0, window.scrollY - pageTop), Math.min(page.offsetHeight - flowerHeight, window.scrollY + window.innerHeight - pageTop - flowerHeight));
+      wake();
     };
     const scroll = () => { lastScrollTime = performance.now(); wake(); };
     const introComplete = () => { updateInteraction(); wake(); };
@@ -297,6 +336,8 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     };
     const resize = () => {
       if (measuredDesktop !== desktop.matches) {
+        releaseDrag();
+        returningFromDrag = false;
         measuredDesktop = desktop.matches;
         initialized = false;
         settlingClick = false;
@@ -327,6 +368,8 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       wake();
     };
     const motionChange = () => {
+      releaseDrag();
+      returningFromDrag = false;
       pointerX = pointerY = 0;
       mouseX = mouseY = NaN;
       hoverGlow = 0;
@@ -340,6 +383,11 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     observer.observe(page);
     observer.observe(hero);
     observer.observe(links);
+    flower.addEventListener("pointerdown", grab);
+    flower.addEventListener("pointermove", dragMove);
+    flower.addEventListener("pointerup", releaseDrag);
+    flower.addEventListener("pointercancel", releaseDrag);
+    flower.addEventListener("lostpointercapture", releaseDrag);
     document.addEventListener("click", click, { capture: true });
     window.addEventListener("scroll", scroll, { passive: true });
     window.addEventListener("resize", resize);
@@ -351,6 +399,12 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     resize();
 
     return () => {
+      releaseDrag();
+      flower.removeEventListener("pointerdown", grab);
+      flower.removeEventListener("pointermove", dragMove);
+      flower.removeEventListener("pointerup", releaseDrag);
+      flower.removeEventListener("pointercancel", releaseDrag);
+      flower.removeEventListener("lostpointercapture", releaseDrag);
       stopped = true;
       abort.abort();
       if (frame) window.cancelAnimationFrame(frame);

@@ -53,7 +53,6 @@ export function ContactPreview() {
   return (
     <form className="contact-form" noValidate onInput={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onChange={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onSubmit={submit}>
       <PreviewFormsNotice available={available} />
-      <p className="form-disclaimer">TELL DD ABOUT YOUR PROJECT</p>
       <div className="contact-fields">
         <label>YOUR NAME<input type="text" name="name" autoComplete="name" maxLength={100} required placeholder="Name" aria-invalid={invalidFields.includes("name")} /></label>
         <label>EMAIL ADDRESS<input type="email" name="email" autoComplete="email" maxLength={254} required placeholder="name@example.com" aria-invalid={invalidFields.includes("email")} /></label>
