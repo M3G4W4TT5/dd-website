@@ -1,3 +1,5 @@
+import { bookingClient } from "../../../../../server/client-identity";
+import { AdmissionDenied } from "../../../../../../../server/database/admission";
 import { boundedJson, HttpError } from "@dd/runtime";
 import { NextResponse } from "next/server";
 import { rentalCheckoutSchema, RentalConflict, RentalPhoneRejected, RentalPriceChanged, startRentalCheckout } from "../../../../../server/rental-checkout";
@@ -21,7 +23,7 @@ export async function POST(request: Request) {
   if (!parsed.success) return parsed.error.issues.some(issue => issue.path.join(".") === "details.phone")
     ? json({ code: "invalid_phone" }, 422) : json({ code: "invalid_details" }, 400);
   try {
-    const result = await startRentalCheckout(parsed.data, identity);
+    const result = await startRentalCheckout(parsed.data, identity, undefined, bookingClient(request));
     let marketingRequested: boolean | null = null;
     if (parsed.data.marketingOptIn) {
       try {
@@ -32,6 +34,8 @@ export async function POST(request: Request) {
     }
     return json({ ...result, marketingRequested, reservationCreated: true, paymentStarted: false });
   } catch (error) {
+    if (error instanceof HttpError) return json({error:error.message},error.status);
+    if (error instanceof AdmissionDenied) return NextResponse.json({error:"Too many requests"},{status:429,headers:{"Cache-Control":"no-store","Retry-After":String(error.retryAfter)}});
     if (error instanceof RentalPhoneRejected) return json({ code: "invalid_phone" }, 422);
     if (error instanceof RentalPriceChanged) return json({ code: "price_changed" }, 409);
     if (error instanceof RentalConflict) return json({ code: "inventory_changed" }, 409);
