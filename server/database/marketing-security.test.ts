@@ -67,9 +67,9 @@ test("bounded retention preserves active/suppression/withdrawal and ambiguous ev
 test("signup pre-pool saturation leaves withdrawal and actions admitted",async()=>{
  let waiting=0;const parked=new Promise<any>(()=>{});
  const pool={connect:()=>{waiting++;return parked;}} as any;
- for(let i=0;i<8;i++)void admission(pool,"marketing-confirm",async()=>{});
+ for(let i=0;i<32;i++)void admission(pool,"marketing-confirm",async()=>{});
  await assert.rejects(()=>admission(pool,"marketing-confirm",async()=>{}));
  void admission(pool,"marketing-unsubscribe",async()=>{});
  void admission(pool,"marketing-action-unsubscribe",async()=>{});
- assert.equal(waiting,10);
+ assert.equal(waiting,34);
 });

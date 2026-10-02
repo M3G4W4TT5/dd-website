@@ -40,7 +40,7 @@ export async function admission<T>(pool: Pool, lane: string, fn: (c: PoolClient)
   const lanes=admissions.get(pool) ?? new Map<string,number>();
   admissions.set(pool,lanes);
   const pending=lanes.get(lane) ?? 0;
-  if(pending>=8) throw new AdmissionDenied("capacity");
+  if(pending>=32) throw new AdmissionDenied("capacity");
   lanes.set(lane,pending+1);
   try { return await transaction(pool, async (c) => {
     await c.query("SET LOCAL statement_timeout='5s'; SET LOCAL lock_timeout='2s'");
