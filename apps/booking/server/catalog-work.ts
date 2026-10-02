@@ -25,14 +25,14 @@ export async function catalogWork<T>(key: string, fn: () => Promise<T>, fresh = 
       waiting++;
       let release: (() => Promise<void>) | undefined;
       try {
-        release = await lease(bookingDb(), "catalog-waiting", 32, 35);
+        release = await lease(bookingDb(), "catalog-waiting", 32, 60);
         return structuredClone(await running) as T;
       } finally { waiting--; if (release) await release(); }
     }
   }
   if (pending.size >= 64) throw new AdmissionDenied("capacity");
   const run = async () => {
-    const release = await lease(bookingDb(), fresh ? "catalog-checkout" : "catalog-public", setting(fresh ? "CATALOG_CHECKOUT_CONCURRENCY" : "CATALOG_PUBLIC_CONCURRENCY", fresh ? 1 : 2, 8), 35);
+    const release = await lease(bookingDb(), fresh ? "catalog-checkout" : "catalog-public", setting(fresh ? "CATALOG_CHECKOUT_CONCURRENCY" : "CATALOG_PUBLIC_CONCURRENCY", fresh ? 1 : 2, 8), 60);
     try {
       await admission(bookingDb(), "catalog-emergency", c=>emergency(c, fresh ? "catalog-checkout" : "catalog-public", setting("CATALOG_EMERGENCY_BURST", 120), 1));
       const value = await boundedPretix(fn, setting("CATALOG_DEADLINE_MS", 25000, 30000), setting("CATALOG_REQUEST_MAX", 100, 500));
