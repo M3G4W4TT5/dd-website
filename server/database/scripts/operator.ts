@@ -1,3 +1,4 @@
+import { cleanupMarketing } from "../retention";
 import { database, transaction, digest } from "../index";
 import { writeFile, realpath } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
@@ -65,9 +66,7 @@ try {
     });
     console.log("Scoped membership action completed");
   } else if (command === "cleanup") {
-    await pool.query(
-      "DELETE FROM marketing_action_tokens WHERE expires_at<now(); DELETE FROM marketing_subscriptions WHERE status='pending' AND requested_at<now()-interval '30 days'",
-    );
+    await cleanupMarketing(pool,true);
     console.log("Scoped expired/pending cleanup completed");
   } else
     throw new Error(
