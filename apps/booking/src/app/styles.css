@@ -2294,7 +2294,7 @@ body:has(.legal-main) .legal-main {
 
 /* Guided mobile journeys share the existing availability and checkout forms. */
 .mobile-booking-flow, .mobile-journey { min-width:0; width:100%; }
-.mobile-studio-entry .button { width:100%; min-height:56px; }
+.mobile-studio-entry .button { width:100%; min-height:56px; font-size:19.5px; }
 .mobile-journey { scroll-margin-top:96px; background:var(--theme-soft-bg); border:1px solid var(--theme-ink); padding:20px; }
 .mobile-journey-heading { font-size:32px; line-height:1.1; margin:24px 0; scroll-margin-top:96px; }
 .journey-progress { display:grid; gap:10px; margin-bottom:20px; font-size:12px; }
@@ -2376,7 +2376,7 @@ body:has(.legal-main) .legal-main {
 
 /* Mobile availability: sold-out dates/times stay clearly red while disabled. */
 .mobile-month-days button.is-unavailable:disabled,.journey-times button.is-unavailable:disabled { color:#a92323; border-color:#a92323; background:#fbe4e4; opacity:1; }
-.journey-times button:disabled:not(.is-unavailable) { color:#666; border-color:#999; background:#e6e6e6; opacity:1; }
+.journey-times button:disabled:not(.is-unavailable):not(.journey-time-selected) { color:#666; border-color:#999; background:#e6e6e6; opacity:1; }
 .mobile-booking-flow #booking-details .details-form { margin-top:0; }
 
 /* Studio details heading occupies the former desktop eyebrow position. */
@@ -2397,4 +2397,31 @@ body:has(.legal-main) .legal-main {
 }
 @media (min-width:821px) and (max-width:1100px) {
  .booking-layout { grid-template-columns:minmax(0,1.2fr) minmax(360px,.8fr); }
+}
+
+/* Mobile interval selection uses the desktop sequential fill animation. */
+.journey-times button { position:relative; }
+.journey-times button > span { display:grid; place-items:center; position:absolute; inset:0; pointer-events:none; }
+.journey-times button.journey-time-selected { background:var(--theme-ink); color:var(--theme-bg); border-color:var(--theme-ink); opacity:1; }
+@media (prefers-reduced-motion: reduce) {
+ .journey-times .time-slot--spreading { animation:none; }
+}
+/* Focus uses the studio colour; red remains reserved for invalid values. */
+#booking-details .details-fields :is(input, select, textarea):focus-visible { outline:2px solid var(--theme-ink); outline-offset:2px; }
+
+/* A filled, blurred layer avoids the hollow box-shadow frame on mobile. */
+@media (max-width:820px), (hover:none) and (pointer:coarse) {
+ .image-frame { box-shadow:none; isolation:isolate; }
+ .image-frame::before { content:""; position:absolute; inset:0; z-index:-1; background:var(--shadow-color); filter:blur(var(--shadow-blur)); transform:translate(var(--shadow-x),var(--shadow-y)); pointer-events:none; }
+ .image-frame.is-visible img { filter:none; }
+}
+
+.journey-date-nav button { display:grid; place-items:center; }
+.journey-time--clearing { animation:journey-time-clear .12s ease-out both; }
+@keyframes journey-time-clear {
+ from { background:var(--theme-ink); color:var(--theme-bg); }
+ to { background:var(--theme-soft-bg); color:var(--theme-ink); }
+}
+@media (prefers-reduced-motion:reduce) {
+ .journey-time--clearing { animation:none; }
 }

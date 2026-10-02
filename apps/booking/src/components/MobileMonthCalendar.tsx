@@ -1,4 +1,5 @@
 "use client";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DateTime } from "luxon";
 import { mobileMonthCells } from "@/lib/mobile-calendar";
 
@@ -12,9 +13,9 @@ export function MobileMonthCalendar({language, month, onMonth, date, min, max, o
   const next = first.plus({months: 1});
   return <div className="mobile-month-calendar">
     <div className="journey-date-nav">
-      <button type="button" disabled={previous.endOf("month").toISODate()! < min} aria-label={language === "da" ? "Forrige måned" : "Previous month"} onClick={() => onMonth(previous.toISODate()!)}>←</button>
+      <button type="button" disabled={previous.endOf("month").toISODate()! < min} aria-label={language === "da" ? "Forrige måned" : "Previous month"} onClick={() => onMonth(previous.toISODate()!)}><ChevronLeft size={20} aria-hidden="true" /></button>
       <strong aria-live="polite">{first.setLocale(language).toFormat("LLLL yyyy")}</strong>
-      <button type="button" disabled={next.toISODate()! > max} aria-label={language === "da" ? "Næste måned" : "Next month"} onClick={() => onMonth(next.toISODate()!)}>→</button>
+      <button type="button" disabled={next.toISODate()! > max} aria-label={language === "da" ? "Næste måned" : "Next month"} onClick={() => onMonth(next.toISODate()!)}><ChevronRight size={20} aria-hidden="true" /></button>
     </div>
     <div className="mobile-month-weekdays" aria-hidden="true">{Array.from({length: 7}, (_, i) => <span key={i}>{first.startOf("week").plus({days: i}).setLocale(language).toFormat("ccc")}</span>)}</div>
     <div className="mobile-month-days" aria-label={language === "da" ? "Vælg dato" : "Select a date"}>
@@ -24,7 +25,7 @@ export function MobileMonthCalendar({language, month, onMonth, date, min, max, o
         const outOfRange = day < min || day > max;
         const state = outOfRange ? undefined : status?.(day);
         return <button key={day} type="button" disabled={outOfRange || state?.disabled} className={state?.unavailable ? "is-unavailable" : undefined} aria-pressed={day === date} aria-label={`${value.toFormat("cccc d LLLL yyyy")}${state ? `: ${state.description}` : ""}`} onClick={() => onDate(day)}>
-          <strong>{value.day}</strong>{state && <small>{state.text}</small>}
+          <strong>{value.day}</strong>{state?.text && <small>{state.text}</small>}
         </button>;
       })}
     </div>

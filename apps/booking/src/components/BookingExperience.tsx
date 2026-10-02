@@ -159,7 +159,28 @@ export function BookingExperience({
   const t = copy[language];
   const mobile = useMobileJourney();
   const [mobileStep, setMobileStep] = useState<StudioStep>("entry");
-  const [moreHours, setMoreHours] = useState<boolean | null>(null);
+  const [mobileTransition, setMobileTransition] = useState<"out" | "in" | null>(null);
+  const mobileTransitionTimer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (mobileTransitionTimer.current !== null) window.clearTimeout(mobileTransitionTimer.current);
+  }, []);
+  function changeMobileStep(nextStep: StudioStep) {
+    if (mobileTransition || nextStep === mobileStep) return;
+    if ((mobileStep === "start" && nextStep === "end") || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setMobileStep(nextStep);
+      return;
+    }
+    setMobileTransition("out");
+    mobileTransitionTimer.current = window.setTimeout(() => {
+      setMobileStep(nextStep);
+      setMobileTransition("in");
+      mobileTransitionTimer.current = window.setTimeout(() => {
+        setMobileTransition(null);
+        mobileTransitionTimer.current = null;
+      }, 360);
+    }, 220);
+  }
+
   const today = initialDate;
   const maxDay = DateTime.fromISO(initialDate).plus({ days: 45 }).toISODate()!;
 
@@ -262,7 +283,7 @@ export function BookingExperience({
     setDate(nextDate);
     setSelectedId(null);
     setHours(1);
-    setMoreHours(null);
+    setEndSelected(false);
     setEndSelected(false);
     setClearingSlotIds([]);
     setStatus("idle");
@@ -376,11 +397,11 @@ export function BookingExperience({
             <div><h1 id="booking-title">{t.bookingTitle.firstLine}{t.bookingTitle.secondLinePrefix && <br />}{t.bookingTitle.secondLinePrefix}<WarpText text={t.bookingTitle.lastWord} /></h1></div>
             <div className="booking-heading-side"><p>{t.heroTextBeforeVenue}<a className="hero-venue-link" href="https://kbhdanser.dk/">København Danser<ArrowUpRight className="hero-venue-arrow" aria-hidden="true" size={12} strokeWidth={1.8} /></a>{t.heroTextAfterVenue}</p></div>
           </div>
-          {mobile ? <div id="booking-flow" className="mobile-booking-flow" tabIndex={-1}>
+          {mobile ? <div id="booking-flow" className={`mobile-booking-flow ${mobileTransition === "out" || phase.endsWith("-out") ? "booking-stage--leaving" : mobileTransition === "in" || phase === "details" || hasVisitedDetails ? "booking-stage--entering" : ""}`} tabIndex={-1} inert={mobileTransition === "out" || phase.endsWith("-out")}>
             {phase === "details" || phase === "details-out" ? <>
-              <JourneyProgress language={language} labels={studioProgress(moreHours).map(value => ({date: language === "da" ? "Dato" : "Date", start: language === "da" ? "Starttid" : "Start time", more: language === "da" ? "Varighed" : "Duration", end: language === "da" ? "Sluttid" : "End time", review: language === "da" ? "Overblik" : "Review", details: language === "da" ? "Dine oplysninger" : "Your details", payment: language === "da" ? "Betaling" : "Payment"})[value]!)} index={studioProgress(moreHours).indexOf("details")} />
+              <JourneyProgress language={language} labels={studioProgress().map(value => ({date: language === "da" ? "Dato" : "Date", start: language === "da" ? "Starttid" : "Start time", end: language === "da" ? "Sluttid" : "End time", review: language === "da" ? "Overblik" : "Review", details: language === "da" ? "Dine oplysninger" : "Your details", payment: language === "da" ? "Betaling" : "Payment"})[value]!)} index={studioProgress().indexOf("details")} />
               <CustomerDetailsPreview language={language} date={date} startId={selectedId!} hours={hours} acceptedQuote={acceptedQuote!} draft={detailsDraft.current} guided onBack={() => { setMobileStep("review"); setPhase("details-out"); }} onConflict={async () => { await selectDate(date); setStatus("changed"); setMobileStep("date"); setPhase("selection"); }} />
-            </> : <MobileStudioPicker language={language} step={mobileStep} setStep={setMobileStep} more={moreHours} onMore={value => { setMoreHours(value); if (!value) setHours(1); }} date={date} today={today} maxDay={maxDay} availability={current} startId={selectedId} quote={quote} loading={loading} error={error} checking={checking} status={status} onDate={day => void selectDate(day)} onStart={id => { setSelectedId(id); setHours(1); setMoreHours(null); setAcceptedQuote(null); setStatus("idle"); }} onEnd={setHours} onCheck={() => void checkSelection()} />}
+            </> : <MobileStudioPicker language={language} step={mobileStep} setStep={changeMobileStep} endSelected={endSelected} date={date} today={today} maxDay={maxDay} availability={current} startId={selectedId} quote={quote} loading={loading} error={error} checking={checking} status={status} onDate={day => void selectDate(day)} onStart={id => { setSelectedId(id); setHours(1); setEndSelected(false); setAcceptedQuote(null); setStatus("idle"); }} onEnd={value => { setHours(value); setEndSelected(true); setAcceptedQuote(null); setStatus("idle"); }} onCheck={() => void checkSelection()} />}
           </div> : (
           <div id="booking-flow" className={`booking-layout booking-stage ${phase.endsWith("-out") ? "booking-stage--leaving" : phase === "details" || hasVisitedDetails ? "booking-stage--entering" : ""} ${phase === "details" || phase === "details-out" ? "booking-layout--details" : ""}`} tabIndex={-1} inert={phase.endsWith("-out")}>
             {phase === "details" || phase === "details-out" ? (
