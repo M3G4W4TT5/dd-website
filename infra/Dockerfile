@@ -1,4 +1,4 @@
-FROM node:24.20.0-bookworm-slim AS dependencies
+FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY apps/booking/package.json apps/booking/package.json
@@ -23,7 +23,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 FROM source AS booking-build
 RUN npm run build:booking
 
-FROM node:24.20.0-bookworm-slim AS booking
+FROM node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e AS booking
 WORKDIR /app
 ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
 COPY --from=booking-build /app/apps/booking/.next/standalone ./
@@ -53,5 +53,5 @@ ARG PUBLIC_SERVICES_URL
 ARG PUBLIC_BOOKING_URL
 ENV DD_MODE=production PUBLIC_SERVICES_URL=$PUBLIC_SERVICES_URL PUBLIC_BOOKING_URL=$PUBLIC_BOOKING_URL
 RUN npm run build:personal
-FROM nginxinc/nginx-unprivileged:1.29-alpine AS primary
+FROM nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6 AS primary
 COPY --from=primary-build /app/apps/personal/dist /usr/share/nginx/html

@@ -1,0 +1,217 @@
+{
+  "resolved_at": "2026-10-02T22:31:07.680669+00:00",
+  "images": [
+    {
+      "tag": "postgres:17.6-alpine",
+      "reference": "postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+      "digest": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+      "amd64_manifest": "sha256:747d5ed1fdeeb124b880fbe3d7c6557d2c4064ae41d6b6297d417882effce4be",
+      "amd64_config": "sha256:d741b376874687de90374fd34f55c6b2760e8f7bd7e4ae5cd47f50757fc08cf8",
+      "platforms": [
+        "linux/386",
+        "linux/amd64",
+        "linux/arm",
+        "linux/arm64",
+        "linux/ppc64le",
+        "linux/riscv64",
+        "linux/s390x"
+      ],
+      "registry": "https://registry-1.docker.io/v2/library/postgres/manifests/17.6-alpine",
+      "created": "2025-10-15T18:23:03Z",
+      "annotations": {},
+      "manifest_file": "postgres.manifest.json",
+      "amd64_provenance": [
+        {
+          "manifest": "sha256:0a586f5bc65bd681e8b8c6bf00a164a12d3cd5e6b716b41222d9ea37c195d95a",
+          "statement": "sha256:0077bac36ee7243519f4251c9373f5883228832776bda9d5d23d5a337ec7665f",
+          "predicate_type": "https://slsa.dev/provenance/v0.2",
+          "builder": "https://github.com/docker-library",
+          "build_type": "https://mobyproject.org/buildkit@v1",
+          "source_materials": [
+            {
+              "uri": "https://github.com/docker-library/postgres.git#5ec89312491bdaa2c42377a65ec0af2ecb774480",
+              "digest": {
+                "sha1": "5ec89312491bdaa2c42377a65ec0af2ecb774480"
+              }
+            }
+          ],
+          "verification": "Registry content digests and subject binding verified; cryptographic publisher signature unverified"
+        }
+      ],
+      "signature_verification": "unverified; cosign/notation unavailable and no publisher trust policy configured",
+      "attestation_descriptors": 8
+    },
+    {
+      "tag": "redis:7.4.5-alpine",
+      "reference": "redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08",
+      "digest": "sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08",
+      "amd64_manifest": "sha256:0302cccee2b2043e61b497c8f4075467c5f7ba27a9f38be7e092634f2734baed",
+      "amd64_config": "sha256:f218e591b571a4129aa29a8566b597d849fba21af7be853d31b03122b20db5e9",
+      "platforms": [
+        "linux/386",
+        "linux/amd64",
+        "linux/arm",
+        "linux/arm64",
+        "linux/ppc64le",
+        "linux/riscv64",
+        "linux/s390x"
+      ],
+      "registry": "https://registry-1.docker.io/v2/library/redis/manifests/7.4.5-alpine",
+      "created": "2025-07-06T16:51:58Z",
+      "annotations": {},
+      "manifest_file": "redis.manifest.json",
+      "amd64_provenance": [
+        {
+          "manifest": "sha256:094004f7359617310cf0ec463866804407c15e86acd87b8bb8f452077382f51f",
+          "statement": "sha256:e1c32e1bbaad740626ab1d54e4f37f106696b24a9bc1b511ab6a0333b780fcd3",
+          "predicate_type": "https://slsa.dev/provenance/v0.2",
+          "builder": "https://github.com/docker-library",
+          "build_type": "https://mobyproject.org/buildkit@v1",
+          "source_materials": [
+            {
+              "uri": "https://github.com/redis/docker-library-redis.git#732a2608af90db97efa8ddd993fcbb63f5d2883b",
+              "digest": {
+                "sha1": "732a2608af90db97efa8ddd993fcbb63f5d2883b"
+              }
+            }
+          ],
+          "verification": "Registry content digests and subject binding verified; cryptographic publisher signature unverified"
+        }
+      ],
+      "signature_verification": "unverified; cosign/notation unavailable and no publisher trust policy configured",
+      "attestation_descriptors": 8
+    },
+    {
+      "tag": "axllent/mailpit:v1.31.1",
+      "reference": "axllent/mailpit:v1.31.1@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365",
+      "digest": "sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365",
+      "amd64_manifest": "sha256:3856f9327f3f228afe8c4ce2dcca3cb2aa00f6ec60b569f36483f7ebb1ff44f7",
+      "amd64_config": "sha256:eb6a74c41b32eb13f088b299bfc73677a9c6583d551620db150607c62f481675",
+      "platforms": [
+        "linux/386",
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "registry": "https://registry-1.docker.io/v2/axllent/mailpit/manifests/v1.31.1",
+      "created": "2026-09-05T11:15:32.076262606Z",
+      "annotations": {
+        "org.opencontainers.image.description": "An email and SMTP testing tool with API for developers",
+        "org.opencontainers.image.documentation": "https://mailpit.axllent.org/docs/",
+        "org.opencontainers.image.licenses": "MIT",
+        "org.opencontainers.image.source": "https://github.com/axllent/mailpit",
+        "org.opencontainers.image.title": "Mailpit",
+        "org.opencontainers.image.url": "https://mailpit.axllent.org"
+      },
+      "manifest_file": "axllent-mailpit.manifest.json",
+      "amd64_provenance": [
+        {
+          "manifest": "sha256:e3a980d32445ae4a5b4cffc63528fe05b5357836d76f315d46e76e75a2637976",
+          "statement": "sha256:faa5215c9af8095e6a0b68d5f40d849e5b62e1da96fa3d4af3ca88fd7d74ec07",
+          "predicate_type": "https://slsa.dev/provenance/v1",
+          "builder": null,
+          "build_type": null,
+          "source_materials": [],
+          "verification": "Registry content digests and subject binding verified; cryptographic publisher signature unverified"
+        }
+      ],
+      "signature_verification": "unverified; cosign/notation unavailable and no publisher trust policy configured",
+      "attestation_descriptors": 3
+    },
+    {
+      "tag": "pretix/standalone:2026.7.0",
+      "reference": "pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02",
+      "digest": "sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02",
+      "amd64_manifest": "sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02",
+      "amd64_config": "sha256:73351dd012cc4fcd430396372cad745be222201145dc8589f6793e96d727c65a",
+      "platforms": [
+        "linux/amd64"
+      ],
+      "registry": "https://registry-1.docker.io/v2/pretix/standalone/manifests/2026.7.0",
+      "created": "2026-07-30T18:49:30.515928171Z",
+      "annotations": {},
+      "manifest_file": "pretix-standalone.manifest.json",
+      "amd64_provenance": [],
+      "signature_verification": "unverified; cosign/notation unavailable and no publisher trust policy configured",
+      "attestation_descriptors": 0
+    },
+    {
+      "tag": "nginxinc/nginx-unprivileged:1.29-alpine",
+      "reference": "nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6",
+      "digest": "sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6",
+      "amd64_manifest": "sha256:8059701048a6cc7d64e8ab2812a44be70161bfa9ecfc01d69e95b8ff2a648705",
+      "amd64_config": "sha256:7312fa98595737958df41e20f21a2880dd9775f455c6bf76e638024dc755d201",
+      "platforms": [
+        "linux/386",
+        "linux/amd64",
+        "linux/arm",
+        "linux/arm64",
+        "linux/ppc64le",
+        "linux/riscv64",
+        "linux/s390x"
+      ],
+      "registry": "https://registry-1.docker.io/v2/nginxinc/nginx-unprivileged/manifests/1.29-alpine",
+      "created": "2026-05-11T02:30:52.283280117Z",
+      "annotations": {
+        "org.opencontainers.image.created": "2026-05-11T02:30:43.384Z",
+        "org.opencontainers.image.description": "Unprivileged NGINX Dockerfiles",
+        "org.opencontainers.image.licenses": "Apache-2.0",
+        "org.opencontainers.image.revision": "c4edb2fc1a693a7bdae4ab2bbc1c7fe63622290f",
+        "org.opencontainers.image.source": "https://github.com/nginx/docker-nginx-unprivileged",
+        "org.opencontainers.image.title": "docker-nginx-unprivileged",
+        "org.opencontainers.image.url": "https://github.com/nginx/docker-nginx-unprivileged",
+        "org.opencontainers.image.version": "1.29.8-alpine"
+      },
+      "manifest_file": "nginxinc-nginx-unprivileged.manifest.json",
+      "amd64_provenance": [
+        {
+          "manifest": "sha256:287938eaf4e0ddf13aebc1ed3305de0fa76380787986ca8417f32707c1357773",
+          "statement": "sha256:0d23860b4b9e7b38892c1b60767007bd392317a27bf6759d3415804ddd07de26",
+          "predicate_type": "https://slsa.dev/provenance/v1",
+          "builder": null,
+          "build_type": null,
+          "source_materials": [],
+          "verification": "Registry content digests and subject binding verified; cryptographic publisher signature unverified"
+        }
+      ],
+      "signature_verification": "unverified; cosign/notation unavailable and no publisher trust policy configured",
+      "attestation_descriptors": 8
+    },
+    {
+      "tag": "node:24.20.0-bookworm-slim",
+      "reference": "node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "digest": "sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e",
+      "amd64_manifest": "sha256:6642ef280aebc09c4541bee0b15c9f89f0f3f3c247ddee79ae1d37eddfdcbbaa",
+      "amd64_config": "sha256:59c575db86dccc264e6b71c316548f05a5c3c7a9aa1c112dc019807e651fd06b",
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64",
+        "linux/ppc64le"
+      ],
+      "registry": "https://registry-1.docker.io/v2/library/node/manifests/24.20.0-bookworm-slim",
+      "created": "2026-08-27T17:03:39.400483596Z",
+      "annotations": {},
+      "manifest_file": "node.manifest.json",
+      "amd64_provenance": [
+        {
+          "manifest": "sha256:e4629ce16afadf66c8766cd164745221677379636f095b5b10f226bd69171943",
+          "statement": "sha256:f71591d3af468a28f5b79cd269f8487ebbf8c9f19b7b1c12643b11982468fe6a",
+          "predicate_type": "https://slsa.dev/provenance/v0.2",
+          "builder": "https://github.com/docker-library",
+          "build_type": "https://mobyproject.org/buildkit@v1",
+          "source_materials": [
+            {
+              "uri": "https://github.com/nodejs/docker-node.git#c4eb0858f5c522521768d5b6dc1d9f1631d4854d",
+              "digest": {
+                "sha1": "c4eb0858f5c522521768d5b6dc1d9f1631d4854d"
+              }
+            }
+          ],
+          "verification": "Registry content digests and subject binding verified; cryptographic publisher signature unverified"
+        }
+      ],
+      "signature_verification": "unverified; cosign/notation unavailable and no publisher trust policy configured",
+      "attestation_descriptors": 3
+    }
+  ],
+  "evidence_notes": "Resolved existing approved tags through Docker Hub Registry V2 over HTTPS; manifest bytes, linux/amd64 config and available provenance subject/content digests checked. Publisher signatures and installed hosted bytes are unverified. No version upgrades requested."
+}

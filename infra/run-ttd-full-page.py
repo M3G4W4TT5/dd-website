@@ -27,5 +27,5 @@ with tempfile.TemporaryDirectory(prefix='ttd-outer-fixture-') as directory:
     if args.output:
         args.output.mkdir(parents=True, exist_ok=True)
         command += ['-v', f'{args.output.resolve()}:/out']
-    command += ['--entrypoint', 'python', 'pretix/standalone:2026.7.0', '/review/infra/verify-ttd-full-page.py' if args.script == 'page' else '/review/infra/verify-ttd-mail-delivery.py']
+    command += ['--entrypoint', 'python', 'pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02', '/review/infra/verify-ttd-full-page.py' if args.script == 'page' else '/review/infra/verify-ttd-mail-delivery.py']
     subprocess.run(command, check=True)
