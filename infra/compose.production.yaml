@@ -98,7 +98,11 @@ services:
     secrets:
       - source: pretix-runtime
         target: runtime
-    networks: [pretix, database, ingress]
+    networks:
+      pretix: {}
+      database: {}
+      ingress: {}
+      webhook-producer: {ipv4_address: 172.26.0.2}
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -146,7 +150,11 @@ services:
     cpus: 0.75
     build: {context: .., dockerfile: infra/Dockerfile, target: booking}
     user: "10001:10001"
-    networks: [database, booking-internal, ingress]
+    networks:
+      database: {}
+      booking-internal: {}
+      ingress: {}
+      webhook-destination: {ipv4_address: 172.27.0.2}
     secrets:
       - source: booking-web
         target: runtime
@@ -190,7 +198,7 @@ services:
   proxy:
     image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6
     # Compose bind-mounts local secrets with their host ownership and mode.
-    # The dedicated group reads only the internal webhook header, not other secrets.
+    # Only the ingress identity header is mounted into the public proxy.
     group_add: ["10006"]
     restart: unless-stopped
     mem_limit: 64m
@@ -202,13 +210,32 @@ services:
     secrets:
       - source: booking-ingress-header
         target: booking-ingress-header
-      - source: pretix-webhook-header
-        target: pretix-webhook-header
     networks:
       ingress: {}
       booking-internal:
         aliases: [booking-public-proxy]
     depends_on: [booking, booking-communications, pretix]
+  pretix-webhook-relay:
+    image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6
+    user: "101:101"
+    group_add: ["10006"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,noexec,size=16m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.25
+    pids_limit: 64
+    logging: *logging
+    volumes: ["./pretix-webhook-relay.conf:/etc/nginx/conf.d/default.conf:ro"]
+    secrets:
+      - source: pretix-webhook-header
+        target: pretix-webhook-header
+    networks:
+      webhook-producer: {ipv4_address: 172.26.0.3}
+      webhook-destination: {ipv4_address: 172.27.0.3}
+    depends_on: [booking]
   primary-communications:
     <<: *node
     profiles: [primary]
@@ -236,6 +263,12 @@ networks:
   booking-internal: {internal: true}
   ingress: {}
   capture-ui: {}
+  webhook-producer:
+    internal: true
+    ipam: {config: [{subnet: 172.26.0.0/29, gateway: 172.26.0.1}]}
+  webhook-destination:
+    internal: true
+    ipam: {config: [{subnet: 172.27.0.0/29, gateway: 172.27.0.1}]}
 volumes:
   postgres: {}
   redis: {}

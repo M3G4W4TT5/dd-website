@@ -53,6 +53,7 @@ jobs:
       - run: python3 infra/runtime-probes.test.py
       - run: python3 infra/check-image-pins.py
       - run: python3 infra/image-pins.test.py
+      - run: python3 infra/webhook-isolation.test.py
       - run: python3 infra/deploy.test.py
       - run: python3 infra/apply-hosted-release.test.py
       - run: python3 infra/ttd-checkout.test.py

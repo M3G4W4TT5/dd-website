@@ -10,6 +10,7 @@ import getpass
 import grp
 import hashlib
 import json
+import ipaddress
 import os
 from pathlib import Path
 import pwd
@@ -29,7 +30,7 @@ STATE = Path('/var/lib/dd-hosted')
 PRIVATE = STATE / 'provisioning'
 PROJECT = 'dd-hosted'
 FILES = ('compose.production.yaml', 'compose.hosted.yaml', 'proxy.conf',
-         'pretix-nginx.conf', 'pretix-settings.py', 'pretix-task.conf', 'deploy.py')
+         'pretix-nginx.conf', 'pretix-settings.py', 'pretix-task.conf', 'pretix-webhook-relay.conf', 'deploy.py')
 BASELINE = {
     'compose.production.yaml': 'cde07a912b21df2956950eea23769bab710ed9f922571f3c1f7a737e0e5ecbb1',
     'compose.hosted.yaml': '21b6df7f428132e39519db26b16aa28b7e85e4f597bbd896cc739f5f6caa8ba1',
@@ -71,6 +72,10 @@ PARTIAL = {**TARGET,
 # Preserve all historical accepted bytes; this new target is the security package.
 PRE_SECURITY_TARGET = TARGET.copy()
 TARGET = {**TARGET, **{'compose.production.yaml': '95aaa432f1b2ee927ba563da6176fa6d2ffcaa8cf06165aaaec40145306bdc63', 'proxy.conf': 'b5a711691c741d3334c86d12c9f5dae305476f0bafc5376d736a7829e070f616'}}
+PRE_RELAY_TARGET = TARGET.copy()
+TARGET = {**TARGET, **{'compose.production.yaml': 'aae1108d847981841c937fd983c2f0d7665703854b1e3ed95ed5aa805e1453ea', 'proxy.conf': '12646c92a04232676f3bf47c0e291f35b2484b2c935519928dee528245c91468', 'pretix-settings.py': 'e48172eb651c7a8d1514552b839005a3c5d9614f66c6974d550d6737b1c8475c', 'deploy.py': '7a3ef398cb3bf09f41147f5129c509d8841fdc1722269cf853def54a788cf973', 'pretix-webhook-relay.conf': 'fef94729ece768e6666125bd622bddefa9598e3edf3b2aca66501fb7c50ef3f1'}}
+
+RELAY_IMAGE = 'nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6'
 PROXY_GROUP = 10006
 APP_SERVICES = {'booking': 'booking', 'communications': 'booking-communications',
                 'worker': 'booking-worker'}
@@ -311,7 +316,7 @@ def verify_runtime_mount(service, filename):
 def verify_webhook_proxy():
     probe = '''import urllib.request,urllib.error
 try:
- urllib.request.urlopen(urllib.request.Request('http://proxy:8081/api/manage/pretix-webhook',data=b'{}',method='POST',headers={'Content-Type':'application/json'}),timeout=10)
+ urllib.request.urlopen(urllib.request.Request('http://pretix-webhook-relay:8081/api/manage/pretix-webhook',data=b'{}',method='POST',headers={'Content-Type':'application/json'}),timeout=10)
  raise SystemExit(1)
 except urllib.error.HTTPError as error:
  raise SystemExit(0 if error.code==400 else 1)
@@ -325,6 +330,8 @@ def verify_mounts():
         ('pretix', '/etc/nginx/nginx.conf', ROOT / 'pretix-nginx.conf'),
         ('pretix-cron', '/pretix/src/production_settings.py', ROOT / 'pretix-settings.py'),
         ('proxy', '/etc/nginx/conf.d/default.conf', ROOT / 'proxy.conf'),
+        ('pretix-webhook-relay', '/etc/nginx/conf.d/default.conf', ROOT / 'pretix-webhook-relay.conf'),
+        ('pretix-webhook-relay', '/run/secrets/pretix-webhook-header', ROOT / 'secrets' / 'pretix-webhook-header.conf'),
     ):
         result = safe_run(['docker', 'exec', PROJECT + '-' + service + '-1',
                            'sha256sum', destination], capture=True).split()[0]
@@ -340,7 +347,7 @@ with scopes_disabled():
  events=list(Event.objects.filter(organizer__slug='dd-studio'))
  assert len(events)==3 and all(e.testmode and e.live for e in events)
  hooks=list(WebHook.objects.filter(organizer__slug='dd-studio',comment='DD booking private lifecycle'))
- assert len(hooks)==1 and hooks[0].enabled and hooks[0].target_url=='http://proxy:8081/api/manage/pretix-webhook'
+ assert len(hooks)==1 and hooks[0].enabled and hooks[0].target_url=='http://pretix-webhook-relay:8081/api/manage/pretix-webhook'
 '''
     safe_run(['docker', 'exec', PROJECT + '-pretix-1', 'python', '-m', 'pretix', 'shell',
               '-v', '0', '-c', code])
@@ -366,6 +373,69 @@ def verify_proxy_group():
         raise ValueError('Dedicated proxy GID has host members')
 
 
+def verify_relay_subnets():
+    expected={'dd-hosted_webhook-producer':ipaddress.ip_network('172.26.0.0/29'),
+              'dd-hosted_webhook-destination':ipaddress.ip_network('172.27.0.0/29')}
+    ids=safe_run(['docker','network','ls','--format','{{.ID}}'],capture=True).split()
+    data=json.loads(safe_run(['docker','network','inspect',*ids],capture=True)) if ids else []
+    for network in data:
+        for row in network.get('IPAM',{}).get('Config',[]):
+            if not row.get('Subnet'):continue
+            subnet=ipaddress.ip_network(row['Subnet'])
+            if network['Name'] in expected:
+                if subnet != expected[network['Name']]:raise ValueError('Existing relay subnet differs')
+            elif any(subnet.version==target.version and subnet.overlaps(target) for target in expected.values()):
+                raise ValueError('Relay address range overlaps existing network')
+
+
+def verify_relay_topology():
+    roles={'pretix':{'webhook-producer':'172.26.0.2'},
+           'booking':{'webhook-destination':'172.27.0.2'},
+           'pretix-webhook-relay':{'webhook-producer':'172.26.0.3','webhook-destination':'172.27.0.3'}}
+    for service,addresses in roles.items():
+        detail=json.loads(safe_run(['docker','inspect',PROJECT+'-'+service+'-1'],capture=True))[0]
+        nets=detail['NetworkSettings']['Networks']
+        for network,address in addresses.items():
+            if nets.get(PROJECT+'_'+network,{}).get('IPAddress')!=address:raise ValueError('Relay interface identity differs')
+        if service=='pretix-webhook-relay':
+            if set(nets)!={PROJECT+'_'+n for n in addresses} or detail['HostConfig'].get('PortBindings'):
+                raise ValueError('Relay has unrelated network or published port')
+            if detail['Config'].get('Image')!=RELAY_IMAGE:
+                raise ValueError('Relay image pin differs')
+            mounts={m['Destination']:m for m in detail.get('Mounts',[])}
+            for path in ('/run/secrets/pretix-webhook-header','/etc/nginx/conf.d/default.conf'):
+                if path not in mounts or mounts[path].get('RW',True):raise ValueError('Relay readonly mount differs')
+            if detail['Config'].get('User')!='101:101' or '10006' not in detail['HostConfig'].get('GroupAdd',[]):
+                raise ValueError('Relay runtime identity differs')
+    for network,members in (('webhook-producer',{'pretix','pretix-webhook-relay'}),('webhook-destination',{'booking','pretix-webhook-relay'})):
+        detail=json.loads(safe_run(['docker','network','inspect',PROJECT+'_'+network],capture=True))[0]
+        if {v['Name'] for v in detail.get('Containers',{}).values()}!={PROJECT+'-'+v+'-1' for v in members}:
+            raise ValueError('Unexpected relay network peer')
+    proxy=json.loads(safe_run(['docker','inspect',PROJECT+'-proxy-1'],capture=True))[0]
+    if any(m.get('Destination')=='/run/secrets/pretix-webhook-header' for m in proxy.get('Mounts',[])):
+        raise ValueError('Public proxy retains webhook secret')
+
+
+def migrate_webhook_target():
+    code="""from django.db import transaction
+from django_scopes import scopes_disabled
+from pretix.api.models import WebHook
+with scopes_disabled(), transaction.atomic():
+ rows=list(WebHook.objects.select_for_update().filter(organizer__slug='dd-studio',comment='DD booking private lifecycle'))
+ assert len(rows)<=1
+ if rows:
+  hook=rows[0]
+  assert hook.enabled and not hook.all_events
+  assert set(hook.limit_events.values_list('slug',flat=True))=={'studio'}
+  target='http://pretix-webhook-relay:8081/api/manage/pretix-webhook'
+  assert hook.target_url in ('http://proxy:8081/api/manage/pretix-webhook',target)
+  hook.target_url=target
+  hook.save(update_fields=['target_url'])
+ print('PASS scoped webhook target transition; listeners and retry identity preserved')
+"""
+    safe_run(['docker','exec',PROJECT+'-pretix-1','python','-m','pretix','shell','-v','0','-c',code])
+
+
 def install(source):
     action = 'config-install'
     record(action, 'preflight', 'running')
@@ -377,15 +447,18 @@ def install(source):
         candidate = source / name
         destination = installed(name)
         trusted(candidate)
-        trusted(destination)
         if sha(candidate) != TARGET[name]:
             raise ValueError('Staged file differs from reviewed release: ' + name)
-        if sha(destination) not in (BASELINE[name], PARTIAL[name], PREVIOUS_TARGET[name],
-                                    CURRENT_INSTALLED[name], PRE_PAGES_TARGET[name], PRE_TTD_TARGET[name],
-                                    PRE_RENDER_TARGET[name], PRE_MAIL_TARGET[name], PRE_SECURITY_TARGET[name], TARGET[name]):
+        if name == 'pretix-webhook-relay.conf' and not destination.exists() and not destination.is_symlink():
+            continue  # Explicit first-install additive file; all old files still checked.
+        trusted(destination)
+        historical=(BASELINE,PARTIAL,PREVIOUS_TARGET,CURRENT_INSTALLED,PRE_PAGES_TARGET,
+                    PRE_TTD_TARGET,PRE_RENDER_TARGET,PRE_MAIL_TARGET,PRE_SECURITY_TARGET,PRE_RELAY_TARGET,TARGET)
+        if sha(destination) not in {version[name] for version in historical if name in version}:
             raise ValueError('Installed configuration version differs: ' + name)
     verify_bridge()
     verify_proxy_group()
+    verify_relay_subnets()
     running = running_application()
     manifest = current()
     if not isinstance(manifest, dict) or not re.fullmatch(r'[0-9a-f]{40}', manifest.get('commit', '')):
@@ -429,11 +502,14 @@ with scopes_disabled(), transaction.atomic():
 '''
     safe_run(['docker', 'exec', '-i', PROJECT + '-pretix-1', 'python', '-m', 'pretix', 'shell', '-v', '0',
               '-c', 'exec(__import__("sys").stdin.read())'], input=channel_check)
-    if rotation_pending:
-        record(action, 'booking_recreation', 'running', running_revisions=running['revisions'])
-        safe_run(command + ['booking'], env=env)
+    record(action, 'booking_recreation', 'running', running_revisions=running['revisions'])
+    safe_run(command + ['booking'], env=env)
     record(action, 'proxy_recreation', 'running', running_revisions=running['revisions'])
     safe_run(command + ['proxy'], env=env)
+    record(action, 'relay_recreation', 'running', running_revisions=running['revisions'])
+    safe_run(command + ['pretix-webhook-relay'], env=env)
+    migrate_webhook_target()
+    verify_relay_topology()
     record(action, 'verification', 'running', running_revisions=running['revisions'])
     after = running_application()
     if after['ids'] != running['ids'] or after['images'] != running['images']:
@@ -521,7 +597,7 @@ with scopes_disabled(), transaction.atomic():
    event.live=True
    event.save(update_fields=['live'])
  rental=next(e for e in events if e.slug=='studio')
- target='http://proxy:8081/api/manage/pretix-webhook'
+ target='http://pretix-webhook-relay:8081/api/manage/pretix-webhook'
  rows=list(WebHook.objects.filter(organizer=organizer,comment='DD booking private lifecycle'))
  assert len(rows)<=1
  hook=rows[0] if rows else WebHook.objects.create(organizer=organizer,target_url=target,enabled=True,all_events=False,comment='DD booking private lifecycle')

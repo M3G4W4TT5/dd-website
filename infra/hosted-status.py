@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 ROOT = Path("/etc/dd-hosted")
 STATE = Path("/var/lib/dd-hosted")
 CONFIGS = ("compose.production.yaml", "compose.hosted.yaml", "proxy.conf",
-           "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf")
+           "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf", "pretix-webhook-relay.conf")
 GATES = ("DD_MODE", "PREVIEW", "PAYMENT_ENVIRONMENT", "PAYMENT_RELEASE_ENABLED",
          "MAIL_DELIVERY", "MAIL_RELEASE_ENABLED", "PRETIX_EVENTS_CHECKOUT_ENABLED",
          "BOOKING_SELF_SERVICE_ENABLED")
