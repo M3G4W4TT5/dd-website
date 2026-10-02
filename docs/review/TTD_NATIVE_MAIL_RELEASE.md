@@ -75,3 +75,33 @@ verified delivery; this controlled release alone does not accept Step 6.
 Installer regression verifies only Pretix web/cron are recreated, manifest application
 revision/images are preserved, and running release drift stops before mutation.
 Initial PR CI exposed the old installer adapter hash; it was updated before release.
+
+PR35 merged as edb8eb2. All PR checks/builds passed on 981a3fc; merge tree is
+identical to the checked tree. Owner package is staged; installed adapter, native
+SMTP activation and inbox/PDF acceptance remain pending. See
+`ttd-candidate/native-mail-release-2026-10-02.json`. No application images are
+being deployed for this adapter-only correction.
+
+
+## Installation failure and approved recovery
+
+Owner checksum-verified PR35 package and installed adapter0ae9c977. Pretix web/cron
+were recreated on pinned image5df3b7aa; all application/primary image identities,
+sandbox/mail gates and inventory settings remained unchanged. Verification then
+failed with checkout502, while booking root/health/availability passed. The actual
+host config is725787995b8a90454163405f122ec35858c10f106e75cf3305e92932650dc635,
+but the current manifest still records599be2db because completion did not occur.
+This is a failed install verification, not accepted activation.
+
+Owner read-only probes confirm direct Pretix200 and proxy fresh-DNS backend200;
+checkout through the loaded proxy still502. Proxy uses a static proxy_pass, so
+its resolved upstream address is retained until Nginx reload. The log probe
+returned no matching failed-upstream entries; it did not independently prove a
+stale IP. Owner approved graceful shared-proxy reload now and after credential
+activation. Native SMTP credentials have not been configured and no mail sent.
+
+Recovery tests:16 installer cases pass, including verification-only finalization
+(no container recreation/reload), required explicit proxy-reload approval, and
+nginx configuration check before graceful reload after recreation. No proxy
+container restart or configuration change. Actual recovery still pending owner
+reload and independent route/identity check. Keep inbox/PDF acceptance pending.

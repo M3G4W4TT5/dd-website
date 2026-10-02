@@ -1,0 +1,16 @@
+{
+  "pull_request": 35,
+  "merge_commit": "edb8eb2ffcaeab5bc70a632c8be40dc367bca0ce",
+  "checked_commit": "981a3fcc8733a9badf82c28e3784e49f888af747",
+  "merge_tree_matches_checked_commit": true,
+  "pr_checks_run": 37032726070,
+  "pr_personal_checks_run": 37032726101,
+  "pr_checks_and_builds": "passed",
+  "adapter_sha256": "0ae9c97756add2eb62239f415ecf8a1808d60b9ed5ff8242070b944bcc881bb0",
+  "candidate_host_config_version": "725787995b8a90454163405f122ec35858c10f106e75cf3305e92932650dc635",
+  "package_checksum_manifest_sha256": "32bbd2b2217c07e1f661febb6af058b849a147e06f1af3ba65d86a86b3688754",
+  "installation": "pending owner",
+  "native_smtp_activation": "pending owner credential",
+  "mail_delivery_acceptance": "unverified",
+  "application_image_deployment": "not requested; preserve running application images"
+}

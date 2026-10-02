@@ -678,8 +678,10 @@ def rotate_mail_credentials(commit):
 
 
 
-def native_mail_adapter(source, install_adapter=True):
-    """Adapter-only release/reload: no proxy, credentials or booking recreation."""
+def native_mail_adapter(source, install_adapter=True, recreate=True, allow_proxy_reload=False):
+    """Native adapter release/recovery; shared proxy reload needs explicit approval."""
+    if recreate and not allow_proxy_reload:
+        raise ValueError("Pretix recreation requires approved graceful proxy reload")
     action = 'native-mail-adapter'
     record(action, 'preflight', 'running')
     trusted(source)
@@ -703,17 +705,29 @@ def native_mail_adapter(source, install_adapter=True):
     if version != deploy['config_version'](source):
         raise ValueError('Native mail host configuration differs')
     safe_run(arguments + ['config', '--quiet'], env=env)
-    record(action, 'pretix_recreation', 'running', config_version=version)
-    safe_run(arguments + ['up', '-d', '--no-deps', '--force-recreate', '--no-build',
-                         '--pull', 'never', '--wait', '--wait-timeout', '240', 'pretix', 'pretix-cron'], env=env)
+    if recreate:
+        record(action, 'pretix_recreation', 'running', config_version=version)
+        safe_run(arguments + ['up', '-d', '--no-deps', '--force-recreate', '--no-build',
+                             '--pull', 'never', '--wait', '--wait-timeout', '240', 'pretix', 'pretix-cron'], env=env)
+        # Static proxy_pass resolves container DNS when Nginx loads config.
+        # A graceful reload refreshes the recreated Pretix address while keeping
+        # the shared proxy container and its other services running.
+        record(action, 'proxy_reload', 'running', config_version=version)
+        safe_run(['docker', 'exec', PROJECT + '-proxy-1', 'nginx', '-t'])
+        safe_run(['docker', 'exec', PROJECT + '-proxy-1', 'nginx', '-s', 'reload'])
+    record(action, 'verification', 'running', config_version=version)
     if running_application() != running:
         raise ValueError('Native mail action changed application identities')
     verify_mounts()
-    deploy['check_readiness'](arguments, env)
+    try:
+        deploy['check_readiness'](arguments, env)
+    except urllib.error.HTTPError as error:
+        ACTIVE['diagnostic'] = 'http_status_' + str(error.code)
+        raise
     # Application revision/images stay authoritative; record only the new config.
     manifest['config_version'] = version
     put(STATE / 'current.json', (json.dumps(manifest, indent=2) + '\n').encode(), 0o600)
-    record(action, 'complete', 'installed' if install_adapter else 'reloaded',
+    record(action, 'complete', 'installed' if install_adapter else ('reloaded' if recreate else 'verified'),
            config_version=version, commit=manifest['commit'], mail_acceptance='pending')
     print('PASS native mail adapter/process identity; application images preserved. External delivery still requires owner acceptance.')
 
@@ -726,8 +740,11 @@ def main():
     source = Path(__file__).resolve().parent
     with (STATE / 'deploy.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        if action in ('install-native-mail', 'reload-native-mail') and len(sys.argv) == 2:
-            native_mail_adapter(source, install_adapter=action == 'install-native-mail')
+        if action == 'finalize-native-mail' and len(sys.argv) == 2:
+            native_mail_adapter(source, install_adapter=False, recreate=False)
+        elif action in ('install-native-mail', 'reload-native-mail') and len(sys.argv) in (2, 3):
+            approved = len(sys.argv) == 3 and sys.argv[2] == '--allow-proxy-reload'
+            native_mail_adapter(source, install_adapter=action == 'install-native-mail', allow_proxy_reload=approved)
         elif action == 'install' and len(sys.argv) == 2:
             install(source)
         elif action == 'activate-sandbox' and len(sys.argv) == 3:
@@ -737,7 +754,7 @@ def main():
         elif action == 'rotate-mail-credentials' and len(sys.argv) == 3:
             rotate_mail_credentials(sys.argv[2])
         else:
-            raise ValueError('Expected install-native-mail, reload-native-mail, install, activate-sandbox COMMIT, controlled-mail COMMIT or rotate-mail-credentials COMMIT')
+            raise ValueError('Expected finalize-native-mail, install-native-mail/reload-native-mail --allow-proxy-reload, install, activate-sandbox COMMIT, controlled-mail COMMIT or rotate-mail-credentials COMMIT')
 
 
 def run_owner_action():
