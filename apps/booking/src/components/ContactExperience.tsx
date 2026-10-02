@@ -119,8 +119,8 @@ export function ContactExperience({ initialLanguage }: { initialLanguage: Langua
           {showPrivacyError && <p id="contact-privacy-error" className="contact-privacy-error terms-error" role="alert">{t.privacyRequired}</p>}
           <div className="contact-form-bottom"><button type="submit" disabled={sending}>{sending ? t.sending : t.send}<ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status ? t[status] : ""}</p></div>
         </form>
-        <div className="contact-visual-placeholder" aria-hidden="true" />
       </section>
+      <div className="contact-visual-placeholder" aria-hidden="true" />
     </main>
     <SiteFooter language={language} />
   </>;
