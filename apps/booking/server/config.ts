@@ -1,4 +1,4 @@
-import { mode } from "@dd/runtime";
+import { mode } from "../../../server/runtime/config";
 import { origin } from "../../../server/runtime/config";
 export function validateBooking(env: NodeJS.ProcessEnv) {
   for (const key of Object.keys(env))

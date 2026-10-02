@@ -94,6 +94,9 @@ def main():
         raise ValueError('Unexpected availability credential')
     deploy_file = Path('/usr/local/sbin/dd-deploy')
     trusted(deploy_file)
+    source=Path(__file__).resolve().parent
+    trusted(source/'runtime-probes.py')
+    probes=runpy.run_path(str(source/'runtime-probes.py'))
     deploy = runpy.run_path(str(deploy_file))
     manifest = deploy['validate_manifest'](json.loads((STATE / 'current.json').read_text()))
     for name in ('compose.production.yaml', 'compose.hosted.yaml'):
@@ -111,31 +114,14 @@ def main():
                             '--entrypoint', 'python3', 'pretix-migrate', '-m', 'pretix',
                             'shell', '-v', '0', '-c', 'exec(__import__("sys").stdin.read())'],
                            input=code, text=True, env=env, stdout=log, stderr=log, check=True)
-            # Check the real HTTP API and application parser, not only an ORM read.
-            check = '''
-import {getAvailability, todayInStudio} from './apps/booking/server/availability.ts';
-try {
- const availability = await getAvailability(todayInStudio());
- if (availability.source !== 'pretix' || availability.slots.length !== 14)
-  throw new Error('Unexpected rental inventory');
- console.log('PASS: application availability reads 14 hosted rental slots through the real HTTP API.');
-} catch (error) {
- const known = ['Expected one studio full-day discount', 'Unsupported studio discount configuration',
- 'Unexpected pretix pagination origin', 'Unexpected rental inventory'];
- const message = known.includes(error.message) || /^pretix API( responded)? [0-9]{3}$/.test(error.message)
-  ? error.message : error.name;
- console.error('Availability check failed: ' + message);
- process.exit(1);
-}
-'''
-            subprocess.run(['docker', 'run', '--rm', '--read-only', '--user', '10001:10001',
-                            '--network', 'dd-hosted_ingress', '--cap-drop', 'ALL',
-                            '--security-opt', 'no-new-privileges', '--memory', '256m', '--pids-limit', '64',
-                            '--tmpfs', '/tmp:rw,nosuid,noexec,size=64m,mode=1777',
-                            '--mount', f'type=bind,src={ROOT}/secrets/booking-web.env,dst=/run/secrets/runtime,readonly',
-                            '--entrypoint', 'node', manifest['images']['communications'],
-                            '--env-file=/run/secrets/runtime', '--import', 'tsx', '--input-type=module', '-e', check],
-                           text=True, env=env, check=True)
+            # Matching standalone image, catalog/DB subset and exact two networks.
+            def probe_run(args,capture=False):
+                result=subprocess.run(args,text=True,env=env,check=True,stdout=subprocess.PIPE if capture else log,stderr=log)
+                return result.stdout.strip() if capture else None
+            image=manifest['images']['booking']
+            revision=probe_run(['docker','image','inspect','--format','{{index .Config.Labels "org.opencontainers.image.revision"}}',image],True)
+            if revision!=manifest['commit']:raise ValueError('Image revision differs from current release')
+            probes['run_probe'](probe_run,manifest['images'],'booking-web.env','availability',ROOT,PRIVATE)
     print('PASS: omitted full-day discount restored and hosted availability verified. Payment/mail/write gates remain closed.')
 
 

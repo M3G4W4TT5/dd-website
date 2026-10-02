@@ -16,7 +16,7 @@
     "dev:primary-services": "tsx server/runtime/main.ts primary",
     "dev:booking-services": "tsx server/runtime/main.ts booking",
     "dev:worker": "tsx apps/booking/server/worker.ts",
-    "test:server": "tsx --test server/**/*.test.ts",
+    "test:server": "node infra/build-runtime-probes.mjs && tsx --test server/**/*.test.ts",
     "verify:infrastructure": "npm run test:server && npm run test:booking && npm run typecheck && npm run typecheck:server && npm run build:personal && npm run build:booking && npm run build:server",
     "build:server": "npm run build -w @dd/contracts && npm run build -w @dd/mail && npm run build -w @dd/database && npm run build -w @dd/contact && npm run build -w @dd/marketing && npm run build -w @dd/runtime",
     "test:pages": "tsx --test server/runtime/pages-proxy.test.ts",

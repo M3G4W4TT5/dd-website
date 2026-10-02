@@ -6,15 +6,15 @@ import os
 from pathlib import Path
 import re
 import secrets
+import runpy
 import subprocess
 import sys
 
 ROOT = Path('/etc/dd-hosted')
 STATE = Path('/var/lib/dd-hosted')
 PRIVATE = STATE / 'provisioning'
-IMAGE = 'ghcr.io/m3g4w4tt5/dd-website-communications@sha256:a3d41b983fe2920e3b57f1edb4a9c5ba085de6c1c453381448196bba232e3ce6'
 KEYS = ('availability', 'web_read', 'worker_read', 'write', 'booking_payload',
-        'marketing_payload', 'recovery_hash', 'marketing_bearer', 'webhook_password')
+        'marketing_payload', 'recovery_hash', 'marketing_bearer', 'webhook_password', 'ingress')
 
 # Executed through Django in the pinned Pretix image. CHECK_ONLY rolls back all
 # test teams/tokens and permits local configuration verification without adoption.
@@ -116,6 +116,7 @@ def runtime_files(credentials, passwords):
            'BOOKING_MARKETING_BEARER': credentials['marketing_bearer'],
            'PRETIX_API_TOKEN': credentials['availability'],
            'PRETIX_MANAGE_API_TOKEN': credentials['web_read'],
+           'BOOKING_INGRESS_KEY': credentials['ingress'],
            'PRETIX_MANAGE_WEBHOOK_USER': 'dd-booking',
            'PRETIX_MANAGE_WEBHOOK_PASSWORD': credentials['webhook_password'],
            'PRETIX_EVENTS_CHECKOUT_ENABLED': 'false', 'BOOKING_SELF_SERVICE_ENABLED': 'false'}
@@ -163,6 +164,12 @@ def main():
         if directory.is_symlink() or not directory.is_dir() or stat.st_uid != 0 or stat.st_mode & 0o022:
             raise ValueError('Unsafe operational directory')
     checked_file(PRIVATE / 'provisioning-private.json')
+    source=Path(__file__).resolve().parent
+    for name in ('runtime-probes.py','deploy.py','release.json'):
+        st=(source/name).lstat()
+        if (source/name).is_symlink() or st.st_uid!=0 or st.st_mode & 0o022:raise ValueError('Unsafe reviewed probe/release source')
+    probes=runpy.run_path(str(source/'runtime-probes.py'))
+    manifest=runpy.run_path(str(source/'deploy.py'))['validate_manifest'](json.loads((source/'release.json').read_text()))
     passwords = json.loads((PRIVATE / 'provisioning-private.json').read_text())['passwords']
     env = {'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'HOME': '/root',
            'DD_SECRET_DIRECTORY': str(ROOT / 'secrets')}
@@ -197,23 +204,22 @@ def main():
             run(compose + ['run', '-T', '--rm', '--no-deps', '--entrypoint', 'python3',
                            'pretix', '-m', 'pretix', 'shell', '-v', '0',
                            '-c', 'exec(__import__("sys").stdin.read())'], stdin=code)
-            run(['docker', 'pull', IMAGE])
-            for filename, (uid, config) in runtime_files(credentials, passwords).items():
-                path = ROOT / 'secrets' / filename
-                body = ''.join(key + '=' + value + '\n' for key, value in config.items())
-                write_private(path, body, uid)
-                validator = ('import {communicationsConfig} from "./server/runtime/config.ts"; communicationsConfig(process.env,"booking");'
-                             if filename == 'booking-communications.env' else
-                             'import {' + ('validateWorker' if uid == 10003 else 'validateBooking') +
-                             '} from "./apps/booking/server/config.ts"; ' +
-                             ('validateWorker' if uid == 10003 else 'validateBooking') + '(process.env);')
-                run(['docker', 'run', '--rm', '--network', 'none', '--read-only',
-                     '--user', f'{uid}:{uid}', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges',
-                     '--memory', '256m', '--pids-limit', '64',
-                     '--tmpfs', '/tmp:rw,noexec,nosuid,size=32m',
-                     '--mount', f'type=bind,src={path},dst=/run/secrets/runtime,readonly',
-                     '--entrypoint', 'node', IMAGE, '--env-file=/run/secrets/runtime',
-                     '--import', 'tsx', '--input-type=module', '-e', validator])
+            for image in manifest['images'].values():
+                run(['docker','pull',image])
+                revision=run(['docker','image','inspect','--format','{{index .Config.Labels "org.opencontainers.image.revision"}}',image],capture=True)
+                if revision!=manifest['commit']:raise ValueError('Image revision differs from reviewed release')
+            for filename,(uid,config) in runtime_files(credentials,passwords).items():
+                write_private(ROOT/'secrets'/filename,''.join(k+'='+v+'\n' for k,v in config.items()),uid)
+                probes['run_probe'](run,manifest['images'],filename,'config',ROOT,PRIVATE)
+            header=ROOT/'secrets/booking-ingress-header.conf'
+            body='proxy_set_header X-DD-Booking-Ingress-Key "'+credentials['ingress']+'";\n'
+            if header.exists():
+                st=header.lstat()
+                if header.is_symlink() or st.st_uid!=0 or st.st_gid!=10006 or st.st_mode & 0o337 or header.read_text()!=body:
+                    raise ValueError('Existing ingress header differs from initial registry')
+            else:
+                write_private(header,body)
+                os.chown(header,0,10006);os.chmod(header,0o440)
             write_private(PRIVATE / 'runtime-setup.complete', 'scoped-runtime-v1\n')
     print('PASS: hosted API scopes and three per-service runtime files verified; secrets not displayed.')
     print('Separate web/worker rental read tokens; availability cannot read orders; write token withheld from applications.')
