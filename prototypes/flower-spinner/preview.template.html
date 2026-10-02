@@ -1,0 +1,111 @@
+<div id="ttd-flower-spinner-prototype">
+  <style>
+    #ttd-flower-spinner-prototype {
+      --green-ink: #116e3a;
+      --purple-ink: #7349cd;
+      --red-ink: #dc3e16;
+      --yellow-ink: #e3b936;
+    }
+    #ttd-flower-spinner-prototype .flower-stage {
+      display: grid;
+      place-items: center;
+      min-height: 256px;
+    }
+    #ttd-flower-spinner-prototype .flower-pulse,
+    #ttd-flower-spinner-prototype .flower-spin,
+    #ttd-flower-spinner-prototype .flower-mark {
+      width: 120px;
+      height: 120px;
+      transform-origin: center;
+    }
+    #ttd-flower-spinner-prototype .flower-pulse {
+      animation: ttd-flower-heartbeat 3.2s linear infinite;
+    }
+    #ttd-flower-spinner-prototype .flower-spin {
+      animation: ttd-flower-turn 3.2s linear infinite;
+    }
+    #ttd-flower-spinner-prototype .flower-mark {
+      background-color: var(--green-ink);
+      -webkit-mask: url("__FLOWER_MASK_DATA_URL__") center / contain no-repeat;
+      mask: url("__FLOWER_MASK_DATA_URL__") center / contain no-repeat;
+      animation: ttd-flower-colours 12.8s ease-in-out infinite;
+    }
+    #ttd-flower-spinner-prototype[data-paused="true"] .flower-pulse,
+    #ttd-flower-spinner-prototype[data-paused="true"] .flower-spin,
+    #ttd-flower-spinner-prototype[data-paused="true"] .flower-mark {
+      animation-play-state: paused;
+    }
+    #ttd-flower-spinner-prototype .flower-caption { margin-bottom: 16px; }
+    @keyframes ttd-flower-turn {
+      0% { transform: rotate(0deg); animation-timing-function: cubic-bezier(.5, 0, .5, 1); }
+      64%, 100% { transform: rotate(720deg); }
+    }
+    @keyframes ttd-flower-heartbeat {
+      0%, 68% { transform: scale(1); }
+      75% { transform: scale(1.18); animation-timing-function: ease-out; }
+      81% { transform: scale(.98); animation-timing-function: ease-out; }
+      87% { transform: scale(1.10); animation-timing-function: ease-out; }
+      95%, 100% { transform: scale(1); }
+    }
+    @keyframes ttd-flower-colours {
+      0%, 17% { background-color: var(--green-ink); }
+      20.5%, 42% { background-color: var(--purple-ink); }
+      45.5%, 67% { background-color: var(--red-ink); }
+      70.5%, 92% { background-color: var(--yellow-ink); }
+      95.5%, 100% { background-color: var(--green-ink); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #ttd-flower-spinner-prototype .flower-pulse,
+      #ttd-flower-spinner-prototype .flower-spin,
+      #ttd-flower-spinner-prototype .flower-mark { animation: none; }
+    }
+  </style>
+  <div class="flower-stage" role="img" aria-label="Transparent flower spinner: two turns easing to a stop, then a double heartbeat while changing from green to purple, red, yellow, and back to green.">
+    <div class="flower-pulse" aria-hidden="true">
+      <div class="flower-spin"><div class="flower-mark"></div></div>
+    </div>
+  </div>
+  <div class="flower-caption text-center text-muted text-small">Spin → heartbeat → next colour</div>
+  <div class="viz-row">
+    <button type="button" class="btn" data-flower-pause aria-pressed="false">Pause</button>
+    <button type="button" class="btn btn-ghost" data-flower-replay>Replay</button>
+    <span class="text-small text-muted" data-flower-status aria-live="polite"></span>
+  </div>
+  <script>
+    (() => {
+      const root = document.getElementById('ttd-flower-spinner-prototype');
+      const pause = root.querySelector('[data-flower-pause]');
+      const replay = root.querySelector('[data-flower-replay]');
+      const status = root.querySelector('[data-flower-status]');
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const saved = window.openai?.widgetState?.privateContent;
+      let paused = saved?.paused === true;
+      function update() {
+        root.dataset.paused = String(paused);
+        pause.textContent = paused ? 'Resume' : 'Pause';
+        pause.setAttribute('aria-pressed', String(paused));
+        pause.disabled = replay.disabled = reduced.matches;
+        status.textContent = reduced.matches ? 'Reduced motion: static flower' : '';
+      }
+      function save() {
+        window.openai?.setWidgetState?.({
+          modelContent: { prototype: 'flower-spinner', cycleSeconds: 3.2 },
+          privateContent: { paused }
+        }).catch(() => {});
+      }
+      pause.addEventListener('click', () => { paused = !paused; update(); save(); });
+      replay.addEventListener('click', () => {
+        root.getAnimations({ subtree: true }).forEach(animation => { animation.currentTime = 0; });
+        paused = false;
+        update();
+        save();
+      });
+      reduced.addEventListener('change', update);
+      window.addEventListener('openai:set_globals', event => {
+        const next = event.detail?.globals?.widgetState?.privateContent;
+        if (typeof next?.paused === 'boolean') { paused = next.paused; update(); }
+      });
+      update();
+    })();
+  </script>
+</div>

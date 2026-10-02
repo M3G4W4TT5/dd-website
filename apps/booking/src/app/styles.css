@@ -2210,54 +2210,59 @@ body:has(.legal-main) .legal-main {
   filter: blur(0);
 }
 
-.page-transition-squares {
+.page-transition-flower,
+.page-transition-flower-spin,
+.page-transition-flower-mark {
   height: 120px;
   width: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
-
-.page-transition-square {
-  height: 30px;
-  width: 30px;
-  position: absolute;
-  background-color: var(--square-colour);
-  box-shadow: 0 7px 29px 0 var(--square-colour);
-  animation: page-transition-square-move 4s ease infinite;
+  transform-origin: center;
   animation-play-state: paused;
 }
 
-.page-transition[data-phase="blur"] .page-transition-square,
-.page-transition[data-phase="colour"] .page-transition-square,
-.page-transition[data-phase="waiting"] .page-transition-square,
-.page-transition[data-phase="reveal"] .page-transition-square {
+.page-transition-flower {
+  animation: page-transition-flower-heartbeat 1.6s linear infinite;
+  animation-play-state: paused;
+}
+
+.page-transition-flower-spin {
+  animation: page-transition-flower-turn 1.6s linear infinite;
+  animation-play-state: paused;
+}
+
+.page-transition-flower-mark {
+  background-color: var(--green-ink);
+  -webkit-mask: url('/branding/page-transition-flower-mask.png') center / contain no-repeat;
+  mask: url('/branding/page-transition-flower-mask.png') center / contain no-repeat;
+  animation: page-transition-flower-colours 6.4s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.page-transition:is([data-phase="blur"], [data-phase="colour"], [data-phase="waiting"], [data-phase="reveal"])
+:is(.page-transition-flower, .page-transition-flower-spin, .page-transition-flower-mark) {
   animation-play-state: running;
 }
 
-.page-transition-square--green {
-  --square-colour: var(--green-ink);
-  transform: translate(-30px, -30px);
-  animation-delay: -1s;
+/* Approved Quick prototype: one turn, double heartbeat, then repeat.
+   The 0.448-second colour blend starts with the heartbeat after the spin stops. */
+@keyframes page-transition-flower-turn {
+  0% { transform: rotate(0deg); animation-timing-function: cubic-bezier(.5, 0, .5, 1); }
+  64%, 100% { transform: rotate(360deg); }
 }
 
-.page-transition-square--purple {
-  --square-colour: var(--purple-ink);
-  transform: translate(30px, -30px);
-  animation-delay: -2s;
+@keyframes page-transition-flower-heartbeat {
+  0%, 68% { transform: scale(1); }
+  75% { transform: scale(1.18); animation-timing-function: ease-out; }
+  81% { transform: scale(.98); animation-timing-function: ease-out; }
+  87% { transform: scale(1.10); animation-timing-function: ease-out; }
+  95%, 100% { transform: scale(1); }
 }
 
-.page-transition-square--red {
-  --square-colour: var(--red-ink);
-  transform: translate(30px, 30px);
-  animation-delay: -3s;
-}
-
-.page-transition-square--yellow {
-  --square-colour: var(--yellow-ink);
-  transform: translate(-30px, 30px);
-  animation-delay: -4s;
+@keyframes page-transition-flower-colours {
+  0%, 17% { background-color: var(--green-ink); }
+  24%, 42% { background-color: var(--purple-ink); }
+  49%, 67% { background-color: var(--red-ink); }
+  74%, 92% { background-color: var(--yellow-ink); }
+  99%, 100% { background-color: var(--green-ink); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2270,14 +2275,10 @@ body:has(.legal-main) .legal-main {
     transition: none;
   }
 
-  .page-transition-square { animation: none; }
+  .page-transition-flower,
+  .page-transition-flower-spin,
+  .page-transition-flower-mark { animation: none; }
 
-}
-@keyframes page-transition-square-move {
-  0%, 100% { transform: translate(-30px, -30px); }
-  25% { transform: translate(30px, -30px); }
-  50% { transform: translate(30px, 30px); }
-  75% { transform: translate(-30px, 30px); }
 }
 
 /* One grid cell for both phone controls; native country names remain accessible. */
@@ -2425,3 +2426,41 @@ body:has(.legal-main) .legal-main {
 @media (prefers-reduced-motion:reduce) {
  .journey-time--clearing { animation:none; }
 }
+
+/* Compact mobile event details and the combined buyer/ticket form. */
+.events-main--mobile-detail .events-heading { padding-bottom:16px; }
+.events-main--mobile-detail .events-back { margin-bottom:12px; }
+.events-main--mobile-detail .events-heading h1 { margin-top:0; margin-bottom:12px; }
+.event-signup--guided { border-top:0; padding-top:0; }
+.event-signup--guided .journey-progress { margin-bottom:6px; }
+.event-signup--guided .details-back { min-height:44px; margin-bottom:0; }
+.event-signup--guided .event-signup-heading { margin-bottom:12px; }
+.event-signup--guided .event-signup-heading h3 { margin:4px 0 0; font-size:36px; }
+.event-signup--guided .details-form { margin-top:0; }
+.event-signup--guided .event-signup-total { margin:20px 0; }
+.event-signup--guided .details-fields label,.event-signup--guided .phone-field > label { font-size:17px; line-height:1.4; letter-spacing:0; }
+
+/* Event buyer details: remove the former eyebrow/intro space on desktop too. */
+.event-signup .details-back { margin-bottom:8px; }
+.event-signup .event-signup-heading h3 { margin-top:4px; margin-bottom:12px; }
+.event-signup-summary { margin-top:0; }
+
+@media (min-width:821px) and (hover:hover) and (pointer:fine) {
+ .contact-main .events-heading { padding-bottom:24px; }
+}
+
+/* Desktop studio details match the time-selection summary column. */
+.studio-details--desktop { row-gap:28px; }
+.studio-details--desktop > .details-back { grid-column:1; grid-row:1; margin-bottom:0; justify-self:start; }
+.studio-details--desktop .details-intro { grid-column:1; grid-row:2; }
+.studio-details-summary { margin:20px 0 0; }
+.studio-details-summary .summary-row { font-size:16px; }
+.studio-details-summary dd { margin:0; max-width:65%; text-align:right; font-weight:700; }
+.studio-details-summary .summary-total dt { font-size:17px; font-weight:800; }
+.studio-details-summary .summary-total dd { font-family:Anton,Impact,sans-serif; font-size:34px; font-weight:400; white-space:nowrap; }
+@media (min-width:821px) {
+ .studio-details--desktop .details-form { grid-column:2; grid-row:2; }
+}
+
+.events-heading--listing { padding-bottom:25px; }
+.events-heading--listing h1 { margin-bottom:0; }

@@ -76,3 +76,11 @@ test("remaining places count shared, independent and nested quotas without doubl
   assert.equal(remainingPlaces([item], [{ ...quota, closed: true }]), 0);
   assert.equal(remainingPlaces([item, second, { ...item, id: 9 }], [{ ...quota, items: [7, 8] }, { ...quota, items: [8, 9] }]), null);
 });
+
+test("bundled event artwork remains available outside draft previews without overriding configured images", () => {
+ const workshop = { ...event, slug: "street-dance-workshop-dd-dev" };
+ assert.equal(normalizeEvent(workshop, date, [item], [quota], now)?.image, "/events/street-dance-workshop-dd.webp");
+ assert.equal(normalizeEvent({ ...event, slug: "dance-with-dd-dev" }, date, [item], [quota], now)?.image, "/events/dance-with-dd.webp");
+ assert.equal(normalizeEvent({ ...workshop, meta_data: { ttd_image_url: "https://example.com/event.webp" } }, date, [item], [quota], now)?.image, "https://example.com/event.webp");
+ assert.equal(normalizeEvent(event, date, [item], [quota], now)?.image, null);
+});

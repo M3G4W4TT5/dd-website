@@ -176,17 +176,7 @@ export async function getCatalog(): Promise<Catalog> {
         }
       }
     }
-    const developmentImages: Record<string, string> = {
-      "dance-with-dd-dev": "/events/dance-with-dd.webp",
-      "street-dance-workshop-dd-dev": "/events/street-dance-workshop-dd.webp",
-    };
-    const allOccurrences = grouped
-      .flat()
-      .map((item) =>
-        showDraftTestEvents && !item.image && developmentImages[item.slug]
-          ? { ...item, image: developmentImages[item.slug] }
-          : item,
-      );
+    const allOccurrences = grouped.flat();
     const occurrences = allOccurrences.map((item) =>
       rentalConflicts.some((slot) =>
         overlaps(item.start, item.end, slot.start, slot.end),

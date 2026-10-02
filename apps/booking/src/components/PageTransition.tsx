@@ -115,11 +115,10 @@ export function PageTransition({ children }: { children: ReactNode }) {
     <div className="page-transition" data-phase={phase} aria-hidden="true" style={{ "--transition-colour": colour } as CSSProperties}>
       <div className="page-transition-colour" />
       <div className="page-transition-loader">
-        <div className="page-transition-squares">
-          <div className="page-transition-square page-transition-square--green" />
-          <div className="page-transition-square page-transition-square--purple" />
-          <div className="page-transition-square page-transition-square--red" />
-          <div className="page-transition-square page-transition-square--yellow" />
+        <div className="page-transition-flower">
+          <div className="page-transition-flower-spin">
+            <div className="page-transition-flower-mark" />
+          </div>
         </div>
       </div>
     </div>

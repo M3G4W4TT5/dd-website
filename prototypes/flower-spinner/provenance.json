@@ -1,0 +1,31 @@
+{
+  "source": "dd-logos-final/dd-soft-edge-upscaled/flower.png (workspace asset outside Git repository)",
+  "source_sha256": "c286e51687dc56454adae44ce20cba6dbdc4046c755f18b1a007cfcb4c9cbbad",
+  "source_size": [
+    2048,
+    2048
+  ],
+  "source_alpha_bounds": [
+    188,
+    96,
+    1860,
+    1952
+  ],
+  "mask_size": [
+    512,
+    512
+  ],
+  "mask_alpha_bounds": [
+    45,
+    22,
+    467,
+    490
+  ],
+  "processing": "Original full square canvas; alpha channel downsampled with Lanczos; RGB set to white. No tracing, shape cleanup, or generative edits.",
+  "colours": [
+    "#116e3a",
+    "#7349cd",
+    "#dc3e16",
+    "#e3b936"
+  ]
+}
