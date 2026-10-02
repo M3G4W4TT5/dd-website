@@ -286,8 +286,6 @@ class UpgradePathTests(unittest.TestCase):
         self.assertEqual(status['category'], 'availability_503_stale_images')
         self.assertEqual(json.loads((self.state / 'webhook-rotation.json').read_text())['status'], 'complete')
 
-
-class NativeMailUpgradeTests(UpgradePathTests):
     def test_native_mail_recreates_only_pretix_and_preserves_manifest_images(self):
         self.running['revisions'] = {key:self.manifest['commit'] for key in release.APP_SERVICES}
         original_images = dict(self.manifest['images'])
