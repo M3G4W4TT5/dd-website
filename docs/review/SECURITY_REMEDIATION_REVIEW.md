@@ -10,11 +10,11 @@ The unrelated original checkout (assets, layout, docs, untracked favicon files a
 
 ## 1. Recovery exhaustion — security_fix_recovery
 
-Source: occ_e0bb3550ff268989e932bbd4; route charged recovery-total (100/hour) before independent email/queue work. Email rotation exhausted every client's allowance; retries charged again. Implementation in progress.
+Source: occ_e0bb3550ff268989e932bbd4; route charged recovery-total (100/hour) before independent email/queue work. Email rotation exhausted every client's allowance; retries charged again. Repository implementation completed; required container/host verification remains unverified.
 
 Authenticated ingress overwrites client identity and a private key header; web rejects forwarding headers without this separately authenticated path. Keys stay only in proxy and booking web. Exact ingress gateway trust remains required. Real IP parser canonicalizes mapped IPv4 and IPv6; /24 and /64 prefix budgets are conservative shared-network signals. Atomic admission transaction combines retry lookup, client/email budgets, queue/client outstanding caps and refillable emergency ceiling, rolling all reservations back on rejection. Email denials retain generic acceptance. Recovery polling uses a distinct loop and durable lease, protecting lifecycle polling.
 
-Initial defaults (provisional, conservative assumptions for a single studio, not measured production capacity): 6/client/hour; 60/prefix/hour; 2 outstanding/client; 100 recovery queue; emergency burst 200, refill one/10s. Fixture concurrency and latency evidence will be recorded below. Unknown and known contacts have the same HTTP contract; encrypted payload, near-delivery single-use tokens remain.
+Initial defaults (provisional, conservative assumptions for a single studio, not measured production capacity): 6/client/hour; 60/prefix/hour; 2 outstanding/client; 100 recovery queue; emergency burst 200, refill one/10s. Fixture concurrency and latency evidence is recorded below. Unknown and known contacts have the same HTTP contract; encrypted payload, near-delivery single-use tokens remain.
 
 Migration 002-management.sql is additive with explicit grants. Install migrations before application code; install matching private BOOKING_INGRESS_KEY and booking-ingress-header.conf before proxy/application replacement. Do not rerun provision/bootstrap on the populated host. Retain additive tables on rollback. Existing queued recovery rows count toward total queue, with no client attribution; review counts before rollout.
 
@@ -139,3 +139,55 @@ Owner deployment after review: preserve backups and close forms/checkout gates, 
 Independent webhook review confirmed that an earlier completed rotation would reuse the old proxy-mounted credential. The isolation upgrade now requires its own durable rotation marker with matching credential hash: an old completed rotation alone forces a new credential, interrupted retries reuse pending values, and subsequent successful relay installs retain the new credential. Marker/registry disagreement fails closed. Owner tests now pass 18/18, including this upgrade and retry identity; the actual HTTP fixture passes old credential 401 and new credential accepted duplicate. The disposable network fixture includes old credential denial after replacement. No hosted rotation occurred.
 
 The broad infrastructure sweep reached the legacy `hosted-backup-check.test.py` automatic sudo fallback; its Docker launch failed without changing infrastructure. That affected fixture now requires already available Docker access and never escalates, matching the new Compose fixture. Backup/restore container execution remains **unverified**. No elevated execution or owner approval was obtained; no Docker checks are reported passed from that failed attempt.
+
+## Integrated delivery and remaining acceptance
+
+All eight repository implementations are integrated with explicit no-ff merges. Each had a fresh read-only pre-patch investigator and one independent candidate review; confirmed review findings were corrected and focused checks rerun. **No finding is claimed fully verified/fixed in deployed operation**: required container execution is unavailable locally and hosted acceptance is intentionally outside this delivery. The PR must be draft for these local proof gaps.
+
+| Finding / branch | Implementation | Available local verification | Relevant regular commits | Integration merge |
+| --- | --- | --- | --- | --- |
+| 1 security_fix_recovery | implemented | passed | 710d6c0, 550b996 | cda534d |
+| 2 security_fix_availability | implemented | passed | 838829e, bdf3747, c215f0f | 06b1ce5 |
+| 3 security_fix_checkout | implemented | passed | deffca2, 1f847d8, 34b8421 | 85940e7 |
+| 4 security_fix_marketing | implemented | passed | 8900e20, de84401, e059fd9 | 2c2391f, ff02407 |
+| 5 security_fix_contact | implemented | passed | a42ff11, c31da17, a5ce31c | 23706f8 |
+| 6 security_fix_validators | implemented | passed | ffe9898, 2502f6a | 2f893db |
+| 7 security_fix_image_pinning | implemented | passed | 09f5195, a1cb4d7 | 511f820 |
+| 8 security_fix_webhook_isolation | implemented | passed | 095f06c, 92214d1 | e5b6e69 |
+
+Final integration checks (all against synthetic/disposable/local resources):
+
+- `SECURITY_TEST_DATABASE_URL=postgresql://dd_fixture@127.0.0.1:55432/dd_security_fixture npm run test:server`: **passed 34/34, zero skipped**. Includes fresh compiled standalone parser, durable admission/cleanup and actual fixture SMTP deadline.
+- Same fixture env `npm run test:booking`: **passed 78/78, zero skipped**. Authoritative inventory/price, management/payment-race and sandbox handoff behavior preserved.
+- `npm run typecheck:server`: **passed** all workspace typechecks, including Booking and Personal. `npm run build:server`, `npm run build:booking`, `npm run build:personal`: **passed**. `npm run test:pages`: **passed 6/6**; `npm run typecheck:pages` and `npm run build:pages-functions`: **passed**; Wrangler compiled locally without deployment.
+- After scoped synthetic management migration 004, `node --import tsx server/database/scripts/verify-local.ts` and `node --import tsx server/database/scripts/verify-management.ts`: **passed** actual scoped-role/backup/future-object/cross-domain denial, marketing consent/operator/token/ambiguity and management deduplication/reconciliation/lifecycle regressions. These use ignored fixture env files generated for the disposable loopback cluster only.
+- `python3 infra/apply-hosted-release.test.py`: **passed 18/18** after isolation credential correction. `python3 infra/deploy.test.py`, `infra/primary-release.test.py`, `infra/runtime-probes.test.py`, `infra/image-pins.test.py`, `infra/webhook-isolation.test.py`, `infra/hosted-mail-scope.test.py`, `infra/hosted-rehearse-rollback.test.py`, `infra/ttd-checkout.test.py`, `infra/ttd-csp.test.py`, `infra/ttd-event-emails.test.py`, `infra/ttd-native-mail-config.test.py`: **passed** (65 Python tests total including owner suite). Mocked owner output is not hosted evidence.
+- Focused `node --import tsx --test server/database/webhook-security.test.ts` after credential correction: **passed 2/2**, including actual old/new credential route behavior. `python3 infra/webhook-isolation.test.py` and image inventory regressions reran successfully.
+- Python AST parsing of changed scripts, `git diff origin/main --check`, final scope/path review and sensitive token pattern scan: **passed**; no generated dependencies/build trees, unrelated assets/copy or secrets included. Generated next-env.d.ts is excluded. Source-generated raw public manifest evidence is intentionally included.
+- Final `git fetch origin main`: origin/main remains exact baseline `1293b342015007fdd35a49bb09b4082f45e4d636`, so no main reconciliation merge was needed. The last finding integration is `e5b6e69`; the branch head also includes this final review report.
+
+Required but unavailable local checks: final Docker image builds/pulls; `python3 infra/verify-runtime-probe-images.py REVIEWED_MANIFEST.json` and built-image database/availability network probes; `python3 infra/verify-hosted-compose-upgrade.py` producer and unauthorized peer routing/secret remount; `python3 infra/run-ttd-full-page.py` and `--script mail` pinned Pretix runtime fixtures; `python3 infra/hosted-backup-check.test.py` disposable container backup/restore. **Unverified**, Docker daemon socket permission denied. Existing source/unit substitutes do not establish these runtime outcomes. CI is configured for the available suites, pinned Pretix fixtures, image builds and network fixture, but its future result is not assumed. Publisher signatures remain **unverified** without a trust policy. No VPS, hosted database, provider, inbox, customer, payment or refund acceptance was attempted. Security Cloud findings remain unresolved.
+
+After PR review, owner follow-up is ordered:
+
+1. Review provisional thresholds, retained inbox/pending counts, unresolved deliveries/intents and existing unpaid reservations. Preserve backups. Choose a closed-flow upgrade window; reconcile old unpaid orders without automatically canceling them or treating their absence as evidence. Confirm actual Pretix Celery/broker topology, exact ingress gateway and non-overlapping dedicated CIDRs.
+2. Apply additive management migrations 002/003/004 and marketing migration 002 in each matching domain using its migration owner. Never run initial provision/bootstrap/import/discount repair on populated data or clean populated state as a verification shortcut. Review active history/grants and backup coverage.
+3. Run disposable CI/owner image, probe and network fixtures with synthetic credentials. Review exact upstream image/provenance evidence and signature policy; pull the reviewed third-party pins for the target platform. Stage/install matching ingress key/header privately. Install root-owned matching runtime probe/helper sources and compiled images; retain UID/file mode and minimum-secret bindings.
+4. Install the exact hash-bound host package via reviewed retryable owner upgrade (including dedicated relay, old credential rotation and scoped hook URL change); retain actual app image identity during config replacement. Keep independent primary pin/state, volumes and release protections. Then release exact new application images using the normal reviewed manifest workflow. Merging/deploying code alone does not install these host/network/secret changes.
+5. Verify actual private ingress identity stripping, direct endpoint/unauthorized peer denial, producer and retry delivery, limits/queue/cleanup behavior, authoritative booking/management regressions, provider capture/controlled mail and real inbox receipt as separate acceptance. Record each as passed, failed or unverified. Keep DEPLOY_ENABLED=false, Access, sandbox payments and controlled mail unless separately authorized.
+
+Rollback preserves all additive DB tables/history/ledger/unresolved delivery evidence. Keep flows closed if old code would lose protection. Roll back matched helpers/images only with reviewed config; never restore the shared credential injector or cross-service validator behavior as a silent compatibility workaround.
+
+## Proposed PR and publication follow-up
+
+Title: `Security: bound admission and isolate runtime trust across eight findings`
+
+Draft PR targeting main from security_remediation. Body:
+
+> Recovery, catalog, rental checkout, marketing and inquiry requests now share durable scoped admission so rotating identities or concurrent processes cannot allocate unbounded provider/database/mail work. Matching compiled probes constrain validator credentials, reviewed image digests replace mutable references, and a dedicated producer-bound relay removes webhook credential injection from the shared public proxy.
+>
+> Local synthetic PostgreSQL/SMTP tests, scoped-role checks, 34 server tests, 78 booking tests, Pages tests, typechecks/builds and infrastructure unit checks passed. Draft because Docker daemon access prevented required final image/network/Pretix runtime and backup/restore fixtures; publisher signatures and hosted acceptance remain unverified. All eight outcomes, commits, threshold assumptions, proof gaps, migrations, compatibility and owner deployment/rollback order are in docs/review/SECURITY_REMEDIATION_REVIEW.md.
+>
+> Repository delivery only: no final merge, auto-merge, deployment, hosted/provider/customer action or finding resolution. Owner must apply incremental migrations, private ingress configuration and the dedicated relay/credential transition before exact-image release. Application merge/deployment alone does not install host changes.
+
+Publication: push security_remediation and eight named remediation branches without force; `gh pr create --repo M3G4W4TT5/dd-website --base main --head security_remediation --draft --title 'Security: bound admission and isolate runtime trust across eight findings' --body-file /tmp/dd-security-pr-body.md`, then attach the returned URL using Codex attach_artifact. If unavailable, retain these commits and repeat only this publication/attachment after owner access is restored; do not merge/deploy as follow-up. PR URL is reported in the delivery message. No separate finding PRs are created.
