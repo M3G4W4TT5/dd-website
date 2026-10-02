@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 import { admission, budget, clientIdentity, lease, privateKey, setting, AdmissionDenied } from "../../../server/database/admission";
 import { bookingDb } from "./notifications";
 let locks: Pool | undefined, waiting = 0;
@@ -8,7 +8,7 @@ export async function lockedCheckout<T>(code: string, fn: () => Promise<T>) {
   if (waiting >= 8) throw new AdmissionDenied("capacity");
   waiting++;
   let release: (()=>Promise<void>) | undefined;
-  let connection: Awaited<ReturnType<Pool["connect"]>> | undefined;
+  let connection: PoolClient | undefined;
   try {
     release = await lease(bookingDb(), "checkout-operation", 2, 180);
     locks ??= new Pool({connectionString:process.env.BOOKING_DATABASE_URL,max:2,connectionTimeoutMillis:2000,allowExitOnIdle:true});
