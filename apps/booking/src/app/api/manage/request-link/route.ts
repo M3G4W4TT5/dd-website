@@ -2,8 +2,8 @@ import { submissionId } from "../../../../../server/submission";
 import { boundedJson, HttpError } from "@dd/runtime";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { limit } from "@dd/database";
-import { bookingDb } from "../../../../../server/notifications";
+import { bookingClient } from "../../../../../server/client-identity";
+import { AdmissionDenied } from "../../../../../../../server/database/admission";
 import { requestManageLinks } from "@/lib/manage-recovery";
 
 export const runtime = "nodejs";
@@ -20,9 +20,11 @@ export async function POST(request: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400, headers });
   if (!parsed.data.website) {
-    if (!await limit(bookingDb(), "recovery-total", 100, 3600)) return NextResponse.json({error:"Too many requests"},{status:429,headers:{...headers,"Retry-After":"3600"}});
-    try { await requestManageLinks(parsed.data.email, parsed.data.language, submissionId(request)); }
-    catch { console.error("Booking link request failed"); return NextResponse.json({ error: "Request unavailable" }, { status: 503, headers }); }
+    try { await requestManageLinks(parsed.data.email, parsed.data.language, submissionId(request), bookingClient(request)); }
+    catch (error) {
+      if (error instanceof HttpError) return NextResponse.json({ error: error.message }, { status: error.status, headers });
+      if (error instanceof AdmissionDenied) return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: { ...headers, "Retry-After": String(error.retryAfter) } });
+      console.error("Booking link request failed"); return NextResponse.json({ error: "Request unavailable" }, { status: 503, headers }); }
   }
   return NextResponse.json({ ok: true }, { headers });
 }

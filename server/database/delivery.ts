@@ -13,6 +13,7 @@ export async function pollDelivery(
   pool: Pool,
   key: string,
   send: (row: Delivery, payload: any, messageId: string) => Promise<void>,
+  lane: "all" | "recovery" | "lifecycle" = "all",
 ) {
   // Expired sends include crashes after SMTP acceptance: explicit ambiguity, never auto-retry.
   await pool.query(
@@ -29,8 +30,8 @@ export async function pollDelivery(
   );
   const lease = randomUUID();
   const result = await pool.query<Delivery>(
-    `UPDATE deliveries SET state='leased',lease=$1,lease_until=now()+interval '60 seconds',attempts=attempts+1 WHERE id=(SELECT id FROM deliveries WHERE state='queued' AND next_at<=now() ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING *`,
-    [lease],
+    `UPDATE deliveries SET state='leased',lease=$1,lease_until=now()+interval '60 seconds',attempts=attempts+1 WHERE id=(SELECT id FROM deliveries WHERE state='queued' AND next_at<=now() AND ($2='all' OR ($2='recovery' AND kind='recovery') OR ($2='lifecycle' AND kind<>'recovery')) ORDER BY id FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING *`,
+    [lease, lane],
   );
   const row = result.rows[0];
   if (!row) return false;
