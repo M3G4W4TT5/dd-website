@@ -2210,54 +2210,59 @@ body:has(.legal-main) .legal-main {
   filter: blur(0);
 }
 
-.page-transition-squares {
+.page-transition-flower,
+.page-transition-flower-spin,
+.page-transition-flower-mark {
   height: 120px;
   width: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
-
-.page-transition-square {
-  height: 30px;
-  width: 30px;
-  position: absolute;
-  background-color: var(--square-colour);
-  box-shadow: 0 7px 29px 0 var(--square-colour);
-  animation: page-transition-square-move 4s ease infinite;
+  transform-origin: center;
   animation-play-state: paused;
 }
 
-.page-transition[data-phase="blur"] .page-transition-square,
-.page-transition[data-phase="colour"] .page-transition-square,
-.page-transition[data-phase="waiting"] .page-transition-square,
-.page-transition[data-phase="reveal"] .page-transition-square {
+.page-transition-flower {
+  animation: page-transition-flower-heartbeat 1.6s linear infinite;
+  animation-play-state: paused;
+}
+
+.page-transition-flower-spin {
+  animation: page-transition-flower-turn 1.6s linear infinite;
+  animation-play-state: paused;
+}
+
+.page-transition-flower-mark {
+  background-color: var(--green-ink);
+  -webkit-mask: url('/branding/page-transition-flower-mask.png') center / contain no-repeat;
+  mask: url('/branding/page-transition-flower-mask.png') center / contain no-repeat;
+  animation: page-transition-flower-colours 6.4s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.page-transition:is([data-phase="blur"], [data-phase="colour"], [data-phase="waiting"], [data-phase="reveal"])
+:is(.page-transition-flower, .page-transition-flower-spin, .page-transition-flower-mark) {
   animation-play-state: running;
 }
 
-.page-transition-square--green {
-  --square-colour: var(--green-ink);
-  transform: translate(-30px, -30px);
-  animation-delay: -1s;
+/* Approved Quick prototype: one turn, double heartbeat, then repeat.
+   The 0.448-second colour blend starts with the heartbeat after the spin stops. */
+@keyframes page-transition-flower-turn {
+  0% { transform: rotate(0deg); animation-timing-function: cubic-bezier(.5, 0, .5, 1); }
+  64%, 100% { transform: rotate(360deg); }
 }
 
-.page-transition-square--purple {
-  --square-colour: var(--purple-ink);
-  transform: translate(30px, -30px);
-  animation-delay: -2s;
+@keyframes page-transition-flower-heartbeat {
+  0%, 68% { transform: scale(1); }
+  75% { transform: scale(1.18); animation-timing-function: ease-out; }
+  81% { transform: scale(.98); animation-timing-function: ease-out; }
+  87% { transform: scale(1.10); animation-timing-function: ease-out; }
+  95%, 100% { transform: scale(1); }
 }
 
-.page-transition-square--red {
-  --square-colour: var(--red-ink);
-  transform: translate(30px, 30px);
-  animation-delay: -3s;
-}
-
-.page-transition-square--yellow {
-  --square-colour: var(--yellow-ink);
-  transform: translate(-30px, 30px);
-  animation-delay: -4s;
+@keyframes page-transition-flower-colours {
+  0%, 17% { background-color: var(--green-ink); }
+  24%, 42% { background-color: var(--purple-ink); }
+  49%, 67% { background-color: var(--red-ink); }
+  74%, 92% { background-color: var(--yellow-ink); }
+  99%, 100% { background-color: var(--green-ink); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2270,14 +2275,10 @@ body:has(.legal-main) .legal-main {
     transition: none;
   }
 
-  .page-transition-square { animation: none; }
+  .page-transition-flower,
+  .page-transition-flower-spin,
+  .page-transition-flower-mark { animation: none; }
 
-}
-@keyframes page-transition-square-move {
-  0%, 100% { transform: translate(-30px, -30px); }
-  25% { transform: translate(30px, -30px); }
-  50% { transform: translate(30px, 30px); }
-  75% { transform: translate(-30px, 30px); }
 }
 
 /* One grid cell for both phone controls; native country names remain accessible. */
