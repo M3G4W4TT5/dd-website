@@ -1,3 +1,4 @@
+import { AdmissionDenied } from "../../../../../../../server/database/admission";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -22,14 +23,15 @@ export async function POST(request: Request) {
   try{payload=await boundedJson(request,2048);}catch(e){return new Response(null,{status:e instanceof HttpError?e.status:400});}
   const parsed = schema.safeParse(payload);
   if (!parsed.success) return new Response(null, { status: 400 });
-  const { organizer, event, code, action } = parsed.data;
+  const { organizer, event } = parsed.data;
   if (organizer !== process.env.PRETIX_ORGANIZER_SLUG || event !== process.env.PRETIX_EVENT_SLUG) {
     return NextResponse.json({ accepted: true });
   }
   try {
     await intakeWebhook(parsed.data);
     return NextResponse.json({ accepted: true });
-  } catch {
+  } catch (error) {
+    if(error instanceof AdmissionDenied) return new Response(null,{status:429,headers:{"Retry-After":String(error.retryAfter)}});
     console.error("Booking webhook persistence failed");
     return new Response(null, { status: 503 });
   }

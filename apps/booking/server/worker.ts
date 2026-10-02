@@ -1,3 +1,4 @@
+import { cleanupWebhookInbox } from "../../../server/database/webhook-admission";
 import { createServer } from "node:http";
 import { pretixFetch, pretixHeaders, pretixNextPage } from "./pretix-http";
 import { createCapture, createMailer, DeliveryError } from "@dd/mail";
@@ -139,8 +140,9 @@ async function loop() {
         }
       }, "lifecycle");
       await pool.query(
-        "DELETE FROM abuse_limits WHERE expires_at<now(); DELETE FROM manage_link_tokens WHERE expires_at<now(); DELETE FROM webhook_inbox WHERE state IN ('processed','ignored') AND created_at<now()-interval '30 days'",
+        "DELETE FROM abuse_limits WHERE expires_at<now(); DELETE FROM manage_link_tokens WHERE expires_at<now()",
       );
+      await cleanupWebhookInbox(pool);
       lastSuccess = Date.now();
     } catch {
       console.error("Booking worker dependency failure; inspect queue status");

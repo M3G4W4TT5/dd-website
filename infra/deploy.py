@@ -20,9 +20,9 @@ ROOT = Path("/etc/dd-hosted")
 STATE = Path("/var/lib/dd-hosted")
 PREFIX = "ghcr.io/m3g4w4tt5/dd-website-"
 TARGETS = {"booking": "DD_BOOKING_IMAGE", "communications": "DD_COMMUNICATIONS_IMAGE", "worker": "DD_WORKER_IMAGE"}
-SERVICES = ["postgres", "redis", "mail-capture", "pretix", "pretix-cron", "booking", "booking-communications", "booking-worker", "proxy"]
+SERVICES = ["postgres", "redis", "mail-capture", "pretix", "pretix-cron", "booking", "booking-communications", "booking-worker", "proxy", "pretix-webhook-relay"]
 FILES = ("compose.production.yaml", "compose.hosted.yaml", "proxy.conf",
-         "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf", "deploy.py")
+         "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf", "pretix-webhook-relay.conf", "deploy.py")
 PRIMARY_FILES = ("compose.primary.yaml", "proxy.primary.conf", "primary-routes.inc")
 
 

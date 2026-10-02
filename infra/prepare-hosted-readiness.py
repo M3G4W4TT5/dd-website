@@ -13,7 +13,7 @@ ROOT = Path('/etc/dd-hosted')
 STATE = Path('/var/lib/dd-hosted')
 PRIVATE = STATE / 'provisioning'
 CONFIGS = ('compose.production.yaml', 'compose.hosted.yaml', 'proxy.conf',
-           'pretix-nginx.conf', 'pretix-settings.py', 'pretix-task.conf')
+           'pretix-nginx.conf', 'pretix-settings.py', 'pretix-task.conf', 'pretix-webhook-relay.conf')
 
 
 def trusted(path, uid=0, private=False):
