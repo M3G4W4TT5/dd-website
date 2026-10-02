@@ -1,0 +1,384 @@
+{
+  "config_hashes": {
+    "compose.hosted.yaml": "21b6df7f428132e39519db26b16aa28b7e85e4f597bbd896cc739f5f6caa8ba1",
+    "compose.production.yaml": "ac6604d93feddc7d1ad7ada13fbe1089766e4f4f15447cf0f4f84e95b144abfb",
+    "deploy.py": "78e929be92c9e808128b5f867425bbf7dd27d19482c9bac6d73442c38dc9d242",
+    "pretix-nginx.conf": "bdac328919966debe72e2f86cd4eba1442fc452cd43eb35a3fc7b41ef1e3a563",
+    "pretix-settings.py": "64bc655a068f0bbe501ca8dfd93ee38a2d154cf51f65aa064d32443e94e1dbbd",
+    "pretix-task.conf": "3e3036710bd4a0135c3f2743345fb4b5e6ad952aec1395859a516291fbc7abbb",
+    "proxy.conf": "dc8a94afec5e67a49b23f41e83940aa04c8e23177d8736aa04b9ce545216022c"
+  },
+  "containers": {
+    "booking": {
+      "health": "healthy",
+      "image_id": "sha256:2526e66f4191c592d4ee6a3542f80474a0fcfdd7c0c62679afa4780350af68c9",
+      "image_reference": "ghcr.io/m3g4w4tt5/dd-website-booking@sha256:2526e66f4191c592d4ee6a3542f80474a0fcfdd7c0c62679afa4780350af68c9",
+      "restarts": 0,
+      "revision": "ff763f623f202a8615893bf4f6e9c236dabb4c82",
+      "runtime_file_startup": true,
+      "state": "running"
+    },
+    "booking-communications": {
+      "health": "healthy",
+      "image_id": "sha256:228720828884234fa5cc2b6256d02d2a34083aa1d3a77aaa28a88914e0697b30",
+      "image_reference": "ghcr.io/m3g4w4tt5/dd-website-communications@sha256:228720828884234fa5cc2b6256d02d2a34083aa1d3a77aaa28a88914e0697b30",
+      "restarts": 0,
+      "revision": "ff763f623f202a8615893bf4f6e9c236dabb4c82",
+      "runtime_file_startup": true,
+      "state": "running"
+    },
+    "booking-worker": {
+      "health": "healthy",
+      "image_id": "sha256:a31eb19f4cce09fb7f576b57a2d2f4d680fccc3295c920017c7fd30cdc4dc890",
+      "image_reference": "ghcr.io/m3g4w4tt5/dd-website-worker@sha256:a31eb19f4cce09fb7f576b57a2d2f4d680fccc3295c920017c7fd30cdc4dc890",
+      "restarts": 0,
+      "revision": "ff763f623f202a8615893bf4f6e9c236dabb4c82",
+      "runtime_file_startup": true,
+      "state": "running"
+    },
+    "mail-capture": {
+      "health": "healthy",
+      "image_id": "sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365",
+      "image_reference": "axllent/mailpit:v1.31.1",
+      "restarts": 0,
+      "revision": null,
+      "runtime_file_startup": false,
+      "state": "running"
+    },
+    "postgres": {
+      "health": "healthy",
+      "image_id": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+      "image_reference": "postgres:17.6-alpine",
+      "restarts": 0,
+      "revision": null,
+      "runtime_file_startup": false,
+      "state": "running"
+    },
+    "pretix": {
+      "health": null,
+      "image_id": "sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02",
+      "image_reference": "pretix/standalone:2026.7.0",
+      "restarts": 0,
+      "revision": null,
+      "runtime_file_startup": false,
+      "state": "running"
+    },
+    "pretix-cron": {
+      "health": null,
+      "image_id": "sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02",
+      "image_reference": "pretix/standalone:2026.7.0",
+      "restarts": 0,
+      "revision": null,
+      "runtime_file_startup": false,
+      "state": "running"
+    },
+    "primary-communications": {
+      "health": "healthy",
+      "image_id": "sha256:45d721e8f3aa3767e6ce320aecffaac7be0d9c1b3a42bb6e8cc47c28ccc94bce",
+      "image_reference": "ghcr.io/m3g4w4tt5/dd-website-communications@sha256:45d721e8f3aa3767e6ce320aecffaac7be0d9c1b3a42bb6e8cc47c28ccc94bce",
+      "restarts": 0,
+      "revision": "be350a1d320136abdc1592b350e5f32257f91a17",
+      "runtime_file_startup": true,
+      "state": "running"
+    },
+    "proxy": {
+      "health": null,
+      "image_id": "sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6",
+      "image_reference": "nginxinc/nginx-unprivileged:1.29-alpine",
+      "restarts": 0,
+      "revision": "c4edb2fc1a693a7bdae4ab2bbc1c7fe63622290f",
+      "runtime_file_startup": false,
+      "state": "running"
+    },
+    "redis": {
+      "health": "healthy",
+      "image_id": "sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08",
+      "image_reference": "redis:7.4.5-alpine",
+      "restarts": 0,
+      "revision": null,
+      "runtime_file_startup": false,
+      "state": "running"
+    }
+  },
+  "gates": {
+    "booking": {
+      "BOOKING_SELF_SERVICE_ENABLED": "true",
+      "DD_MODE": "production",
+      "MAIL_DELIVERY": "capture",
+      "MAIL_RELEASE_ENABLED": "false",
+      "PAYMENT_ENVIRONMENT": "sandbox",
+      "PAYMENT_RELEASE_ENABLED": "false",
+      "PRETIX_EVENTS_CHECKOUT_ENABLED": "true",
+      "PREVIEW": "false",
+      "mounted_runtime_matches_host": true,
+      "scoped_write_token_present": true,
+      "startup_uses_runtime_file": true,
+      "stripe_signing_secret_present": true
+    },
+    "communications": {
+      "BOOKING_SELF_SERVICE_ENABLED": "not_applicable",
+      "DD_MODE": "production",
+      "MAIL_DELIVERY": "controlled",
+      "MAIL_RELEASE_ENABLED": "false",
+      "PAYMENT_ENVIRONMENT": "sandbox",
+      "PAYMENT_RELEASE_ENABLED": "false",
+      "PRETIX_EVENTS_CHECKOUT_ENABLED": "not_applicable",
+      "PREVIEW": "false",
+      "mounted_runtime_matches_host": true,
+      "scoped_write_token_present": false,
+      "startup_uses_runtime_file": true,
+      "stripe_signing_secret_present": false
+    },
+    "worker": {
+      "BOOKING_SELF_SERVICE_ENABLED": "not_applicable",
+      "DD_MODE": "production",
+      "MAIL_DELIVERY": "controlled",
+      "MAIL_RELEASE_ENABLED": "false",
+      "PAYMENT_ENVIRONMENT": "sandbox",
+      "PAYMENT_RELEASE_ENABLED": "false",
+      "PRETIX_EVENTS_CHECKOUT_ENABLED": "not_applicable",
+      "PREVIEW": "false",
+      "mounted_runtime_matches_host": true,
+      "scoped_write_token_present": false,
+      "startup_uses_runtime_file": true,
+      "stripe_signing_secret_present": false
+    }
+  },
+  "host": {
+    "disk_available_kib": 42711816,
+    "load_average": [
+      0.46,
+      0.47,
+      0.46
+    ]
+  },
+  "host_config_version": "599be2db06133c7b16c1a310d467e1a99a8a5aebd9d8a47247420b333b5f0a0f",
+  "monitoring": {
+    "backup": {
+      "age_hours": 11.5,
+      "completed_at": "2026-10-02T02:30:36.461405+00:00",
+      "fresh": true,
+      "last_service": "inactive",
+      "timer": "active"
+    },
+    "supervisor_last_service": "inactive",
+    "supervisor_timer": "active"
+  },
+  "pretix": {
+    "dates": 656,
+    "discounts": 1,
+    "events": [
+      {
+        "live": true,
+        "slug": "dance-with-dd-dev",
+        "testmode": true
+      },
+      {
+        "live": true,
+        "slug": "street-dance-workshop-dd-dev",
+        "testmode": true
+      },
+      {
+        "live": true,
+        "slug": "studio",
+        "testmode": true
+      }
+    ],
+    "full_day_discount_complete": true,
+    "orders": 19,
+    "products": 4,
+    "quotas": 657,
+    "supervisor": [
+      "nginx RUNNING",
+      "pretixtask RUNNING",
+      "pretixweb RUNNING"
+    ],
+    "supervisor_probe": "ok",
+    "web_sales_channel_valid": true
+  },
+  "probes": {
+    "booking_availability": {
+      "slots": 14,
+      "source": "pretix",
+      "status": 200
+    },
+    "booking_health": {
+      "status": 200
+    },
+    "booking_root": {
+      "status": 200
+    },
+    "checkout_root": {
+      "status": 200
+    }
+  },
+  "release": {
+    "attempt.json": {
+      "category": null,
+      "commit": "ff763f623f202a8615893bf4f6e9c236dabb4c82",
+      "config_version": "599be2db06133c7b16c1a310d467e1a99a8a5aebd9d8a47247420b333b5f0a0f",
+      "diagnostic": null,
+      "operation": null,
+      "phase": "complete",
+      "recorded_revision": null,
+      "release_record_stale": null,
+      "running_revisions": null,
+      "status": "succeeded"
+    },
+    "config-install.json": {
+      "category": null,
+      "commit": null,
+      "config_version": "599be2db06133c7b16c1a310d467e1a99a8a5aebd9d8a47247420b333b5f0a0f",
+      "diagnostic": null,
+      "operation": null,
+      "phase": "complete",
+      "recorded_revision": "6014e460b9b9516fec6966a6a903ee1ca4f5a4d6",
+      "release_record_stale": false,
+      "running_revisions": {
+        "booking": "6014e460b9b9516fec6966a6a903ee1ca4f5a4d6",
+        "communications": "6014e460b9b9516fec6966a6a903ee1ca4f5a4d6",
+        "worker": "6014e460b9b9516fec6966a6a903ee1ca4f5a4d6"
+      },
+      "status": "installed"
+    },
+    "current.json": {
+      "category": null,
+      "commit": "ff763f623f202a8615893bf4f6e9c236dabb4c82",
+      "config_version": "599be2db06133c7b16c1a310d467e1a99a8a5aebd9d8a47247420b333b5f0a0f",
+      "diagnostic": null,
+      "operation": null,
+      "phase": null,
+      "recorded_revision": null,
+      "release_record_stale": null,
+      "running_revisions": null,
+      "status": null
+    },
+    "failed.json": null,
+    "mail-gates.json": {
+      "category": null,
+      "commit": "b0b390724aadbf1a3ee79b739fbf265dc6eba6cc",
+      "config_version": null,
+      "diagnostic": null,
+      "operation": null,
+      "phase": "complete",
+      "recorded_revision": null,
+      "release_record_stale": null,
+      "running_revisions": null,
+      "status": "configured_pending_sender_scope_check"
+    },
+    "previous.json": {
+      "category": null,
+      "commit": "6014e460b9b9516fec6966a6a903ee1ca4f5a4d6",
+      "config_version": "148e0d8d70c75ea806d6a5c2734870a015269938102b82832dbb0728c560ba91",
+      "diagnostic": null,
+      "operation": null,
+      "phase": null,
+      "recorded_revision": null,
+      "release_record_stale": null,
+      "running_revisions": null,
+      "status": null
+    },
+    "sandbox-gates.json": {
+      "category": null,
+      "commit": "4a7eb56ba334ddc2559b9e308f7501e2cc21ff6c",
+      "config_version": null,
+      "diagnostic": null,
+      "operation": null,
+      "phase": "complete",
+      "recorded_revision": null,
+      "release_record_stale": null,
+      "running_revisions": null,
+      "status": "configured"
+    },
+    "webhook-rotation.json": {
+      "category": null,
+      "commit": null,
+      "config_version": null,
+      "diagnostic": null,
+      "operation": null,
+      "phase": null,
+      "recorded_revision": null,
+      "release_record_stale": null,
+      "running_revisions": null,
+      "status": "complete"
+    }
+  },
+  "resource_pressure": [
+    {
+      "CPUPerc": "0.28%",
+      "MemPerc": "23.50%",
+      "MemUsage": "60.16MiB / 256MiB",
+      "Name": "dd-hosted-booking-communications-1",
+      "PIDs": "18"
+    },
+    {
+      "CPUPerc": "0.43%",
+      "MemPerc": "30.95%",
+      "MemUsage": "79.24MiB / 256MiB",
+      "Name": "dd-hosted-booking-worker-1",
+      "PIDs": "19"
+    },
+    {
+      "CPUPerc": "0.02%",
+      "MemPerc": "13.64%",
+      "MemUsage": "69.84MiB / 512MiB",
+      "Name": "dd-hosted-booking-1",
+      "PIDs": "12"
+    },
+    {
+      "CPUPerc": "0.00%",
+      "MemPerc": "7.78%",
+      "MemUsage": "4.977MiB / 64MiB",
+      "Name": "dd-hosted-proxy-1",
+      "PIDs": "3"
+    },
+    {
+      "CPUPerc": "0.32%",
+      "MemPerc": "52.63%",
+      "MemUsage": "539MiB / 1GiB",
+      "Name": "dd-hosted-pretix-1",
+      "PIDs": "9"
+    },
+    {
+      "CPUPerc": "0.00%",
+      "MemPerc": "2.28%",
+      "MemUsage": "8.746MiB / 384MiB",
+      "Name": "dd-hosted-pretix-cron-1",
+      "PIDs": "2"
+    },
+    {
+      "CPUPerc": "0.31%",
+      "MemPerc": "28.05%",
+      "MemUsage": "71.81MiB / 256MiB",
+      "Name": "dd-hosted-primary-communications-1",
+      "PIDs": "19"
+    },
+    {
+      "CPUPerc": "0.00%",
+      "MemPerc": "18.99%",
+      "MemUsage": "24.31MiB / 128MiB",
+      "Name": "dd-hosted-mail-capture-1",
+      "PIDs": "9"
+    },
+    {
+      "CPUPerc": "0.69%",
+      "MemPerc": "5.86%",
+      "MemUsage": "7.504MiB / 128MiB",
+      "Name": "dd-hosted-redis-1",
+      "PIDs": "6"
+    },
+    {
+      "CPUPerc": "0.82%",
+      "MemPerc": "19.91%",
+      "MemUsage": "102MiB / 512MiB",
+      "Name": "dd-hosted-postgres-1",
+      "PIDs": "11"
+    }
+  ],
+  "webhook_header": {
+    "dd_setup_read_denied": true,
+    "gid": 10006,
+    "mode": "0o440",
+    "uid": 0
+  }
+}

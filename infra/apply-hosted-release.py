@@ -44,10 +44,12 @@ TARGET = {
     'compose.hosted.yaml': '21b6df7f428132e39519db26b16aa28b7e85e4f597bbd896cc739f5f6caa8ba1',
     'proxy.conf': 'dc8a94afec5e67a49b23f41e83940aa04c8e23177d8736aa04b9ce545216022c',
     'pretix-nginx.conf': 'bdac328919966debe72e2f86cd4eba1442fc452cd43eb35a3fc7b41ef1e3a563',
-    'pretix-settings.py': '64bc655a068f0bbe501ca8dfd93ee38a2d154cf51f65aa064d32443e94e1dbbd',
+    'pretix-settings.py': '0ae9c97756add2eb62239f415ecf8a1808d60b9ed5ff8242070b944bcc881bb0',
     'pretix-task.conf': '3e3036710bd4a0135c3f2743345fb4b5e6ad952aec1395859a516291fbc7abbb',
     'deploy.py': '78e929be92c9e808128b5f867425bbf7dd27d19482c9bac6d73442c38dc9d242',
 }
+# Verified installed adapter before native Purelymail delivery.
+PRE_MAIL_TARGET = {**TARGET, 'pretix-settings.py': '64bc655a068f0bbe501ca8dfd93ee38a2d154cf51f65aa064d32443e94e1dbbd'}
 # Verified installed TTD adapter before the rendering-boundary correction.
 PRE_RENDER_TARGET = {**TARGET,
     'pretix-settings.py': '6f5090eeb05be4460299bdec3fdcbc98604e2bb69eb0dfee965a1038779d4123'}
@@ -377,7 +379,7 @@ def install(source):
             raise ValueError('Staged file differs from reviewed release: ' + name)
         if sha(destination) not in (BASELINE[name], PARTIAL[name], PREVIOUS_TARGET[name],
                                     CURRENT_INSTALLED[name], PRE_PAGES_TARGET[name], PRE_TTD_TARGET[name],
-                                    PRE_RENDER_TARGET[name], TARGET[name]):
+                                    PRE_RENDER_TARGET[name], PRE_MAIL_TARGET[name], TARGET[name]):
             raise ValueError('Installed configuration version differs: ' + name)
     verify_bridge()
     verify_proxy_group()
@@ -675,6 +677,47 @@ def rotate_mail_credentials(commit):
     print('PASS: distinct booking app passwords mounted; controlled recipient and mail release gates retained.')
 
 
+
+def native_mail_adapter(source, install_adapter=True):
+    """Adapter-only release/reload: no proxy, credentials or booking recreation."""
+    action = 'native-mail-adapter'
+    record(action, 'preflight', 'running')
+    trusted(source)
+    for name in FILES:
+        trusted(source / name)
+        trusted(installed(name))
+        if sha(source / name) != TARGET[name]:
+            raise ValueError('Native mail package differs: ' + name)
+        allowed = {TARGET[name], PRE_MAIL_TARGET[name]} if name == 'pretix-settings.py' and install_adapter else {TARGET[name]}
+        if sha(installed(name)) not in allowed:
+            raise ValueError('Installed native mail baseline drift: ' + name)
+    running = running_application()
+    manifest = current()
+    if any(revision != manifest['commit'] for revision in running['revisions'].values()):
+        raise ValueError('Running application and release identity differ')
+    arguments, env = compose(running)
+    deploy = runpy.run_path(str(installed('deploy.py')))
+    if install_adapter:
+        put(installed('pretix-settings.py'), (source / 'pretix-settings.py').read_bytes(), 0o644)
+    version = deploy['config_version'](ROOT)
+    if version != deploy['config_version'](source):
+        raise ValueError('Native mail host configuration differs')
+    safe_run(arguments + ['config', '--quiet'], env=env)
+    record(action, 'pretix_recreation', 'running', config_version=version)
+    safe_run(arguments + ['up', '-d', '--no-deps', '--force-recreate', '--no-build',
+                         '--pull', 'never', '--wait', '--wait-timeout', '240', 'pretix', 'pretix-cron'], env=env)
+    if running_application() != running:
+        raise ValueError('Native mail action changed application identities')
+    verify_mounts()
+    deploy['check_readiness'](arguments, env)
+    # Application revision/images stay authoritative; record only the new config.
+    manifest['config_version'] = version
+    put(STATE / 'current.json', (json.dumps(manifest, indent=2) + '\n').encode(), 0o600)
+    record(action, 'complete', 'installed' if install_adapter else 'reloaded',
+           config_version=version, commit=manifest['commit'], mail_acceptance='pending')
+    print('PASS native mail adapter/process identity; application images preserved. External delivery still requires owner acceptance.')
+
+
 def main():
     if os.geteuid() != 0:
         raise ValueError('Run as dd-owner through sudo')
@@ -683,7 +726,9 @@ def main():
     source = Path(__file__).resolve().parent
     with (STATE / 'deploy.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        if action == 'install' and len(sys.argv) == 2:
+        if action in ('install-native-mail', 'reload-native-mail') and len(sys.argv) == 2:
+            native_mail_adapter(source, install_adapter=action == 'install-native-mail')
+        elif action == 'install' and len(sys.argv) == 2:
             install(source)
         elif action == 'activate-sandbox' and len(sys.argv) == 3:
             activate_sandbox(sys.argv[2])
@@ -692,7 +737,7 @@ def main():
         elif action == 'rotate-mail-credentials' and len(sys.argv) == 3:
             rotate_mail_credentials(sys.argv[2])
         else:
-            raise ValueError('Expected install, activate-sandbox COMMIT, controlled-mail COMMIT or rotate-mail-credentials COMMIT')
+            raise ValueError('Expected install-native-mail, reload-native-mail, install, activate-sandbox COMMIT, controlled-mail COMMIT or rotate-mail-credentials COMMIT')
 
 
 def run_owner_action():

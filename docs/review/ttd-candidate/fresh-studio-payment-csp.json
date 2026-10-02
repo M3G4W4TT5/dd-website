@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-02",
+  "source": "owner read-only hosted diagnostic",
+  "current_commit": "ff763f623f202a8615893bf4f6e9c236dabb4c82",
+  "current_config_version": "599be2db06133c7b16c1a310d467e1a99a8a5aebd9d8a47247420b333b5f0a0f",
+  "host_web_cron_adapter_sha256": "64bc655a068f0bbe501ca8dfd93ee38a2d154cf51f65aa064d32443e94e1dbbd",
+  "readonly_web_cron_mounts": true,
+  "supervised_programs_running": true,
+  "payment_response": {
+    "path": "studio existing-order payment",
+    "owner_response_status": 200,
+    "escaped_stripe": false,
+    "stripe_dom_mount": true,
+    "exact_adapter_script_hash_permitted": true,
+    "unsafe_inline": false,
+    "stripe_script_origin_permitted": true,
+    "stripe_frame_origin_permitted": true
+  },
+  "all_three_theme_hashes_permitted": true
+}

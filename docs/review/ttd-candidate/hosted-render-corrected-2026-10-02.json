@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-02",
+  "application_release": "ff763f623f202a8615893bf4f6e9c236dabb4c82",
+  "deployment_run": 37015381158,
+  "deployment_ci": "succeeded",
+  "final_owner_runtime_identity": "verified against all three published image references/current manifest/config/readonly web-cron mounts",
+  "routes": [
+    {
+      "event": "studio",
+      "path": "existing-order payment",
+      "markup_is_controls": true,
+      "stripe_mount": true,
+      "secure_card_iframe": true,
+      "card_expiry_cvc_inside_iframe": true,
+      "customer_keys": [
+        "name",
+        "email",
+        "phone"
+      ],
+      "logo_count": 1,
+      "palette": "green",
+      "billing_toggle_operates": true
+    },
+    {
+      "event": "dance-with-dd-dev",
+      "path": "initial checkout payment",
+      "cart_state": "expired",
+      "markup_is_controls": true,
+      "stripe_mount": true,
+      "secure_card_iframe": true,
+      "card_expiry_cvc_inside_iframe": true,
+      "customer_keys": [
+        "name",
+        "email",
+        "phone"
+      ],
+      "logo_count": 1,
+      "palette": "purple",
+      "billing_toggle_operates": true
+    }
+  ],
+  "desktop_buttons_aligned": true,
+  "tested_mobile_widths": [
+    320,
+    390
+  ],
+  "mobile_overflow": false,
+  "billing_font_px": 16,
+  "billing_height_px": 44,
+  "iframe_card_font_px": 16,
+  "csp_console_errors_observed": 0,
+  "initial_event_effective_csp_response_headers": "not exposed by browser network observer; final owner probe pending",
+  "new_payment_or_purchase_submitted": false,
+  "billing_toggles_restored": true,
+  "owner_payment_acceptance": "unverified",
+  "studio_order_state_at_final_owner_probe": "fresh unpaid n",
+  "exact_theme_hashes_permitted_all_three_events": true,
+  "unsafe_inline": false,
+  "exact_payment_script_hash_after_release": {
+    "path": "studio existing-order payment",
+    "owner_response_status": 200,
+    "escaped_stripe": false,
+    "stripe_dom_mount": true,
+    "exact_adapter_script_hash_permitted": true,
+    "unsafe_inline": false,
+    "stripe_script_origin_permitted": true,
+    "stripe_frame_origin_permitted": true
+  },
+  "fresh_studio_payment": {
+    "observed": true,
+    "expired_text": false,
+    "javascript_warning": false,
+    "controls_and_secure_card_iframe": true,
+    "customer_keys": [
+      "name",
+      "email",
+      "phone"
+    ],
+    "keyboard_postal_to_checkbox": true,
+    "billing_toggle_operates_and_restored": true,
+    "iframe_card_number_expiry_cvc_font_px": 16,
+    "desktop_overflow": false,
+    "logo_count": 1,
+    "customer_or_payment_submission": false
+  },
+  "fresh_workshop_checkout": {
+    "event": "street-dance-workshop-dd-dev",
+    "at_payment": true,
+    "cart_expired": false,
+    "markup_is_controls": true,
+    "stripe_mount_and_secure_iframe": true,
+    "customer_keys": [
+      "name",
+      "email",
+      "phone"
+    ],
+    "logo_count": 1,
+    "palette": "purple",
+    "desktop_overflow": false,
+    "iframe_card_font_px": 16,
+    "card_number_expiry_cvc_inside_iframe": true,
+    "billing_toggle_operates_and_restored": true,
+    "executed_adapter_script_sha256": "61bc21d7c69aefb2f44ce7c8f6e67e802cfbc6559a836692b7c83c0b4f2ab36a",
+    "script_byte_match_to_reviewed_candidate": true,
+    "raw_response_headers": "not exposed by browser observer",
+    "payment_submitted_by_agent": false
+  },
+  "rendering_gate": "both fresh hosted payment paths observed working; payment acceptance and broader F4 subcases remain unverified"
+}

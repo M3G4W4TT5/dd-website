@@ -286,6 +286,24 @@ class UpgradePathTests(unittest.TestCase):
         self.assertEqual(status['category'], 'availability_503_stale_images')
         self.assertEqual(json.loads((self.state / 'webhook-rotation.json').read_text())['status'], 'complete')
 
+    def test_native_mail_recreates_only_pretix_and_preserves_manifest_images(self):
+        self.running['revisions'] = {key:self.manifest['commit'] for key in release.APP_SERVICES}
+        original_images = dict(self.manifest['images'])
+        with self.context(): release.native_mail_adapter(self.source)
+        recreated = [c for c in self.commands if 'up' in c]
+        self.assertEqual(len(recreated),1)
+        self.assertEqual(recreated[0][-2:],['pretix','pretix-cron'])
+        self.assertIn('--no-deps',recreated[0]); self.assertIn('never',recreated[0])
+        self.assertFalse(any('proxy' == c[-1] or 'booking' == c[-1] for c in self.commands))
+        result=json.loads((self.state/'current.json').read_text())
+        self.assertEqual(result['images'],original_images)
+        self.assertEqual(result['commit'],'c'*40)
+        self.assertEqual(result['config_version'],release.runpy.run_path(HERE/'deploy.py')['config_version'](self.root))
+    def test_native_mail_stops_before_mutation_on_running_release_drift(self):
+        with self.context(),self.assertRaisesRegex(ValueError,'identity differ'):
+            release.native_mail_adapter(self.source)
+        self.assertEqual(self.commands,[])
+
 
 if __name__ == '__main__':
     unittest.main()
