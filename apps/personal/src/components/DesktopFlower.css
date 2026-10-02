@@ -19,6 +19,8 @@
 @media(max-width:760px) {
   .desktop-flower-page { --mobile-flower-width:clamp(44px,14.4vw,96px); overflow-x:clip; }
   .desktop-flower { width:var(--mobile-flower-width); touch-action:none; }
+  /* Keep the coin draggable in the heading's empty space. */
+  .desktop-flower.is-reel-docked { z-index:3; }
   .desktop-flower.is-dragging { z-index:40; cursor:grabbing; }
   .desktop-flower-page>.links-section { padding-bottom:max(130px,calc(var(--mobile-flower-width) * 1.11 + 60px)); }
   .desktop-flower-page .work-switcher { position:relative; z-index:2; }
