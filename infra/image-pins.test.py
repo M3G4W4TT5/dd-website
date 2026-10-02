@@ -8,8 +8,9 @@ class PinsTests(unittest.TestCase):
  def test_all_operational_references_and_manifest_evidence(self):pins.main()
  def test_mutable_wrong_digest_unknown_names_aliases_and_new_locations(self):
   approved={'node:24.20.0-bookworm-slim@sha256:'+'a'*64}
-  for text in ['FROM node:24.20.0-bookworm-slim','image: node:latest',"IMAGE='ubuntu:latest'","docker run 'evil.example/pretix/standalone:2026.7.0'",'FROM ubuntu', 'image: docker.io/library/node:24.20.0-bookworm-slim@sha256:'+'a'*64, 'image: node:24.20.0-bookworm-slim@sha256:'+'b'*64]:
-   with self.subTest(text=text),self.assertRaises(ValueError):pins.check_text(text,Path('Dockerfile') if text.startswith('FROM ') else Path('new-operation.py'),approved)
+  for text in ['FROM node:24.20.0-bookworm-slim','image: node:latest',"IMAGE='ubuntu:latest'","docker run 'evil.example/pretix/standalone:2026.7.0'",'FROM ubuntu', "POSTGRES = 'postgres'", 'postgres: {image: postgres:17.6-alpine}', 'image: docker.io/library/node:24.20.0-bookworm-slim@sha256:'+'a'*64, 'image: node:24.20.0-bookworm-slim@sha256:'+'b'*64]:
+   with self.subTest(text=text),self.assertRaises(ValueError):pins.check_text(text,Path('Dockerfile') if text.startswith('FROM ') else Path('compose.yaml') if 'image:' in text else Path('new-operation.py'),approved)
+  with self.assertRaises(ValueError):pins.check_text('docker run --rm postgres:17.6-alpine',Path('operation.sh'),approved)
   with tempfile.TemporaryDirectory() as folder:
    root=Path(folder);(root/'infra').mkdir();(root/'.github/workflows').mkdir(parents=True);new=root/'infra/new-compose.yaml';new.write_text('image: ubuntu:latest\n')
    self.assertIn(new,list(pins.paths(root)))

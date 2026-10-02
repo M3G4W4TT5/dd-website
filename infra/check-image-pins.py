@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 """Reject mutable/unreviewed literal operational images; no network or Docker needed."""
+import ast
 import hashlib
 import json
 from pathlib import Path
 import re
 import sys
+import shlex
 
 ROOT=Path(__file__).resolve().parent.parent
 # Dynamic first-party references are constrained by the existing manifest validators.
@@ -35,6 +37,18 @@ def validate_reference(value,approved,stages=()):
 
 def check_text(text,path,approved):
  stages=set();found=set()
+ repos={v.split('@')[0].rsplit(':',1)[0] for v in approved}
+ # Tagless references to approved repositories also mean mutable :latest.
+ if path.suffix=='.py':
+  try:tree=ast.parse(text)
+  except SyntaxError:tree=ast.Module(body=[],type_ignores=[])
+  for node in ast.walk(tree):
+   if isinstance(node,(ast.Assign,ast.AnnAssign)):
+    names=[t.id for t in (node.targets if isinstance(node,ast.Assign) else [node.target]) if isinstance(t,ast.Name)]
+    value=node.value
+    if any(n.endswith('_IMAGE') or n in ('POSTGRES','PRETIX','NGINX') for n in names) and isinstance(value,ast.Constant) and isinstance(value.value,str):
+     validate_reference(value.value,approved)
+
  for number,line in enumerate(text.splitlines(),1):
   match=re.match(r'\s*FROM\s+(?:--platform=\S+\s+)?(\S+)(?:\s+AS\s+(\S+))?',line,re.I)
   if match and (path.name.startswith("Dockerfile") or ":" in match[1] or "@sha256:" in match[1]):
@@ -45,6 +59,20 @@ def check_text(text,path,approved):
    value=match[1].strip()
    # Required Compose variable expressions may contain an explanatory message.
    validate_reference(value,approved);found.add(value)
+  # Flow-style Compose maps and literal shell Docker commands need coverage too.
+  if path.suffix in ('.yaml','.yml') and not line.lstrip().startswith('#') and not re.match(r'\s*image:',line):
+   for match in re.finditer(r'\bimage:\s*([\w./:@-]+)',line):
+    validate_reference(match[1],approved);found.add(match[1])
+  if path.suffix=='.sh' and re.search(r'\bdocker\s+(?:container\s+)?run\b',line):
+   tokens=shlex.split(line.replace('\\',''))
+   start=tokens.index('run')+1;skip=False
+   options={'-e','--env','--env-file','-v','--volume','--mount','--network','--user','--name','--entrypoint','-p','--publish','--workdir','-w','--label','--platform'}
+   for token in tokens[start:]:
+    if skip:skip=False;continue
+    if token in options:skip=True;continue
+    if token.startswith('-'):continue
+    if token.startswith('$'):break
+    validate_reference(token,approved);found.add(token);break
   # These unit fixtures contain deliberate rejected manifest references.
   literal_checks = [] if path.name in ("deploy.test.py","primary-release.test.py") else LITERAL.finditer(line)
   for match in literal_checks:
