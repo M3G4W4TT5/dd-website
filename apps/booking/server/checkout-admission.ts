@@ -41,8 +41,9 @@ export async function reserveIntent(code: string, hash: string, email: string, s
     await budget(c,keys.prefix,setting("CHECKOUT_PREFIX_HOURLY",60),3600);
     await budget(c,keys.contact,setting("CHECKOUT_CONTACT_HOURLY",6),3600,"contact");
     }
-    const counts=await c.query<{total:string;client:string;contact:string}>("SELECT count(*) AS total,count(*) FILTER(WHERE client_key=$1) AS client,count(*) FILTER(WHERE contact_key=$2) AS contact FROM rental_intents WHERE state<>'terminal'",[keys.client,keys.contact]);
+    const counts=await c.query<{total:string;client:string;contact:string;prefix:string}>("SELECT count(*) AS total,count(*) FILTER(WHERE client_key=$1) AS client,count(*) FILTER(WHERE contact_key=$2) AS contact,count(*) FILTER(WHERE prefix_key=$3) AS prefix FROM rental_intents WHERE state<>'terminal'",[keys.client,keys.contact,keys.prefix]);
     if(Number(counts.rows[0].client)>=setting("CHECKOUT_CLIENT_ACTIVE",1) || Number(counts.rows[0].contact)>=setting("CHECKOUT_CONTACT_ACTIVE",1)) throw new AdmissionDenied("client");
+    if(Number(counts.rows[0].prefix)>=setting("CHECKOUT_PREFIX_ACTIVE",20)) throw new AdmissionDenied("client");
     if(Number(counts.rows[0].total)>=setting("CHECKOUT_ACTIVE_MAX",40)) throw new AdmissionDenied("capacity");
     if(existing.rowCount) {
       await c.query("UPDATE rental_intents SET state='reserved',updated_at=now() WHERE order_code=$1",[code]);

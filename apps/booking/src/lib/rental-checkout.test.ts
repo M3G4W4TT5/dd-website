@@ -59,7 +59,7 @@ function orderFrom(payload: Record<string, unknown>, hourlyOre = 25_000): TestOr
     api_meta: payload.api_meta as Record<string, unknown>,
     positions: positions.map(position => ({ ...position, price: position.discount ? "0.00" : `${hourlyOre / 100}.00` })),
     payments: [{ provider: "stripe", amount: `${total}.00`, state: "created",
-      payment_url: `https://shop.example.invalid/synthetic/studio/order/${code}/pay/change` }],
+      payment_url: `https://shop.example.invalid/synthetic/studio/order/${payload.code ?? code}/pay/change` }],
   };
 }
 
