@@ -1,5 +1,10 @@
+import { securityFixture } from "../../../../server/database/security-fixture";
+import { invalidateCatalog } from "../../server/catalog-work";
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { before, after } from "node:test";
+let fixture: Awaited<ReturnType<typeof securityFixture>>;
+before(async()=>{ if (process.env.SECURITY_TEST_DATABASE_URL) fixture=await securityFixture(); });
+after(async()=>{ if (fixture) await fixture.close(); });
 import { DateTime } from "luxon";
 import { getAvailability } from "../../server/availability";
 import { quoteInterval } from "./booking";
@@ -16,7 +21,8 @@ const rule = {
 
 async function withPretix<T>(options: { price?: string; rule?: Record<string, unknown>; override?: string },
                              run: () => Promise<T>): Promise<T> {
-  Object.assign(process.env, {
+  invalidateCatalog();
+  Object.assign(process.env, { BOOKING_DATABASE_URL: fixture.url,
     PRETIX_ORGANIZER_SLUG: "synthetic", PRETIX_EVENT_SLUG: "studio", PRETIX_ITEM_ID: "9",
     PRETIX_API_TOKEN: "synthetic-read-token", PRETIX_API_BASE: "https://api.example.invalid",
   });
@@ -42,7 +48,7 @@ async function withPretix<T>(options: { price?: string; rule?: Record<string, un
   finally { globalThis.fetch = previous; }
 }
 
-test("Pretix rule and hourly product determine the full-day quote", async () => {
+test("Pretix rule and hourly product determine the full-day quote", { skip: !process.env.SECURITY_TEST_DATABASE_URL }, async () => {
   await withPretix({ price: "310.00" }, async () => {
     const availability = await getAvailability(day);
     assert.equal(availability.source, "pretix");
@@ -53,7 +59,7 @@ test("Pretix rule and hourly product determine the full-day quote", async () => 
   });
 });
 
-test("unsupported rule and nonuniform prices fail closed", async () => {
+test("unsupported rule and nonuniform prices fail closed", { skip: !process.env.SECURITY_TEST_DATABASE_URL }, async () => {
   for (const changed of [
     { condition_min_count: 13 }, { benefit_discount_matching_percent: "90.00" },
     { benefit_only_apply_to_cheapest_n_matches: 3 }, { active: false },

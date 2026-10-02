@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     ? json({ code: "invalid_phone" }, 422) : json({ error: "Invalid event details" }, 400);
   const input = parsed.data;
   try {
-    const catalog = await getCatalog();
+    const catalog = await getCatalog(true);
     if (catalog.state !== "ready") return json({ error: "Availability unavailable" }, 503);
     const occurrence = catalog.occurrences.find(item => item.slug === input.slug && item.dateId === input.dateId);
     if (!occurrence || !registrationTicket(occurrence, input)) return json({ error: "Tickets or price changed" }, 409);

@@ -4,7 +4,7 @@ import { bookingDb } from "./notifications";
 import { DateTime } from "luxon";
 import { pretixFetch, pretixHeaders } from "./pretix-http";
 import { canManageBooking } from "../src/lib/cancellation";
-import { getAvailability } from "./availability";
+import { getFreshAvailability as getAvailability } from "./availability";
 import { quoteInterval, STUDIO_ZONE } from "../src/lib/booking";
 import {
   managedInterval,

@@ -1,3 +1,4 @@
+import { catalogWork, mapBounded, paginationGuard } from "./catalog-work";
 import { z } from "zod";
 import { DateTime } from "luxon";
 import { pretixFetch, pretixHeaders, pretixNextPage } from "./pretix-http";
@@ -41,7 +42,9 @@ async function list<T>(
 ): Promise<T[]> {
   let url: URL | null = new URL(path, cfg.base);
   const output: T[] = [];
+  const guard = paginationGuard();
   while (url) {
+    guard(url);
     const response = await pretixFetch(url, {
       headers: pretixHeaders(url, token),
       cache: "no-store",
@@ -76,7 +79,7 @@ function sandboxCheckoutEnabled() {
     process.env.PAYMENT_ENVIRONMENT === "sandbox" &&
     process.env.PAYMENT_RELEASE_ENABLED !== "true";
 }
-export async function getCatalog(): Promise<Catalog> {
+async function catalog(): Promise<Catalog> {
   const cfg = config();
   const empty: Catalog = {
     state: cfg ? "error" : "setup",
@@ -92,25 +95,20 @@ export async function getCatalog(): Promise<Catalog> {
     const showDraftTestEvents =
       process.env.NODE_ENV === "development" &&
       process.env.PRETIX_DEV_DRAFT_EVENTS === "true";
-    const eventDates = await Promise.all(
-      rawEvents
-        .filter((e) => e.slug !== rentalSlug)
-        .map(async (event) => {
+    const eventDates = await mapBounded(rawEvents.filter((e) => e.slug !== rentalSlug), async (event) => {
           const path = `${prefix(cfg.organizer)}${encodeURIComponent(event.slug)}/`;
           const dates: (RawDate | null)[] = event.has_subevents
             ? await list(`${path}subevents/`, dateSchema, cfg)
             : [null];
           return { event, dates, path };
-        }),
-    );
-    const grouped = await Promise.all(
+        });
+    const grouped = await mapBounded(
       eventDates
         .filter(
           ({ event }) =>
             (event.live || (showDraftTestEvents && event.testmode)) &&
             event.is_public,
-        )
-        .map(async ({ event, dates, path }) => {
+        ), async ({ event, dates, path }) => {
           const [items, quotas] = await Promise.all([
             list(`${path}items/`, itemSchema, cfg),
             list(`${path}quotas/?with_availability=true`, quotaSchema, cfg),
@@ -127,7 +125,7 @@ export async function getCatalog(): Promise<Catalog> {
               ),
             )
             .filter((item): item is Occurrence => item !== null);
-        }),
+        },
     );
     const eventBlocks = eventDates.flatMap(({ event, dates }) =>
       dates.flatMap((date) => {
@@ -217,7 +215,7 @@ export async function getCatalog(): Promise<Catalog> {
     return empty;
   }
 }
-export async function getRoomOccupancy(
+async function roomOccupancy(
   day: string,
 ): Promise<{ start: string; end: string }[]> {
   const cfg = config();
@@ -252,4 +250,17 @@ export async function getRoomOccupancy(
     }
   }
   return occupied;
+}
+
+export async function getCatalog(fresh = false): Promise<Catalog> {
+  if (!config()) return catalog();
+  try { return await catalogWork("catalog", async () => {
+    const value = await catalog();
+    if (value.state !== "ready") throw new Error("Catalog unavailable");
+    return value;
+  }, fresh); }
+  catch { return {state:"error",occurrences:[],checkoutEnabled:false,organizer:config()?.organizer ?? "",shopBase:null}; }
+}
+export function getRoomOccupancy(day: string) {
+  return config() ? catalogWork("occupancy:"+day, () => roomOccupancy(day)) : roomOccupancy(day);
 }
