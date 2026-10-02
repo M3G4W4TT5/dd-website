@@ -1,0 +1,26 @@
+{
+  "source": "Owner-provided read-only route diagnostic, 2026-10-02",
+  "global_mail_is_capture": true,
+  "event": "street-dance-workshop-dd-dev",
+  "confirmed_stripe_payment": true,
+  "native_paid_mail_log_count": 1,
+  "captured_messages": [
+    {
+      "recipient_matches_order_email": true,
+      "attachment_count": 1,
+      "pdf_attachment_count": 1,
+      "captured_at": "2026-10-02T14:44:43Z"
+    },
+    {
+      "recipient_matches_order_email": true,
+      "attachment_count": 0,
+      "pdf_attachment_count": 0,
+      "captured_at": "2026-10-02T14:44:42Z"
+    }
+  ],
+  "mailpit": {
+    "relay_environment_configured": false,
+    "relay_argument_present": false
+  },
+  "worker_probe_limitation": "Docker Config.Env omits runtime-file configuration; null values and false scope/allowlist results are inconclusive, not evidence of worker misconfiguration."
+}

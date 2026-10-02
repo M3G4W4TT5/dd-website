@@ -9,6 +9,7 @@ from pathlib import Path
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--sudo', action='store_true', help='Use existing passwordless local Docker sudo access')
 parser.add_argument('--output', type=Path, help='Optional directory for synthetic rendered HTML/CSP specimens')
+parser.add_argument('--script', choices=['page', 'mail'], default='page')
 args = parser.parse_args()
 root = Path(__file__).resolve().parent.parent
 docker = ['sudo', '-n', 'docker'] if args.sudo else ['docker']
@@ -16,7 +17,7 @@ with tempfile.TemporaryDirectory(prefix='ttd-outer-fixture-') as directory:
     fixture = Path(directory)
     fixture.chmod(0o755)
     config = fixture / 'pretix.cfg'
-    config.write_text('[pretix]\ninstance_name=TTD isolated fixture\nurl=http://localhost\ncurrency=DKK\n[database]\nbackend=sqlite3\n[mail]\nbackend=console\n[celery]\nbackend=memory://\nbroker=memory://\n')
+    config.write_text('[pretix]\ninstance_name=TTD isolated fixture\nurl=http://localhost\ncurrency=DKK\n[database]\nbackend=sqlite3\n[mail]\nbackend=console\n[celery]\nbackend=cache+memory://\nbroker=memory://\n')
     command = docker + ['run', '--rm', '--network', 'none', '--read-only',
         '--user', f'{os.getuid()}:{os.getgid()}',
         '--tmpfs', '/tmp:rw,size=512m', '--tmpfs', '/data:rw,size=64m',
@@ -26,5 +27,5 @@ with tempfile.TemporaryDirectory(prefix='ttd-outer-fixture-') as directory:
     if args.output:
         args.output.mkdir(parents=True, exist_ok=True)
         command += ['-v', f'{args.output.resolve()}:/out']
-    command += ['--entrypoint', 'python', 'pretix/standalone:2026.7.0', '/review/infra/verify-ttd-full-page.py']
+    command += ['--entrypoint', 'python', 'pretix/standalone:2026.7.0', '/review/infra/verify-ttd-full-page.py' if args.script == 'page' else '/review/infra/verify-ttd-mail-delivery.py']
     subprocess.run(command, check=True)

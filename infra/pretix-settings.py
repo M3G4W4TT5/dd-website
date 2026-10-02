@@ -40,6 +40,7 @@ class HostedPretixHelpersConfig(PretixHelpersConfig):
         configure_ttd_presentation()
         configure_ttd_card()
         configure_ttd_mail()
+        configure_ttd_mail_delivery()
 
 
 INSTALLED_APPS[INSTALLED_APPS.index('pretix.helpers')] = 'production_settings.HostedPretixHelpersConfig'
@@ -326,3 +327,68 @@ def configure_ttd_mail():
         return re.sub(r'(<body\b[^>]*>)', lambda match: match[0] + banner, html, count=1, flags=re.I)
 
     TemplateBasedMailRenderer.render = render
+
+
+# Native event mail is separate from the rental worker. Defaults stay captured.
+def ttd_mail_policy():
+    import configparser
+    import os
+    from pathlib import Path
+    cfg = configparser.ConfigParser(interpolation=None)
+    path = os.environ.get('PRETIX_CONFIG_FILE')
+    if path:
+        cfg.read(Path(path))
+    if not cfg.has_section('ttd-mail'):
+        return None
+    values = dict(cfg['ttd-mail'])
+    if (values.get('delivery'), values.get('release_enabled')) not in {('controlled', 'false'), ('enabled', 'true')}:
+        raise RuntimeError('Native TTD mail requires reviewed controlled delivery')
+    if values.get('host') != 'smtp.purelymail.com' or values.get('port') != '465' or values.get('user') != 'booking@didde-mie.com':
+        raise RuntimeError('Native TTD SMTP identity differs')
+    if len(values.get('password', '')) < 12:
+        raise RuntimeError('Native TTD SMTP credential missing')
+    if values.get('delivery') == 'controlled' and values.get('recipient_allowlist') != 'dev@memoryone.eu':
+        raise RuntimeError('Native TTD mail recipient scope differs')
+    return values
+
+
+def configure_ttd_mail_delivery():
+    from functools import wraps
+    from email.utils import parseaddr
+    from django.core.mail import get_connection
+    from pretix.base.email import CheckPrivateNetworkSmtpBackend
+    from pretix.base.models.mail import OutgoingMail
+    policy = ttd_mail_policy()
+    if not policy:
+        return
+    original = OutgoingMail.get_mail_backend
+    events = {'dance-with-dd-dev', 'street-dance-workshop-dd-dev'}
+
+    class ControlledTTDBackend(CheckPrivateNetworkSmtpBackend):
+        def send_messages(self, messages):
+            # Inspect final To/Cc/Bcc/envelope recipients before opening SMTP.
+            messages = list(messages)
+            if policy['delivery'] == 'controlled' and any(not m.recipients() or any(parseaddr(r)[1].lower() != policy['recipient_allowlist'] for r in m.recipients()) for m in messages):
+                return get_connection(backend='django.core.mail.backends.smtp.EmailBackend',
+                                      host='mail-capture', port=1025, username='', password='',
+                                      use_ssl=False, use_tls=False, fail_silently=False).send_messages(messages)
+            for message in messages:
+                message.from_email = 'TTD Studio <noreply+booking@didde-mie.com>'
+                message.extra_headers = {k: v for k, v in message.extra_headers.items() if k.lower() not in {'from', 'reply-to'}}
+                message.reply_to = ['booking@didde-mie.com']
+            return super().send_messages(messages)
+
+    @wraps(original)
+    def get_backend(self):
+        event = self.event
+        if not event or event.organizer.slug != 'dd-studio' or event.slug not in events:
+            return original(self)
+        if not event.testmode and policy['delivery'] == 'controlled':
+            return get_connection(backend='django.core.mail.backends.smtp.EmailBackend',
+                                  host='mail-capture', port=1025, username='', password='',
+                                  use_ssl=False, use_tls=False, fail_silently=False)
+        return ControlledTTDBackend(host=policy['host'], port=465, username=policy['user'],
+                                    password=policy['password'], use_ssl=True, use_tls=False,
+                                    timeout=15, fail_silently=False)
+
+    OutgoingMail.get_mail_backend = get_backend

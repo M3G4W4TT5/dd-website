@@ -99,3 +99,13 @@ exact-digest release must reconcile the new host-config manifest after install.
 No native event policy/email reactivation is necessary for this presentation fix.
 Installed corrective identity and hosted behavior remain unverified until
 installation and direct hosted checks. Payment acceptance remains owner-performed.
+
+The owner approved and completed this corrective configuration installation.
+Final actual release ff763f6/config599be2db/adapter64bc655a is independently
+verified on 2 October; web/cron mounts and processes match the reviewed candidate.
+No native settings/email packages were reapplied. This completes installation,
+not payment acceptance; fresh valid-page/exact payment-CSP and human checks remain
+in TTD_HUMAN_ACCEPTANCE.md. Do not rerun activation for acceptance diagnosis.
+
+
+Native event-mail correction is prepared locally: see `../docs/review/TTD_NATIVE_MAIL_RELEASE.md`. Controlled Purelymail activation and external inbox/PDF acceptance remain pending; no mail was sent or settings activated during local preparation.

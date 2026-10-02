@@ -1,0 +1,26 @@
+{
+  "source": "Owner-provided read-only ttd-paid-mail-inspect.py output, 2026-10-02",
+  "global_mail_is_capture": true,
+  "events": [
+    {
+      "event": "studio",
+      "testmode": true,
+      "custom_smtp": false,
+      "custom_host_is_capture": false,
+      "paid_order_found": true,
+      "confirmed_stripe_payment": true,
+      "native_paid_mail_log_count": 1,
+      "captured_messages_for_latest_paid_order": 1
+    },
+    {
+      "event": "street-dance-workshop-dd-dev",
+      "testmode": true,
+      "custom_smtp": false,
+      "custom_host_is_capture": false,
+      "paid_order_found": true,
+      "confirmed_stripe_payment": true,
+      "native_paid_mail_log_count": 1,
+      "captured_messages_for_latest_paid_order": 2
+    }
+  ]
+}

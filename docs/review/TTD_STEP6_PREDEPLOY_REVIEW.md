@@ -377,3 +377,22 @@ See TTD_CHECKOUT_REVIEW.md for the verified rendering/prefill causes, complete
 outer-template regression, final local correction and approval-gated release plan.
 Current running application6014e46/host-config148e0d8d/adapter6f5090ee and all
 gates were freshly owner-verified. No corrective push or activation occurred.
+
+## Corrective release installed and independently verified — 2 October
+
+PR34 merged as ff763f6 after checks; main publication37014202335 and manual
+exact-digest deployment37015381158 succeeded. Owner independently verified all
+three actual ff763f6 image references/revisions, config599be2db/current+attempt
+records, adapter64bc655a host/readonly web-cron mounts, pinned Pretix programs and
+preserved primary/sandbox/mail gates. Direct hosted Chrome shows billing controls
+and Stripe iframe on both original routes with correct palette/prefill. All three
+actual theme hashes are allowed; no unsafe-inline. The examples expired; fresh
+valid payment pages, exact payment script response-header hashes and remaining
+human subcases are unverified. Step6 is incomplete; do not infer acceptance from
+release success or the rendered expired examples. See TTD_CHECKOUT_REVIEW.md.
+
+Fresh valid studio/workshop payment pages now pass direct hosted rendering,
+billing controls, Stripe iframe and branding checks. Fresh studio exact script
+response-CSP hash/origins pass; event exact candidate script executes (raw event
+header observer unavailable). Rendering blocker cleared for owner-led acceptance;
+Step6/full F4/payment/paid-native-page checks remain incomplete.

@@ -1,0 +1,9 @@
+{
+  "commit": "ff763f623f202a8615893bf4f6e9c236dabb4c82",
+  "images": {
+    "worker": "ghcr.io/m3g4w4tt5/dd-website-worker@sha256:a31eb19f4cce09fb7f576b57a2d2f4d680fccc3295c920017c7fd30cdc4dc890",
+    "communications": "ghcr.io/m3g4w4tt5/dd-website-communications@sha256:228720828884234fa5cc2b6256d02d2a34083aa1d3a77aaa28a88914e0697b30",
+    "booking": "ghcr.io/m3g4w4tt5/dd-website-booking@sha256:2526e66f4191c592d4ee6a3542f80474a0fcfdd7c0c62679afa4780350af68c9"
+  },
+  "config_version": "599be2db06133c7b16c1a310d467e1a99a8a5aebd9d8a47247420b333b5f0a0f"
+}

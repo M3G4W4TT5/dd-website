@@ -723,3 +723,202 @@ After-correction installed identity: **unverified; not yet installed**.
    both hosted checkout paths function. Only then resume owner-performed sandbox
    payment/confirmation/management and the broader acceptance queue. Step 6 remains
    incomplete until all required human checks pass.
+
+### Corrective release progress — 2 October 2026
+
+Owner approved the concrete release plan. Reconciled onto current main6014e46
+in a separate correction checkout; original implementation changes/evidence remain
+untouched. PR #34 at a063f0e passed all booking/server/personal checks, the new
+pinned complete-page regression and all three image builds. It merged as
+ff763f623f202a8615893bf4f6e9c236dabb4c82. Main publication37014202335 succeeded;
+automatic deployment remains disabled. Validated three immutable published image
+artifacts and host config599be2db; manifest: ttd-candidate/main-ff763f6-release.json.
+
+Exact-main owner package staged and checksum-verified under
+/home/dd-setup/dd-ttd-render-ff763f6. SHA256SUMS file SHA-256:
+29db660b198ab3d9446231fa0d4eabceab9598bb934fd266850da9c0d80a4860.
+Owner root-owned copy/configuration installation requested; no installed
+correction or hosted acceptance is claimed from staging/publication alone.
+
+Owner checksum-verified the root-owned package and installed adapter64bc655a
+under config599be2db. All three actual 6014e46 application images were preserved,
+primary remained be350a1, all runtime mounts/gates and 19-order count remained
+unchanged. Pretix programs RUNNING and real availability returned 14 Pretix slots.
+The current/attempt manifest still shows old config148e0d8d at this interim stage;
+this is expected before exact published image release. Safe owner status:
+ttd-candidate/vps-after-render-config-install.json. Manual exact-digest release
+37015381158 dispatched for ff763f6/publication37014202335; final identity pending.
+
+The first owner copy command expanded its wildcard before sudo and failed due to
+/home/dd-setup traversal permissions. No install ran then. Corrected root-shell
+copy succeeded without widening directory permissions; all checksum checks passed.
+
+Exact-digest release37015381158 succeeded for ff763f6 without rebuilding. Final
+owner running-image/current-manifest/web-cron mount/CSP evidence requested.
+Direct Chrome reloaded the two original payment pages: both now have real billing
+controls, #stripe-card and a Secure card payment input frame; source text is gone.
+Both authoritative prefill objects now contain name/email/phone (presence only
+recorded). Card number/expiry/CVC remain inside Stripe's iframe. Both no-postcode
+toggles disable/restore postal input and remain non-required outside new-card
+validation; no form or payment submission was performed.
+
+Desktop buttons align. Each page has exactly one proportioned supplied logo;
+studio green/event purple. 320/390px checks show no horizontal overflow, 16px
+billing/card text and 44px billing controls. Saved a hosted event mobile branding
+screenshot (expired cart; no customer values/action URLs):
+screenshots/ttd-event-hosted-render-corrected-mobile.jpg. Browser response-header
+events were unavailable; zero CSP console errors and working adapter listeners
+are observed execution evidence, not a substitute for exact header/hash checks.
+
+The event cart expired during investigation. Its rendered payment page is fixed,
+but a fresh owner-created event checkout at payment is needed to verify the valid
+cart path. Studio retains a native warning from earlier missing-payment-method
+checkout preparation; iframe/controls now exist. No warning was hidden or copy
+changed. Browser viewport screenshots briefly interrupted capture; dimensions
+were restored to original1920x905 and both billing toggles restored unchecked.
+Actual phone zoom/orientation, hosted invalid-payment errors, saved/new retry,
+wallet/gift-card completion, SCA, paid confirmation/management and mail remain
+owner checks. F4 is split: rendering observed passed; remaining subcases unverified.
+Safe browser evidence: ttd-candidate/hosted-render-corrected-2026-10-02.json.
+
+### Final installed identity independently verified — 2 October 2026
+
+Owner post-release status matches every immutable image reference/revision in
+main-ff763f6-release.json. Booking2526e66f, communications22872082 and workera31eb19f
+are healthy, zero restarts, revision ff763f623f202a8615893bf4f6e9c236dabb4c82.
+Current.json and succeeded attempt.json agree with config
+599be2db06133c7b16c1a310d467e1a99a8a5aebd9d8a47247420b333b5f0a0f; failed.json
+is absent. Host/web/cron adapter hash is
+64bc655a068f0bbe501ca8dfd93ee38a2d154cf51f65aa064d32443e94e1dbbd, mounts read-only,
+pinned Pretix image5df3b7aa retained, all three supervised programs RUNNING.
+Primary be350a1/image45d721e8 preserved. Runtime mounts/startup match, sandbox
+and restricted mail/live-release gates retained; 19 orders/products4/dates656/
+quotas657/discount1 unchanged, backup fresh and availability14 Pretix slots.
+Evidence: ttd-candidate/vps-after-render-release.json and
+ttd-candidate/vps-after-render-release-diagnostic.txt.
+
+The actual three index theme hashes are permitted by effective CSP; unsafe-inline
+is absent. At this final probe the studio orders are expired, so there is no
+pending payment route from which the helper can verify the new exact script hash.
+Do not report that missing result as passed. Initial event response headers were
+not exposed by browser network observation; actual listeners/iframes execute and
+pinned full-page CSP checks pass, but direct new payment-header hash verification
+remains unverified. Fresh owner-created studio/event payment pages requested,
+without payment, before resuming broader acceptance. Owner retains purchases.
+
+Fresh owner-created studio OrderPaymentStart page directly inspected in Chrome:
+real billing controls and secure card iframe; name/email/phone presence; one
+proportioned green logo and no overflow. Earlier native JavaScript warning is
+absent. Actual cardnumber/exp-date/cvc inputs remain inside Stripe with16px text.
+Keyboard Tab from postcode reaches no-postcode checkbox; checkbox disables postal
+and is restored unchecked. No form/customer/payment submission. Sanitized crop:
+screenshots/ttd-studio-fresh-hosted-payment.jpg (order heading excluded).
+The fresh workshop tab is still on Your information; owner advance to payment
+requested. Exact fresh studio payment response-CSP diagnostic also requested.
+
+Fresh studio read-only owner response now passes the exact new adapter script
+hash, Stripe script/frame origins, real DOM mount and unescaped Stripe markup;
+unsafe-inline absent. Source: ttd-candidate/fresh-studio-payment-csp.json.
+
+Owner advanced fresh Street Dance Workshop to payment and stopped without paying.
+Direct Chrome confirms non-expired cart, real billing controls and secure Stripe
+iframe, name/email/phone presence, one purple logo, no desktop overflow. Card
+number/expiry/CVC remain in Stripe iframe with16px text. Billing toggle operates
+and is restored unchecked; customer-entered fields preserved. No agent payment
+submission. Actual event adapter script SHA-256
+61bc21d7c69aefb2f44ce7c8f6e67e802cfbc6559a836692b7c83c0b4f2ab36a matches
+reviewed source byte-for-byte and execution is observed via its billing listener.
+Raw event response-header capture remains unavailable; distinguish execution/
+matching-source evidence from direct CSP-header evidence (studio has the latter).
+No entered card/postal/customer values or private links are recorded in artifacts.
+
+Both fresh payment pages now render and their billing/Stripe controls operate.
+The escaped-markup blocker is resolved and the rendering gate is clear for owner
+sandbox payment acceptance. Complete F4 (including all retry/saved-card/header/
+paid-native-page subcases), S1/E1 and Step6 remain unverified until human checks.
+Owner retains all purchases, SCA, refunds, cancellations, mail and subscriptions.
+
+
+### Owner-paid studio and workshop observations — 2 October
+
+Owner reports completing both sandbox purchases. Read-only Chrome inspection of
+both native order pages confirms the displayed Paid state. Studio has one
+proportioned green TTD logo; workshop has one proportioned purple TTD logo and
+payment-received confirmation. Both desktop pages have no horizontal overflow.
+Workshop also passes the observed 390px layout check. Fresh paid studio mobile
+layout remains unverified. No agent purchased, changed, cancelled or refunded an
+order, or downloaded tickets.
+
+Workshop displays native PDF ticket download controls; their download/content
+acceptance remains unverified. Studio displays the native buyer-information link.
+No cancellation panel is shown on either inspected paid page. Workshop shows no
+buyer-information or item-change links. These are presentation observations, not
+proof of every authoritative modification/refund rule.
+
+Owner reports receipt of the studio booking confirmation email and no event
+ticket email. Studio receipt is owner-reported passed; event external email
+receipt is currently failed. The first read-only mail diagnostic failed before
+returning evidence because it used the wrong native log field; the helper was
+corrected to action_type and a rerun requested. Event routing/capture cause stays
+unverified until that result. No mail was sent/resend or settings changed.
+
+Paid page presentation is observed passed for the inspected desktop paths and
+workshop mobile viewport. S1/E1/F4 overall and Step6 remain incomplete: distinguish
+these owner payments and native Paid displays from provider reconciliation, SCA,
+retry/saved-card branches, ticket functionality and remaining human acceptance.
+
+
+### Verified native mail capture after owner payments — 2 October
+
+Owner's corrected read-only diagnostic confirms global Pretix mail routes to
+Mailpit capture and neither studio nor workshop overrides SMTP. Both latest paid
+orders have a confirmed Stripe payment and one native paid-mail log entry.
+Mailpit contains one matching studio message and two matching workshop messages.
+Evidence: `ttd-candidate/paid-mail-capture-2026-10-02.json`.
+
+The workshop's missing external email is explained by the preserved capture
+route. Native mail generation/capture is passed; external event ticket receipt
+remains failed in this owner check and external delivery acceptance incomplete.
+Message counts do not establish ticket attachment/content correctness. Studio
+external confirmation receipt is owner-reported; this diagnostic establishes only
+the separate native captured message, not the sending route of the received
+confirmation. No mail was sent or resent and no SMTP/release gate was changed.
+Any external native event-mail activation requires a separately reviewed plan
+that preserves the approved mail restrictions. Checkout rendering correction and
+paid native branding evidence do not make Step6 fully accepted.
+
+
+Mail-route source trace: `apps/booking/server/worker.ts` sweeps only the configured
+PRETIX_EVENT_SLUG and sends its paid confirmation through @dd/mail; controlled
+SMTP enforces a recipient allowlist in `server/mail/index.ts`. Native Pretix's
+separate SMTP defaults are mail-capture:1025 (`infra/setup-hosted-pretix.py`). The
+reviewed Mailpit Compose service configures capture retention, with no relay.
+This explains the distinct studio/custom and event/native delivery paths. A
+sanitized owner probe has been staged to verify actual worker event scope,
+Mailpit relay configuration, captured recipient matches and PDF metadata. Its
+result is pending; source defaults alone are not running configuration proof.
+
+
+### Event ticket destination confirmed — 2 October
+
+Owner route diagnostic confirms two workshop messages addressed to the correct
+order email in Mailpit. The message captured at 14:44:43 UTC (16:44:43 Copenhagen)
+has one PDF attachment; the preceding message at 14:44:42 UTC has none. Mailpit
+has no configured relay environment or relay command argument. Effective native
+Pretix SMTP is capture and event custom SMTP is disabled. The ticket-bearing
+message therefore reached the local capture service rather than external SMTP;
+missing inbox receipt is a routing/activation gap, not missing generation or an
+incorrect recipient. PDF contents and ticket validity remain unverified.
+Evidence: `ttd-candidate/paid-mail-route-2026-10-02.json`.
+
+The diagnostic's worker fields are inconclusive: it inspected Docker Config.Env,
+whereas this deployment loads service settings from mounted runtime files. Null
+mail values and false scope/allowlist booleans must not be interpreted as an
+actual worker configuration failure. Owner studio inbox receipt remains reported
+passed, with its exact sending route not established by this probe. No mail was
+sent/resend and no capture, recipient, SMTP or release restrictions were changed.
+External event ticket delivery needs a reviewed restricted-delivery correction
+before activation; full mail acceptance and Step6 remain incomplete.
+
+
+Native event-mail correction is prepared locally: see `TTD_NATIVE_MAIL_RELEASE.md`. Controlled Purelymail activation and external inbox/PDF acceptance remain pending; no mail was sent or settings activated during local preparation.
