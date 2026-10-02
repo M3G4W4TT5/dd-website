@@ -50,6 +50,7 @@ jobs:
       - run: npm run typecheck -w @dd/booking
       - run: npm run typecheck:server
       - run: npm run build:server
+      - run: python3 infra/runtime-probes.test.py
       - run: python3 infra/deploy.test.py
       - run: python3 infra/apply-hosted-release.test.py
       - run: python3 infra/ttd-checkout.test.py
