@@ -76,6 +76,10 @@ function validHttpsUrl(value: unknown): string | null {
   if (typeof value !== "string") return null;
   try { const url = new URL(value); return url.protocol === "https:" ? url.href : null; } catch { return null; }
 }
+const bundledEventImages: Record<string, string> = {
+  "dance-with-dd-dev": "/events/dance-with-dd.webp",
+  "street-dance-workshop-dd-dev": "/events/street-dance-workshop-dd.webp",
+};
 function validImage(meta: Record<string, unknown> | undefined): string | null {
   return validHttpsUrl(meta?.ttd_image_url);
 }
@@ -134,7 +138,7 @@ export function normalizeEvent(event: RawEvent, date: RawDate | null, items: Raw
     titleEn: localized(date?.name || event.name, "en") || localized(event.name, "en"),
     description: localized(description, "da") || (typeof metaDescriptionDa === "string" ? metaDescriptionDa : "") || localized(eligible[0]?.description, "da"),
     descriptionEn: localized(description, "en") || (typeof metaDescriptionEn === "string" ? metaDescriptionEn : "") || localized(eligible[0]?.description, "en"),
-    image: validImage(date?.meta_data) || validImage(event.meta_data),
+    image: validImage(date?.meta_data) || validImage(event.meta_data) || bundledEventImages[event.slug] || null,
     shopUrl: validHttpsUrl(event.public_url),
     roomVerified: (date ? date.meta_data?.ttd_room_verified : event.meta_data?.ttd_room_verified) === true ||
       (date ? date.meta_data?.ttd_room_verified : event.meta_data?.ttd_room_verified) === "true",

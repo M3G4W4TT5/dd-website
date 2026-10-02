@@ -14,8 +14,7 @@ import { ZONE, type Language, type Occurrence } from "@/lib/events-model";
 
 const copy = {
   en: {
-    back: "Back to event", eyebrow: "YOUR DETAILS", title: "Sign up for the event.",
-    intro: "Enter your details and choose how many tickets you would like. All tickets will be sent to your email.",
+    back: "Back to event", title: "Enter your details.",
     name: "Name", email: "Email", phone: "Phone", quantity: "Number of tickets", ticket: "Ticket type", total: "Total",
     phoneInvalid: "Enter a valid phone number for the selected country code.",
     submit: "Continue to payment", working: "Checking tickets…",
@@ -26,8 +25,7 @@ const copy = {
     marketingFailed: "We could not start your TTD Studio email signup. You can continue to payment without it.", continue: "Continue to payment",
   },
   da: {
-    back: "Tilbage til event", eyebrow: "DINE OPLYSNINGER", title: "Tilmeld dig eventet.",
-    intro: "Indtast dine oplysninger, og vælg antal billetter. Alle billetter sendes til din e-mail.",
+    back: "Tilbage til event", title: "Indtast dine oplysninger.",
     name: "Navn", email: "E-mail", phone: "Telefon", quantity: "Antal billetter", ticket: "Billettype", total: "I alt",
     phoneInvalid: "Indtast et gyldigt telefonnummer med den valgte landekode.",
     submit: "Fortsæt til betaling", working: "Tjekker billetter…",
@@ -62,8 +60,6 @@ export function EventSignupForm({ occurrence, language, onBack, draft }: {
 }) {
   const t = copy[language];
   const mobile = useMobileJourney();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const next = language === "da" ? "Fortsæt" : "Continue";
   const back = language === "da" ? "Tilbage" : "Back";
   const formRef = useRef<HTMLFormElement>(null);
   const submission = useRef<ReturnType<typeof submissionIdentity> | null>(null);
@@ -78,11 +74,12 @@ export function EventSignupForm({ occurrence, language, onBack, draft }: {
   const [termsAccepted, setTermsAccepted] = useState(draft.termsAccepted);
   const [marketingOptIn, setMarketingOptIn] = useState(draft.marketingOptIn);
   const [showTermsError, setShowTermsError] = useState(false);
+  const [validationAttempted, setValidationAttempted] = useState(false);
   const [invalidFields, setInvalidFields] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "working" | "invalid" | "changed" | "error" | "rate" | "phoneInvalid">("idle");
   const [handoff, setHandoff] = useState<Handoff | null>(null);
   const submitting = useRef(false);
-  useEffect(() => { titleRef.current?.focus({ preventScroll: true }); if (mobile) titleRef.current?.closest(".event-signup")?.scrollIntoView({ block: "start", behavior: "instant" }); }, [step, mobile]);
+  useEffect(() => { titleRef.current?.focus({ preventScroll: true }); if (mobile) titleRef.current?.closest(".event-signup")?.scrollIntoView({ block: "start", behavior: "instant" }); }, [mobile]);
   useEffect(() => { draft.fields.itemId = String(itemId ?? ""); draft.fields.quantity = quantity; draft.termsAccepted = termsAccepted; draft.marketingOptIn = marketingOptIn; }, [draft, itemId, quantity, termsAccepted, marketingOptIn]);
   function remember(form: HTMLFormElement) { for (const [name, value] of new FormData(form)) if (typeof value === "string") draft.fields[name] = value; }
 
@@ -94,9 +91,9 @@ export function EventSignupForm({ occurrence, language, onBack, draft }: {
 
   async function checkout(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (mobile && step !== 3) { if (validQuantity) setStep(step === 1 ? 2 : 3); return; }
     if (submitting.current || !ticket) return;
     const form = event.currentTarget;
+    setValidationAttempted(true);
     const invalid = invalidDetailFields(form);
     const values = new FormData(form);
     setInvalidFields([...new Set(invalid)]);
@@ -129,40 +126,41 @@ export function EventSignupForm({ occurrence, language, onBack, draft }: {
     finally { submitting.current = false; }
   }
 
+  const quantityField = <label>{t.quantity}<input name="quantity" type="number" inputMode="numeric" min={ticket?.minPerOrder ?? 1} max={maximum} aria-describedby={showQuantityLimit ? "event-quantity-limit" : undefined} step={1} required value={quantity} onChange={event => { const value = event.target.value; const overMaximum = Number(value) > maximum; setQuantity(overMaximum ? String(maximum) : value); setShowQuantityLimit(overMaximum); if (overMaximum) setInvalidFields(fields => fields.filter(field => field !== "quantity")); }} aria-invalid={invalidFields.includes("quantity")} /></label>;
+
   return <section className={`details-preview event-signup ${mobile ? "event-signup--guided" : ""}`} aria-labelledby="event-signup-title">
-    {mobile && <JourneyProgress language={language} labels={language === "da" ? ["Event og dato", "Billetter", "Overblik", "Dine oplysninger", "Betaling"] : ["Event and date", "Tickets", "Review", "Your details", "Payment"]} index={step} />}
+    {mobile && <JourneyProgress language={language} labels={language === "da" ? ["Event og dato", "Dine oplysninger", "Betaling"] : ["Event and date", "Your details", "Payment"]} index={1} />}
     <div className="details-intro event-signup-heading">
-      <button className="details-back" type="button" onClick={() => mobile && step > 1 ? setStep(step === 3 ? 2 : 1) : onBack()} disabled={status === "working"}><ArrowLeft size={17} aria-hidden="true" />{mobile ? back : t.back}</button>
-      <span className="section-kicker">{mobile && step < 3 ? (step === 1 ? t.ticket : language === "da" ? "OVERBLIK" : "REVIEW") : t.eyebrow}</span>
-      <h3 id="event-signup-title" ref={titleRef} tabIndex={-1}>{mobile && step < 3 ? (step === 1 ? t.ticket : language === "da" ? "Gennemgå dine billetter" : "Review your tickets") : t.title}</h3>
+      <button className="details-back" type="button" onClick={onBack} disabled={status === "working"}><ArrowLeft size={17} aria-hidden="true" />{mobile ? back : t.back}</button>
+      <h3 id="event-signup-title" ref={titleRef} tabIndex={-1}>{mobile ? (language === "da" ? "Indtast dine oplysninger" : "Enter your details") : t.title}</h3>
       </div>
-    <div className="details-intro" hidden={mobile && step === 1}>
-      {(!mobile || step === 3) && <p>{t.intro}</p>}
+    {!mobile && <div className="details-intro">
       <div className="event-signup-summary">
         <strong>{language === "da" ? occurrence.title : occurrence.titleEn}</strong>
         <p>{start.toLocaleString({ weekday: "long", day: "numeric", month: "long", year: "numeric" })}<br />{start.toFormat("HH:mm")}–{end.toFormat("HH:mm")}</p>
         <p>{(language === "da" ? occurrence.location : occurrence.locationEn) || "TTD Studio"}</p>
-        {mobile && ticket && <p className="event-selected-ticket">{language === "da" ? ticket.name : ticket.nameEn}</p>}
         {ticket && <p>{validQuantity ? `${count} × ${formatPrice(Number(ticket.price))}` : formatPrice(Number(ticket.price))}</p>}
         <div className="event-signup-total" aria-live="polite"><span>{t.total}</span><strong>{validQuantity ? formatPrice(count * Number(ticket.price)) : "—"}</strong></div>
       </div>
-    </div>
-    <form ref={formRef} className="details-form" noValidate onSubmit={event => void checkout(event)} onInput={event => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); setHandoff(null); }}>
+    </div>}
+    <form ref={formRef} className="details-form" noValidate onSubmit={event => void checkout(event)} onInput={event => { remember(event.currentTarget); if (validationAttempted) setInvalidFields(invalidDetailFields(event.currentTarget)); setHandoff(null); }}>
       <fieldset className="event-signup-fields" disabled={status === "working"}>
         <div className="details-fields">
-          <div className="event-buyer-fields" hidden={mobile && step !== 3}><BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} defaults={draft.fields} /></div>
-          <div className="event-ticket-fields" hidden={mobile && step !== 1}>
-          {eligible.length > 1 && <label>{t.ticket}<select name="itemId" value={ticket?.id} onChange={event => { const item = eligible.find(item => item.id === Number(event.target.value))!; setItemId(item.id); setQuantity(String(item.minPerOrder)); setShowQuantityLimit(false); }}>
+          <div className="event-buyer-fields"><BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} defaults={draft.fields} /></div>
+          {mobile && quantityField}
+          <div className="event-ticket-fields">
+          {(eligible.length > 1 || mobile) && <label>{t.ticket}<select name="itemId" value={ticket?.id} onChange={event => { const item = eligible.find(item => item.id === Number(event.target.value))!; setItemId(item.id); setQuantity(String(item.minPerOrder)); setShowQuantityLimit(false); }}>
             {eligible.map(item => <option key={item.id} value={item.id}>{language === "da" ? item.name : item.nameEn} · {formatPrice(Number(item.price))}</option>)}
           </select></label>}
-          <label>{t.quantity}<input name="quantity" type="number" inputMode="numeric" min={ticket?.minPerOrder ?? 1} max={maximum} aria-describedby={showQuantityLimit ? "event-quantity-limit" : undefined} step={1} required value={quantity} onChange={event => { const value = event.target.value; const overMaximum = Number(value) > maximum; setQuantity(overMaximum ? String(maximum) : value); setShowQuantityLimit(overMaximum); if (overMaximum) setInvalidFields(fields => fields.filter(field => field !== "quantity")); }} aria-invalid={invalidFields.includes("quantity")} /></label>
+          {!mobile && quantityField}
           </div>
         </div>
+        {mobile && <div className="event-signup-total" aria-live="polite"><span>{t.total}</span><strong>{validQuantity ? formatPrice(count * Number(ticket.price)) : "—"}</strong></div>}
         {showQuantityLimit && <p id="event-quantity-limit" className="form-field-error" role="alert">{maximum} {t.max}</p>}
         {invalidFields.length > 0 && <p className="form-field-error" role="alert">{t.invalid}</p>}
         {invalidFields.includes("phone") && <p id="phone-field-error" className="form-field-error" role="alert">{t.phoneInvalid}</p>}
-        <div hidden={mobile && step !== 3}><DetailsConsent idPrefix="event" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {language === "en" ? "&" : "og"} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={setMarketingOptIn} onTermsChange={checked => { setTermsAccepted(checked); if (checked) setShowTermsError(false); }} /></div>
-        {mobile && step < 3 ? <div className="journey-actions"><button type="button" disabled={!validQuantity} onClick={() => setStep(step === 1 ? 2 : 3)}>{next}</button></div> : <div className="details-actions"><button type="submit" disabled={!ticket || status === "working" || !!handoff}>{status === "working" ? t.working : t.submit}<ArrowUpRight size={19} aria-hidden="true" /></button></div>}
+        <div><DetailsConsent idPrefix="event" marketingLabel={t.marketing} termsLabel={<>{t.accept} <a href={`/terms?lang=${language}`}>{t.terms}</a> {language === "en" ? "&" : "og"} <a href={`/privacy?lang=${language}`}>{t.privacy}</a>.</>} termsError={t.termsRequired} marketingOptIn={marketingOptIn} termsAccepted={termsAccepted} showTermsError={showTermsError} onMarketingChange={setMarketingOptIn} onTermsChange={checked => { setTermsAccepted(checked); if (checked) setShowTermsError(false); }} /></div>
+        <div className="details-actions"><button type="submit" disabled={!ticket || status === "working" || !!handoff}>{status === "working" ? t.working : t.submit}<ArrowUpRight size={19} aria-hidden="true" /></button></div>
       </fieldset>
       {status !== "idle" && status !== "working" && <p className={`details-status ${status}`} role="alert">{t[status]}</p>}
       {handoff && <div className="marketing-result" role="status"><p>{t.marketingFailed}</p><div className="details-actions"><button type="button" onClick={() => submitCart(handoff)}>{t.continue}<ArrowUpRight size={19} aria-hidden="true" /></button></div></div>}

@@ -2,7 +2,9 @@
 
 import { submissionIdentity, submitWithIdentity } from "../lib/submission";
 
-import { ArrowLeft, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { DateTime } from "luxon";
+import { STUDIO_ZONE } from "../lib/booking";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BuyerDetailsFields, DetailsConsent, invalidDetailFields } from "./BookingFormFields";
 import type { Quote } from "../lib/booking";
@@ -13,7 +15,7 @@ export type BookingDetailsDraft = { fields: Record<string, string>; termsAccepte
 const copy = {
   da: {
     title: "Indtast dine oplysninger",
-    intro: "Indtast dine oplysninger, og gennemgå din booking, før du fortsætter til betaling.",
+    date: "Dato", time: "Tidspunkt", duration: "Varighed", total: "Samlet pris", hour: "time", hours: "timer",
     name: "Navn",
     email: "E-mail",
     phone: "Telefon",
@@ -45,11 +47,10 @@ const copy = {
     invalid: "Kontrollér oplysningerne og prøv igen.",
     changed: "Tiderne er ikke længere ledige. Vælg et nyt interval.",
     error: "Tjekket kunne ikke gennemføres lige nu.",
-    checkout: "Betaling sker på næste trin.",
   },
   en: {
     title: "Enter your details",
-    intro: "Enter your details and review your booking before continuing to payment.",
+    date: "Date", time: "Time", duration: "Duration", total: "Total price", hour: "hour", hours: "hours",
     name: "Name",
     email: "Email",
     phone: "Phone",
@@ -81,7 +82,6 @@ const copy = {
     invalid: "Check the details and try again.",
     changed: "These hours are no longer free. Choose another interval.",
     error: "The check could not be completed right now.",
-    checkout: "Payment takes place in the next step.",
   },
 } as const;
 
@@ -202,9 +202,17 @@ export function CustomerDetailsPreview({
     }
   }
 
+  const backButton = <button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button>;
+
   return (
-    <section className="details-preview" id="booking-details" aria-labelledby="details-title">
-      <div className="details-intro"><button className="details-back" type="button" onClick={onBack}><ArrowLeft size={17} aria-hidden="true" />{guided ? (language === "da" ? "Tilbage" : "Back") : t.back}</button><h3 id="details-title" tabIndex={-1}>{t.title}</h3>{!guided && <><p>{t.intro}</p><div className="details-reminder"><ShieldCheck size={17} />{t.checkout}</div></>}</div>
+    <section className={`details-preview ${!guided ? "studio-details--desktop" : ""}`} id="booking-details" aria-labelledby="details-title">
+      {!guided && backButton}
+      <div className="details-intro">{guided && backButton}<h3 id="details-title" tabIndex={-1}>{t.title}</h3>{!guided && <dl className="studio-details-summary">
+        <div className="summary-row"><dt>{t.date}</dt><dd>{DateTime.fromISO(date, { zone: STUDIO_ZONE }).setLocale(language).toLocaleString({ weekday: "long", day: "numeric", month: "long" })}</dd></div>
+        <div className="summary-row"><dt>{t.time}</dt><dd>{DateTime.fromISO(acceptedQuote.start).setZone(STUDIO_ZONE).toFormat("HH:mm")} — {DateTime.fromISO(acceptedQuote.end).setZone(STUDIO_ZONE).toFormat("HH:mm")}</dd></div>
+        <div className="summary-row"><dt>{t.duration}</dt><dd>{acceptedQuote.hours} {acceptedQuote.hours === 1 ? t.hour : t.hours}</dd></div>
+        <div className="summary-total"><dt>{t.total}</dt><dd>{new Intl.NumberFormat(language === "da" ? "da-DK" : "en-DK", { style: "currency", currency: "DKK", maximumFractionDigits: 0 }).format(acceptedQuote.totalOre / 100)}</dd></div>
+      </dl>}</div>
       <form ref={formRef} className="details-form" noValidate onInput={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onChange={(event) => { remember(event.currentTarget); if (invalidFields.length) setInvalidFields(invalidDetailFields(event.currentTarget)); }} onSubmit={(event) => void review(event)}>
         <div className="details-fields">
           <BuyerDetailsFields labels={t} invalidFields={invalidFields} language={language} defaults={draft.fields} />
