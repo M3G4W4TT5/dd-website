@@ -289,11 +289,13 @@ class UpgradePathTests(unittest.TestCase):
     def test_native_mail_recreates_only_pretix_and_preserves_manifest_images(self):
         self.running['revisions'] = {key:self.manifest['commit'] for key in release.APP_SERVICES}
         original_images = dict(self.manifest['images'])
-        with self.context(): release.native_mail_adapter(self.source)
+        with self.context(): release.native_mail_adapter(self.source, allow_proxy_reload=True)
         recreated = [c for c in self.commands if 'up' in c]
         self.assertEqual(len(recreated),1)
         self.assertEqual(recreated[0][-2:],['pretix','pretix-cron'])
         self.assertIn('--no-deps',recreated[0]); self.assertIn('never',recreated[0])
+        proxy_checks=[c for c in self.commands if 'nginx' in c]
+        self.assertEqual(proxy_checks,[['docker','exec','dd-hosted-proxy-1','nginx','-t'],['docker','exec','dd-hosted-proxy-1','nginx','-s','reload']])
         self.assertFalse(any('proxy' == c[-1] or 'booking' == c[-1] for c in self.commands))
         result=json.loads((self.state/'current.json').read_text())
         self.assertEqual(result['images'],original_images)
@@ -301,8 +303,19 @@ class UpgradePathTests(unittest.TestCase):
         self.assertEqual(result['config_version'],release.runpy.run_path(HERE/'deploy.py')['config_version'](self.root))
     def test_native_mail_stops_before_mutation_on_running_release_drift(self):
         with self.context(),self.assertRaisesRegex(ValueError,'identity differ'):
+            release.native_mail_adapter(self.source, allow_proxy_reload=True)
+        self.assertEqual(self.commands,[])
+
+    def test_native_mail_recreation_needs_explicit_shared_reload_approval(self):
+        with self.context(),self.assertRaisesRegex(ValueError,'approved graceful proxy reload'):
             release.native_mail_adapter(self.source)
         self.assertEqual(self.commands,[])
+    def test_native_mail_finalization_does_not_recreate_or_reload(self):
+        self.running['revisions']={key:self.manifest['commit'] for key in release.APP_SERVICES}
+        with self.context(): release.native_mail_adapter(self.source,install_adapter=False,recreate=False)
+        self.assertFalse(any('up' in c or 'reload' in c for c in self.commands))
+        status=json.loads((self.state/'native-mail-adapter.json').read_text())
+        self.assertEqual(status['status'],'verified')
 
 
 if __name__ == '__main__':
