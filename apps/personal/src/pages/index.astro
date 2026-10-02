@@ -85,9 +85,8 @@ const flowerMask = await getImage({ src: flower, width: 512, format: "png" });
         <WorkSwitcher client:load items={work} />
       </section>
 
-      <section class="contact-section" id="contact" aria-labelledby="contact-title" style={`--contact-image: url("${media.lowerBanner}")`}>
+      <section class="contact-section" id="contact" aria-labelledby="contact-title" style={`--contact-image: url("${media.lowerBanner}"); --contact-desktop-image: url("${media.desktopContactPortrait}")`}>
         <div class="contact-layout"><div class="contact-copy"><h2 id="contact-title"><span>WORK<br />WITH</span><span class="contact-title-logo"><Image src={ddFlower} alt="DD." width={600} widths={[240, 360, 600]} sizes="(max-width: 500px) 26vw, (max-width: 760px) 184px, (max-width: 1653px) 17vw, 275px" format="webp" quality={95} loading="lazy" /></span></h2><p>For dance, choreography and campaign inquiries.</p></div><ContactPreview client:load /></div>
-        <p class="contact-image-credit">DD / HALO</p>
       </section>
 
       <section class="links-section" aria-labelledby="links-title">

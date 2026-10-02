@@ -3,6 +3,7 @@ export const media = {
   heroPortrait: "/work/dd_hero.webp",
   mobileHeroPortrait: "/work/dd_halo_mobile_hero.webp",
   lowerBanner: "/work/dd_halo_banner.webp",
+  desktopContactPortrait: "/work/dd_halo_desktop_contact.jpg",
   glastonbury: "/work/dua_glastonbury.jpg",
   jungle: "/work/jungle_74.webp",
   rosaliaLux: "/work/rosalia_lux.jpg",
