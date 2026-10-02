@@ -48,8 +48,9 @@ isolation and unrelated organizer isolation pass again.
 ## Release sequence
 
 1. Preserve previous review evidence and current ff763f6 applications/primary.
-   Commit scoped correction and evidence, PR/check/merge, publish exact images.
-2. Owner installs the reviewed adapter/config package with current identity checks;
+   Commit scoped correction and evidence, PR/check/merge. CI may publish app images,
+   but this adapter-only release does not deploy them.
+2. Owner runs the reviewed install-native-mail adapter-only action with current identity checks;
    retain sandbox/payment/mail gates and unrelated services. Verify adapter hash
    on host/web/cron and pinned Pretix identity.
 3. Stage root-owned configure-ttd-native-mail.py. Owner runs inspection with exact
@@ -57,7 +58,8 @@ isolation and unrelated organizer isolation pass again.
    Purelymail app password. The helper checks authentication/envelope acceptance
    without DATA; it sends no message. It backs up the private config and adds only
    the new controlled [ttd-mail] section, refusing existing/drifted configuration.
-4. Recreate only Pretix web/cron using existing reviewed Compose and pinned image;
+4. Run reload-native-mail to recreate only Pretix web/cron using existing reviewed
+   Compose and pinned image;
    inspect mounted config and supervised processes. No proxy/booking restart.
 5. Owner explicitly resends the existing workshop ticket through Pretix. Verify
    recipient inbox, PDF/content, branding, links, Reply-To, SPF/DKIM/DMARC and
@@ -69,3 +71,7 @@ ownership/mode, then recreate only Pretix web/cron. This restores capture withou
 altering authoritative orders or payments. Do not replay captured mail globally.
 Production customer-recipient activation needs explicit launch approval and
 verified delivery; this controlled release alone does not accept Step 6.
+
+Installer regression verifies only Pretix web/cron are recreated, manifest application
+revision/images are preserved, and running release drift stops before mutation.
+Initial PR CI exposed the old installer adapter hash; it was updated before release.
