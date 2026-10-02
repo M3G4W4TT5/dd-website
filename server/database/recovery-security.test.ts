@@ -42,6 +42,9 @@ test("atomic recovery fairness, concurrent UUID/email rotation, rollback, retrie
     let kind = "";
     await pollDelivery(f.pool,process.env.PAYLOAD_KEY!,async row=>{kind=row.kind;},"lifecycle");
     assert.equal(kind,"paid");
+    // Ambiguous sends are never resent; retain audit evidence without permanent client denial.
+    await f.pool.query("UPDATE deliveries SET state='ambiguous' WHERE kind='recovery'");
+    await requestManageLinks("after-ambiguity@example.invalid", "en", "new-link", clientIdentity("203.0.113.2"));
     process.env.RECOVERY_QUEUE_MAX="1";
     const before = (await f.pool.query("SELECT sum(hits)::int AS n FROM admission_budgets")).rows[0].n;
     await assert.rejects(()=>requestManageLinks("full@example.invalid","en","full",clientIdentity("203.0.113.1")), AdmissionDenied);

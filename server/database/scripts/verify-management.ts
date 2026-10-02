@@ -40,7 +40,7 @@ Object.assign(process.env, {
   NODE_ENV: "test",
 });
 const now = Date.now() + 7 * 86400000,
-  start = new Date(Math.floor(now / 3600000) * 3600000).toISOString(),
+  start = new Date(Math.floor(now / 86400000) * 86400000 + 8 * 3600000).toISOString(),
   end = new Date(Date.parse(start) + 3600000).toISOString();
 let order = {
   code: "ABCDE",
@@ -306,7 +306,7 @@ try {
     changeManagedBooking("ABCDE", order.email, newStart, newEnd),
     changeManagedBooking("ABCDE", order.email, newStart, newEnd),
   ]);
-  assert.equal(changes.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal(changes.filter((r) => r.status === "fulfilled").length, 1, changes.map(r => r.status === "rejected" ? String(r.reason?.message) : "fulfilled").join("; "));
   assert.equal(posts, 1);
   await observeOrder("ABCDE", () => getManagedBooking("ABCDE", order.email));
   // Keep subsequent transition-count assertions isolated from this independently verified change.

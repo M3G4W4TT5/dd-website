@@ -164,7 +164,7 @@ export async function requestManageLinks(rawEmail: string, language: Language, s
       await budget(c, privateKey(cfg.hashKey, "recovery-prefix", client.prefix), setting("RECOVERY_PREFIX_HOURLY", 60), 3600);
       await budget(c, privateKey(cfg.hashKey, "recovery-email", email), 3, 3600, "contact");
       const outstanding = await c.query<{ total: string; client: string }>(
-        "SELECT count(*) AS total,count(*) FILTER(WHERE admission_client=$1) AS client FROM deliveries WHERE kind='recovery' AND state IN ('queued','leased','sending','ambiguous')", [clientKey]);
+        "SELECT count(*) AS total,count(*) FILTER(WHERE admission_client=$1) AS client FROM deliveries WHERE kind='recovery' AND state IN ('queued','leased','sending')", [clientKey]);
       if (Number(outstanding.rows[0].client) >= setting("RECOVERY_CLIENT_OUTSTANDING", 2)) throw new AdmissionDenied("client");
       if (Number(outstanding.rows[0].total) >= setting("RECOVERY_QUEUE_MAX", 100)) throw new AdmissionDenied("capacity");
       await emergency(c, "recovery", setting("RECOVERY_EMERGENCY_BURST", 200), setting("RECOVERY_REFILL_SECONDS", 10));
