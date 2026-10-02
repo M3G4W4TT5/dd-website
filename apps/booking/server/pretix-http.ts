@@ -1,3 +1,4 @@
+import { pretixSignal } from "./pretix-deadline";
 import { request } from "node:http";
 
 /** Keep API traffic on the private Docker network while using Pretix's public vhost. */
@@ -28,6 +29,7 @@ export function pretixHeaders(
 
 /** Node's fetch replaces Host with the URL host, so hosted requests use http.request. */
 export async function pretixFetch(url: URL, init: RequestInit): Promise<Response> {
+  init = { ...init, signal: pretixSignal(url, init) };
   const headers = new Headers(init.headers);
   if (!headers.has("Host")) return fetch(url, init);
   if (url.protocol !== "http:") throw new Error("Invalid private Pretix URL");

@@ -24,6 +24,7 @@ export function validateBooking(env: NodeJS.ProcessEnv) {
       "BOOKING_MARKETING_BEARER",
       "PAYLOAD_KEY",
       "MANAGE_RECOVERY_HASH_KEY",
+      "BOOKING_INGRESS_KEY",
       "PRETIX_API_TOKEN",
       "PRETIX_MANAGE_API_TOKEN",
       "PRETIX_MANAGE_WEBHOOK_USER",
@@ -63,6 +64,7 @@ export function validateBooking(env: NodeJS.ProcessEnv) {
       env.PRETIX_EVENTS_CHECKOUT_ENABLED === "true")
   )
     throw new Error("Preview release gates must be closed");
+  if (env.BOOKING_INGRESS_KEY && !/^[a-f0-9]{64}$/.test(env.BOOKING_INGRESS_KEY)) throw new Error("Invalid ingress key");
   if (env.PAYLOAD_KEY && !/^[0-9a-f]{64}$/.test(env.PAYLOAD_KEY))
     throw new Error("Invalid payload key");
 }
