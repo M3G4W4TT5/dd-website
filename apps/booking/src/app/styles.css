@@ -2473,6 +2473,8 @@ body:has(.legal-main) .legal-main {
     min-height:calc(100svh - var(--events-overview-top,0px));
     padding-bottom:120px;
   }
+  .events-overview > .events-list,
+  .events-overview > .events-list-pagination { transform:translateY(var(--events-list-offset,0px)); }
   .event-row { border-top:1px solid var(--line); }
   .event-row + .event-row { margin-top:-1px; }
   .events-toolbar { margin-top:32px; scroll-margin-top:112px; }

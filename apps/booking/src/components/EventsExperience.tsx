@@ -43,15 +43,26 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
   useEffect(() => {
     const overview = overviewRef.current;
     if (!overview || selected) return;
-    const measure = () => overview.style.setProperty("--events-overview-top", `${overview.getBoundingClientRect().top + window.scrollY}px`);
+    const measure = () => {
+      const top = overview.getBoundingClientRect().top;
+      overview.style.setProperty("--events-overview-top", `${top + window.scrollY}px`);
+      const list = listRef.current;
+      const title = document.querySelector(".events-heading--listing h1");
+      const cueText = overview.querySelector(".events-calendar-cue span");
+      if (list && title && cueText) {
+        const centeredTop = (title.getBoundingClientRect().bottom + cueText.getBoundingClientRect().top - list.offsetHeight) / 2;
+        overview.style.setProperty("--events-list-offset", `${Math.max(0, centeredTop - top - list.offsetTop)}px`);
+      }
+    };
     const observer = new ResizeObserver(measure);
     observer.observe(overview);
+    if (listRef.current) observer.observe(listRef.current);
     const heading = document.querySelector(".events-heading--listing");
     if (heading) observer.observe(heading);
     measure();
     window.addEventListener("resize", measure);
     return () => { observer.disconnect(); window.removeEventListener("resize", measure); };
-  }, [selected, catalog.state, catalog.occurrences.length]);
+  }, [selected, catalog.state, catalog.occurrences.length, listPage]);
   useEffect(() => {
     if (selected || !showCalendarCue) return;
     const dismiss = () => {
@@ -121,7 +132,7 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
             return <a className="event-row" key={item.key} href={href(item, language)} style={{ animationDelay: `${index * 45}ms` }}><time dateTime={item.start}><span className="event-day-number">{date.toFormat("dd")}</span><span>{date.toFormat("LLL")}</span></time><span className="event-row-details"><strong>{language === "da" ? item.title : item.titleEn}</strong><small>{timeText(item.start)}–{timeText(item.end)} · {(language === "da" ? item.location : item.locationEn) || "TTD Studio"}</small></span><span className="event-row-status">{item.remaining === null ? null : item.remaining === 0 ? t.noSlots : `${item.remaining} ${t.places}`}</span></a>;
           })}</div>
           {pageCount > 1 && <nav className="events-list-pagination" aria-label={language === "da" ? "Sider med events" : "Event pages"}><button type="button" aria-label={t.previousEvents} disabled={currentPage === 0} onClick={() => changeListPage(currentPage - 1)}><ChevronLeft aria-hidden="true" /></button><span aria-live="polite">{pageRange} {t.of} {catalog.occurrences.length}</span><button type="button" aria-label={t.nextEvents} disabled={currentPage >= pageCount - 1} onClick={() => changeListPage(currentPage + 1)}><ChevronRight aria-hidden="true" /></button></nav>}
-          {showCalendarCue && <button type="button" className="events-calendar-cue" onClick={() => {
+          {<button type="button" className="events-calendar-cue" style={{ visibility: showCalendarCue ? undefined : "hidden" }} aria-hidden={!showCalendarCue} tabIndex={showCalendarCue ? 0 : -1} onClick={() => {
             setShowCalendarCue(false);
             calendarRef.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion:reduce)").matches ? "instant" : "smooth" });
           }}><span>{language === "da" ? "Se kalenderen" : "View the Calendar"}</span><ArrowDown size={20} aria-hidden="true" /></button>}
