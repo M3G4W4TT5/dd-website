@@ -5,7 +5,13 @@ import { boundedPretix, inPretixScope } from "./pretix-deadline";
 import { bookingClient } from "./client-identity";
 
 const cache = new Map<string, { until: number; value: unknown }>();
-let waiting = 0;
+let waiting = 0, databaseAdmissions = 0;
+async function guardedAdmission<T>(fn: () => Promise<T>) {
+  // Fail without queueing before pool.connect; durable leases remain the shared authority.
+  if (databaseAdmissions >= 8) throw new AdmissionDenied("capacity");
+  databaseAdmissions++;
+  try { return await fn(); } finally { databaseAdmissions--; }
+}
 const pending = new Map<string, Promise<unknown>>();
 export function invalidateCatalog() { cache.clear(); }
 function configKey() {
@@ -25,16 +31,16 @@ export async function catalogWork<T>(key: string, fn: () => Promise<T>, fresh = 
       waiting++;
       let release: (() => Promise<void>) | undefined;
       try {
-        release = await lease(bookingDb(), "catalog-waiting", 32, 60);
+        release = await guardedAdmission(()=>lease(bookingDb(), "catalog-waiting", 32, 60));
         return structuredClone(await running) as T;
       } finally { waiting--; if (release) await release(); }
     }
   }
   if (pending.size >= 64) throw new AdmissionDenied("capacity");
   const run = async () => {
-    const release = await lease(bookingDb(), fresh ? "catalog-checkout" : "catalog-public", setting(fresh ? "CATALOG_CHECKOUT_CONCURRENCY" : "CATALOG_PUBLIC_CONCURRENCY", fresh ? 1 : 2, 8), 60);
+    const release = await guardedAdmission(()=>lease(bookingDb(), fresh ? "catalog-checkout" : "catalog-public", setting(fresh ? "CATALOG_CHECKOUT_CONCURRENCY" : "CATALOG_PUBLIC_CONCURRENCY", fresh ? 1 : 2, 8), 60));
     try {
-      await admission(bookingDb(), "catalog-emergency", c=>emergency(c, fresh ? "catalog-checkout" : "catalog-public", setting("CATALOG_EMERGENCY_BURST", 120), 1));
+      await guardedAdmission(()=>admission(bookingDb(), "catalog-emergency", c=>emergency(c, fresh ? "catalog-checkout" : "catalog-public", setting("CATALOG_EMERGENCY_BURST", 120), 1)));
       const value = await boundedPretix(fn, setting("CATALOG_DEADLINE_MS", 25000, 30000), setting("CATALOG_REQUEST_MAX", 100, 500));
       if (!fresh) {
         if (cache.size >= 64) cache.delete(cache.keys().next().value!);
@@ -51,10 +57,10 @@ export async function catalogWork<T>(key: string, fn: () => Promise<T>, fresh = 
 }
 export async function catalogRequest(request: Request) {
   const client = bookingClient(request), secret = process.env.MANAGE_RECOVERY_HASH_KEY ?? "";
-  await admission(bookingDb(), "catalog-client", async c => {
+  await guardedAdmission(()=>admission(bookingDb(), "catalog-client", async c => {
     await budget(c, privateKey(secret, "catalog-client", client.address), setting("CATALOG_CLIENT_MINUTE", 60), 60);
     await budget(c, privateKey(secret, "catalog-prefix", client.prefix), setting("CATALOG_PREFIX_MINUTE", 600), 60);
-  });
+  }));
 }
 export async function mapBounded<T, R>(values: T[], fn: (value: T) => Promise<R>) {
   const out: R[] = new Array(values.length);
