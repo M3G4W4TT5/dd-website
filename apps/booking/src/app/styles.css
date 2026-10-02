@@ -2464,3 +2464,74 @@ body:has(.legal-main) .legal-main {
 
 .events-heading--listing { padding-bottom:25px; }
 .events-heading--listing h1 { margin-bottom:0; }
+
+.events-calendar-cue { display:none; }
+@media (min-width:821px) and (pointer:fine) {
+  .events-section { border-top:0; padding-top:0; }
+  .events-overview {
+    position:relative;
+    min-height:calc(100svh - var(--events-overview-top,0px));
+    padding-bottom:120px;
+  }
+  .events-overview > .events-list,
+  .events-overview > .events-list-pagination { transform:translateY(var(--events-list-offset,0px)); }
+  .event-row { border-top:1px solid var(--line); }
+  .event-row + .event-row { margin-top:-1px; }
+  .events-toolbar { margin-top:32px; scroll-margin-top:112px; }
+  .events-calendar-cue {
+    position:absolute;
+    bottom:40px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    min-height:44px;
+    padding:4px 12px;
+    border:0;
+    background:transparent;
+    color:inherit;
+    font-size:12px;
+    font-weight:500;
+  }
+  .events-calendar-cue svg { animation:events-calendar-nudge 8s ease-in-out infinite; }
+}
+@media (min-width:1500px) and (pointer:fine) {
+  .event-row:nth-child(2) { margin-top:0; }
+}
+@keyframes events-calendar-nudge {
+  0%,84%,92%,100% { transform:translateY(0); }
+  88% { transform:translateY(5px); }
+  96% { transform:translateY(3px); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .events-calendar-cue svg { animation:none; }
+}
+
+@media (min-width:821px) and (pointer:fine) {
+  .contact-main {
+    display:grid;
+    grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
+    column-gap:clamp(32px,7vw,150px);
+    row-gap:72px;
+  }
+  .contact-main > .events-heading { grid-column:1; grid-row:1; padding-bottom:0; }
+  .contact-main > .events-heading h1 { margin-bottom:0; }
+  .contact-main > .events-heading p { display:none; }
+  .contact-main > .contact-layout { grid-column:1; grid-row:2; display:block; border-top:0; padding-top:0; }
+  .contact-main > .contact-visual-placeholder {
+    display:block;
+    grid-column:2;
+    grid-row:1 / span 2;
+    align-self:start;
+    justify-self:center;
+    width:100%;
+    max-width:650px;
+    aspect-ratio:4 / 5;
+    background:url('/studio/ttd-studio-02-contact.webp') center / cover no-repeat;
+  }
+}
+@media (min-width:1400px) and (pointer:fine) {
+  .contact-main { grid-template-columns:minmax(0,850px) minmax(0,1fr); }
+}

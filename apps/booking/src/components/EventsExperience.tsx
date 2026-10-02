@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DateTime } from "luxon";
-import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useVisualEffects } from "./useVisualEffects";
 import { SiteFooter } from "./SiteFooter";
 import { MobileNavigation } from "./MobileNavigation";
@@ -36,7 +36,42 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
   const signupDraft = useRef<BookingDetailsDraft>({fields: {}, termsAccepted: false, marketingOptIn: false});
   const signupRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const overviewRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<HTMLDivElement>(null);
+  const [showCalendarCue, setShowCalendarCue] = useState(true);
   useVisualEffects();
+  useEffect(() => {
+    const overview = overviewRef.current;
+    if (!overview || selected) return;
+    const measure = () => {
+      const top = overview.getBoundingClientRect().top;
+      overview.style.setProperty("--events-overview-top", `${top + window.scrollY}px`);
+      const list = listRef.current;
+      const title = document.querySelector(".events-heading--listing h1");
+      const cueText = overview.querySelector(".events-calendar-cue span");
+      if (list && title && cueText) {
+        const centeredTop = (title.getBoundingClientRect().bottom + cueText.getBoundingClientRect().top - list.offsetHeight) / 2;
+        overview.style.setProperty("--events-list-offset", `${Math.max(0, centeredTop - top - list.offsetTop)}px`);
+      }
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(overview);
+    if (listRef.current) observer.observe(listRef.current);
+    const heading = document.querySelector(".events-heading--listing");
+    if (heading) observer.observe(heading);
+    measure();
+    window.addEventListener("resize", measure);
+    return () => { observer.disconnect(); window.removeEventListener("resize", measure); };
+  }, [selected, catalog.state, catalog.occurrences.length, listPage]);
+  useEffect(() => {
+    if (selected || !showCalendarCue) return;
+    const dismiss = () => {
+      if (window.scrollY > 8 && !window.matchMedia("(max-width:820px), (hover:none) and (pointer:coarse)").matches) setShowCalendarCue(false);
+    };
+    dismiss();
+    window.addEventListener("scroll", dismiss, { passive: true });
+    return () => window.removeEventListener("scroll", dismiss);
+  }, [selected, showCalendarCue]);
   useEffect(() => { document.documentElement.lang = language; localStorage.setItem("ttd-language", language); }, [language]);
   const t = words[language];
   const pageCount = Math.ceil(catalog.occurrences.length / EVENTS_PER_PAGE);
@@ -91,12 +126,18 @@ export function EventsExperience({ catalog, selected, initialLanguage }: Props) 
       </> : <>
         <div className="events-heading events-heading--listing"><h1>{t.title}</h1></div>
         {catalog.state !== "ready" ? <p className="events-message" role="status">{catalog.state === "setup" ? t.setup : t.error}</p> : catalog.occurrences.length === 0 ? <p className="events-message" role="status">{t.empty}</p> : <section className="events-section" aria-label={t.events}>
+          <div className="events-overview" ref={overviewRef}>
           <div className="events-list" ref={listRef} key={currentPage}>{visibleEvents.map((item, index) => {
             const date = localDay(item.start).setLocale(language);
             return <a className="event-row" key={item.key} href={href(item, language)} style={{ animationDelay: `${index * 45}ms` }}><time dateTime={item.start}><span className="event-day-number">{date.toFormat("dd")}</span><span>{date.toFormat("LLL")}</span></time><span className="event-row-details"><strong>{language === "da" ? item.title : item.titleEn}</strong><small>{timeText(item.start)}–{timeText(item.end)} · {(language === "da" ? item.location : item.locationEn) || "TTD Studio"}</small></span><span className="event-row-status">{item.remaining === null ? null : item.remaining === 0 ? t.noSlots : `${item.remaining} ${t.places}`}</span></a>;
           })}</div>
           {pageCount > 1 && <nav className="events-list-pagination" aria-label={language === "da" ? "Sider med events" : "Event pages"}><button type="button" aria-label={t.previousEvents} disabled={currentPage === 0} onClick={() => changeListPage(currentPage - 1)}><ChevronLeft aria-hidden="true" /></button><span aria-live="polite">{pageRange} {t.of} {catalog.occurrences.length}</span><button type="button" aria-label={t.nextEvents} disabled={currentPage >= pageCount - 1} onClick={() => changeListPage(currentPage + 1)}><ChevronRight aria-hidden="true" /></button></nav>}
-          <div className="events-toolbar"><h2>{t.calendar}</h2><div><button aria-label={t.previous} onClick={() => setMonth(month.minus({ months: 1 }))}><ChevronLeft /></button><strong>{month.setLocale(language).toLocaleString({ month: "long", year: "numeric" })}</strong><button aria-label={t.next} onClick={() => setMonth(month.plus({ months: 1 }))}><ChevronRight /></button></div></div>
+          {<button type="button" className="events-calendar-cue" style={{ visibility: showCalendarCue ? undefined : "hidden" }} aria-hidden={!showCalendarCue} tabIndex={showCalendarCue ? 0 : -1} onClick={() => {
+            setShowCalendarCue(false);
+            calendarRef.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion:reduce)").matches ? "instant" : "smooth" });
+          }}><span>{language === "da" ? "Se kalenderen" : "View the Calendar"}</span><ArrowDown size={20} aria-hidden="true" /></button>}
+          </div>
+          <div className="events-toolbar" ref={calendarRef}><h2>{t.calendar}</h2><div><button aria-label={t.previous} onClick={() => setMonth(month.minus({ months: 1 }))}><ChevronLeft /></button><strong>{month.setLocale(language).toLocaleString({ month: "long", year: "numeric" })}</strong><button aria-label={t.next} onClick={() => setMonth(month.plus({ months: 1 }))}><ChevronRight /></button></div></div>
           <div className="events-calendar" role="group" aria-label={`${t.calendar} ${month.toFormat("yyyy-MM")}`}>
             {Array.from({ length: 7 }, (_, i) => <div className="calendar-weekday" key={i}>{month.setLocale(language).startOf("week").plus({ days: i }).toFormat("ccc")}</div>)}
             {days.map(day => <div className={`calendar-day ${day.month !== month.month ? "other-month" : ""}`} key={day.toISODate()} role="group" aria-label={day.setLocale(language).toLocaleString(DateTime.DATE_FULL)}><span>{day.day}</span>{(byDay.get(day.toISODate()!) || []).map(item => <a key={item.key} href={href(item, language)}><strong>{language === "da" ? item.title : item.titleEn}</strong><small>{timeText(item.start)}</small></a>)}</div>)}

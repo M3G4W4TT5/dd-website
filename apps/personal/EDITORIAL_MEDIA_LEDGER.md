@@ -2,6 +2,14 @@
 
 Updated 23 September 2026. The app keeps `noindex,nofollow` and remains unpublished. At the user's request, the page itself has final-form copy without visible draft or rights notices; this ledger retains the outstanding publication checks. The user supplied four selected-work images and two Halo banner images for the local page; the Holdit Work image remains external. **Receiving a file does not establish its photographer credit or permission for public site use.** All seven selected images remain provisional pending DD's approval and rights confirmation. At that stage, no video file was hosted. The 30 September clip addition is documented below.
 
+## 2 October 2026 — mobile hero portrait
+
+The user supplied `WEB_HALO_2024_August_Week_32_Campaign_page_HCM_Desktop_01_01.webp` (480×700) directly in chat for the mobile hero. `public/work/dd_halo_mobile_hero.webp` is an unchanged copy. The mobile layout preserves the full image width and top edge and crops only the bottom to fit the hero. Desktop retains `public/work/dd_hero.webp`. No new photographer credit was supplied.
+
+## 2 October 2026 — desktop contact portrait
+
+The user supplied this [HALO campaign preview image](https://newlinehalo.com/cdn/shop/files/preview_images/4466ec3fe08e464792b7931292490802.thumbnail.0000000000_2500x.jpg?v=1777499719) for the desktop contact section. The downloaded 1920×1080 JPEG is saved unchanged as `public/work/dd_halo_desktop_contact.jpg` and displayed with a centred cover crop. Mobile retains `public/work/dd_halo_banner.webp`. No new photographer credit was supplied.
+
 ## 30 September 2026 — supplied photo update
 
 The user removed Holdit and STINE GOYA × Umbro from Selected Work, added four projects with the role Dancer, and supplied separate work images and video thumbnails in [this Google Drive folder](https://drive.google.com/drive/folders/1xFOdQ_i2JwsNVph1TBkK74s2kJ-fyzi7). The older inventory below describes the previous selection. New assets are local WebP derivatives at quality 90, capped at 1600 pixels without an exported crop; the source files remain unchanged in Drive. No individual creator credit was supplied. This update is local and does not publish the site.

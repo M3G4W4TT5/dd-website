@@ -18,6 +18,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     const glowCanvas = glowCanvasRef.current;
     const page = document.querySelector<HTMLElement>(".desktop-flower-page");
     const hero = document.querySelector<HTMLElement>(".hero-image");
+    const introduction = document.querySelector<HTMLElement>(".intro-statement");
     const links = document.querySelector<HTMLElement>(".links-section");
     const linksList = links?.querySelector<HTMLElement>(".links-list");
     if (!flower || !canvas || !glow || !glowCanvas || !page || !hero || !links) return;
@@ -53,6 +54,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     let startX = 0;
     let startY = 0;
     let viewportY = 0;
+    let reelHomeY: number | undefined;
     let linksTop = 0;
     let linksBottom = 0;
     let dockThreshold = 0;
@@ -100,6 +102,12 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
         endY = dividerY + (linksBottom - dividerY - flower.offsetHeight) / 2;
       }
       flowerHeight = flower.offsetHeight;
+      const headingRect = introduction?.querySelector<HTMLElement>(":scope > p")?.getBoundingClientRect();
+      // Centre beside the middle heading line (CHOREOGRAPHY), retaining the
+      // existing horizontal path rather than deriving x from the annotation.
+      reelHomeY = headingRect
+        ? clamp(headingRect.top - pageRect.top + headingRect.height / 2 - flowerHeight / 2, startY, linksTop - flowerHeight)
+        : undefined;
       glow.style.width = `${flower.offsetWidth + 48}px`;
       glow.style.height = `${flowerHeight + 48}px`;
       // Keep the same perceived rim and shine on the smaller mobile coin.
@@ -123,10 +131,16 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     const target = () => {
       const introActive = document.documentElement.classList.contains("desktop-intro-active");
       const followY = clamp(window.scrollY + viewportY - pageTop, startY, endY);
+      // Park in document space while the reel passes through the viewport.
+      // Release just before the top edge reaches the coin; the existing spring
+      // sends it back down to the follower. The same boundary works in reverse,
+      // and releasing a mobile drag returns to whichever home is active now.
+      const reelDocked = !introActive && reelHomeY !== undefined && followY >= reelHomeY
+        && window.scrollY - pageTop < reelHomeY - 48;
       // Commit to the resting position halfway through Links. Tall viewports
       // can reveal its bottom before the follower reaches that threshold.
       const sectionBottomVisible = followY > startY && window.scrollY + window.innerHeight - pageTop >= linksBottom;
-      const targetY = followY >= dockThreshold || sectionBottomVisible ? endY : followY;
+      const targetY = followY >= dockThreshold || sectionBottomVisible ? endY : reelDocked ? reelHomeY! : followY;
       const progress = clamp((targetY - linksTop) / Math.max(1, endY - linksTop), 0, 1);
       const ease = progress * progress * (3 - 2 * progress);
       // Finish at a full turn, easing into a front-facing pose over the last 320px.
@@ -135,7 +149,10 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       const dockStart = Math.max(startY, endY - 320);
       const dockProgress = clamp((targetY - dockStart) / Math.max(1, endY - dockStart), 0, 1);
       const dockEase = dockProgress * dockProgress * (3 - 2 * dockProgress);
-      const scrollAngle = .16 + (targetY - startY) * rate;
+      // Parking changes position only: scrolling still turns the coin, with
+      // the same angle on either side of the carousel's release boundary.
+      const rotationY = reelDocked ? followY : targetY;
+      const scrollAngle = .16 + (rotationY - startY) * rate;
       const dockAngle = Math.ceil((.16 + (endY - startY) * rate) / (Math.PI * 2)) * Math.PI * 2;
       const normalAngle = introActive ? 0 : reduced.matches ? .16 * (1 - dockEase)
         : scrollAngle + (dockAngle - scrollAngle) * dockEase;
@@ -144,10 +161,11 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       if (settlingClick && performance.now() - lastScrollTime > 120) goalAngle = Math.round(goalAngle / fullTurn) * fullTurn;
       return {
         x: drag?.x ?? startX + (endX - startX) * ease + (reduced.matches || introActive ? 0 : pointerX * 14 * (1 - dockEase)),
-        y: drag?.y ?? clamp(targetY + (reduced.matches || introActive ? 0 : pointerY * 12 * (1 - dockEase)), startY, endY),
+        y: drag?.y ?? clamp(targetY + (reduced.matches || introActive || reelDocked ? 0 : pointerY * 12 * (1 - dockEase)), startY, endY),
         angle: introActive || reduced.matches ? normalAngle : goalAngle,
         normalAngle,
-        dockEase
+        dockEase,
+        reelDocked
       };
     };
 
@@ -248,6 +266,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
         if (!drag) returningFromDrag = false;
         if (settlingClick) { alignRotation(angle, goal); settlingClick = false; }
       }
+      flower.classList.toggle("is-reel-docked", goal.reelDocked && !drag && !returningFromDrag);
       const glowResting = paint(elapsed);
       if ((!resting || !glowResting) && !reduced.matches) frame = window.requestAnimationFrame(tick);
     };
@@ -382,6 +401,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     const observer = new ResizeObserver(resize);
     observer.observe(page);
     observer.observe(hero);
+    if (introduction) observer.observe(introduction);
     observer.observe(links);
     flower.addEventListener("pointerdown", grab);
     flower.addEventListener("pointermove", dragMove);
