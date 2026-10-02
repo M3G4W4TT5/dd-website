@@ -39,6 +39,9 @@ jobs:
       - run: npm run build:server
       - run: python3 infra/deploy.test.py
       - run: python3 infra/apply-hosted-release.test.py
+      - run: python3 infra/ttd-checkout.test.py
+      - run: python3 infra/ttd-csp.test.py
+      - run: python3 infra/run-ttd-full-page.py
       - run: python3 infra/verify-hosted-compose-upgrade.py
 
   images:

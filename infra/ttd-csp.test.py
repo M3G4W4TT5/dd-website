@@ -8,6 +8,7 @@ import base64
 import hashlib
 import re
 import unittest
+from functools import cached_property
 from pathlib import Path
 from types import SimpleNamespace, ModuleType
 from unittest.mock import patch
@@ -33,11 +34,15 @@ class ResponseCSP(unittest.TestCase):
             def connect(self, receiver, **kwargs): handlers[kwargs['dispatch_uid']] = receiver
         class StripeCC:
             def payment_form_render(self, request, total, order=None): return '<div id="stripe-card"></div>'
+        class OrderPaymentStart:
+            form = cached_property(lambda self: '')
         def module(name, **attrs):
             m = ModuleType(name); m.__dict__.update(attrs); return m
         modules = {'pretix.base.middleware': middleware_module,
                    'pretix.presale.signals': module('signals', global_html_head=Signal(), global_html_page_header=Signal()),
                    'django.utils.safestring': module('safe', mark_safe=lambda s: s),
+                   'django.utils.functional': module('functional', cached_property=cached_property),
+                   'pretix.presale.views.order': module('order', OrderPaymentStart=OrderPaymentStart),
                    'pretix.plugins.stripe.payment': module('payment', StripeCC=StripeCC)}
         tree = ast.parse((ROOT / 'pretix-settings.py').read_text())
         functions = {'ttd_theme', 'ttd_csp_block', 'ttd_checkout_style', 'configure_ttd_presentation', 'configure_ttd_card'}

@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-02",
+  "source": "Owner-executed sanitized diagnostics and hosted-status; direct Chrome observation",
+  "installed_before_correction": {
+    "application_commit": "6014e460b9b9516fec6966a6a903ee1ca4f5a4d6",
+    "host_config_version": "148e0d8d70c75ea806d6a5c2734870a015269938102b82832dbb0728c560ba91",
+    "adapter_sha256": "6f5090eeb05be4460299bdec3fdcbc98604e2bb69eb0dfee965a1038779d4123",
+    "pretix_image_id": "sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02",
+    "web_cron_mounts_match": true,
+    "web_cron_mounts_read_only": true,
+    "supervised_processes_running": [
+      "nginx",
+      "pretixtask",
+      "pretixweb"
+    ],
+    "application_images": {
+      "booking": "sha256:42c7d4a03395cfa95103072836a6e180008a5bc9f8af01a87511045eac0b7b1b",
+      "communications": "sha256:def2475f777bdc54ca99ab10b509d7100455bb504c151c4de6b0ecb0607fab57",
+      "worker": "sha256:954f661cc7504fe7cfc6bc255720b6a3b4fbaf8e1b1cac55a3db0f6db8182977"
+    },
+    "all_application_revisions_match": true,
+    "application_runtime_mounts_match": true,
+    "application_health": "healthy",
+    "primary_revision": "be350a1d320136abdc1592b350e5f32257f91a17",
+    "sandbox_payments": true,
+    "payment_release_enabled": false,
+    "mail_release_enabled": false,
+    "mail_modes": {
+      "booking": "capture",
+      "communications": "controlled",
+      "worker": "controlled"
+    },
+    "orders": 19,
+    "backup_fresh": true
+  },
+  "hosted_failure": {
+    "studio_existing_payment": {
+      "escaped_markup": true,
+      "billing_dom_controls": false,
+      "stripe_dom_mount": false,
+      "stripe_iframes": 0,
+      "exact_script_hash_permitted": true,
+      "stripe_script_frame_origins_permitted": true
+    },
+    "dance_with_dd_initial_payment": {
+      "escaped_markup": true,
+      "billing_dom_controls": false,
+      "stripe_dom_mount": false,
+      "stripe_iframes": 0
+    },
+    "all_three_event_index_styles": {
+      "exact_theme_hash_permitted": true,
+      "unsafe_inline": false
+    },
+    "logos_inspected_pages": {
+      "supplied_ttd_count": 1,
+      "native_duplicate_count": 0
+    },
+    "studio_prefill": {
+      "email_and_phone_present": true,
+      "stored_full_name_present_in_current_pending_order": true,
+      "rendered_invoice_name_present": false,
+      "name_scheme": "given_family",
+      "stored_name_scheme": "given_family",
+      "stored_name_keys": [
+        "_scheme",
+        "full_name"
+      ]
+    },
+    "event_order_prefill": {
+      "email_phone_invoice_name_present": true,
+      "invoice_country_postal_present": false
+    }
+  },
+  "after_corrective_release": {
+    "status": "unverified; release not authorized or performed"
+  }
+}

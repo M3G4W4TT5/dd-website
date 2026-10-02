@@ -93,27 +93,40 @@ def ttd_checkout_style(event, request):
         return ''
     _, ink, background = theme
     return ttd_csp_block(request, "style", """
-.ttd-no-postal { display:block; margin-top:12px; }
+.ttd-no-postal { display:flex; gap:10px; align-items:center; min-height:44px; margin-top:8px; font-weight:normal; }
+.ttd-no-postal input { width:20px; height:20px; flex:0 0 auto; margin:0; }
 body { color: INK; background: BACKGROUND; }
 .ttd-checkout-brand { max-width: 1140px; margin: 24px auto 8px; padding: 0 20px; }
 .ttd-checkout-brand img { display:block; width:180px; max-width:100%; height:auto; }
 .main-box { border-radius:0; padding-top:24px; }
-a { color:INK; }
+a,.locales a,.locales a.active { color:INK; }
+.help-block,.text-muted { color:#595959; }
+.control-label,#ttd-card-billing label:not(.ttd-no-postal) { font-size:16px; line-height:1.5; }
+#ttd-card-billing label:not(.ttd-no-postal) { display:block; margin-bottom:8px; }
+#ttd-card-billing .form-group { margin-left:0; margin-right:0; }
+.has-error .control-label,.has-error .help-block,.stripe-errors { color:#a12622; }
+.has-error .form-control { border-color:#a12622; }
+.ttd-billing-error { color:#a12622; }
+.ttd-billing-error[hidden] { display:none; }
+#ttd-card-billing [aria-invalid="true"] { border-color:#a12622; }
 .btn-primary { background:INK; border-color:INK; border-radius:0; }
 .btn-primary:hover,.btn-primary:focus { background:INK; filter:brightness(.85); border-color:INK; }
 .panel,.form-control,.btn { border-radius:0; }
 .form-group { margin-bottom:20px; }
-.form-control { min-height:44px; }
-.checkout-button-row { margin-top:24px; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.form-control { min-height:44px; font-size:16px; }
+.checkout-button-row { margin-top:24px; display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; }
+.checkout-button-row > [class*="col-"] { float:none; width:auto; margin-left:0; flex:0 1 340px; }
+.checkout-button-row > .clearfix { display:none; }
 .checkout-button-row .btn { min-height:44px; white-space:normal; }
-.stripe-card-holder { width:100%; }
-.stripe-payment-request-button-container { margin-top:16px; width:100%; }
+.stripe-payment-request-button-container { margin-top:16px; }
 input:focus,select:focus,textarea:focus { border-color:INK; outline:2px solid INK; outline-offset:2px; }
 @media(max-width:600px) {
  .main-box { width:auto; margin:12px; padding:20px 16px; }
  .ttd-checkout-brand { margin-top:20px; }
  .form-control { font-size:16px; }
- .checkout-button-row .btn { flex:1 1 auto; }
+ .checkout-button-row > [class*="col-"] { flex:1 1 100%; padding:0; }
+ .checkout-button-row { margin-left:0; margin-right:0; }
+ .form-horizontal .control-label { padding-top:0; margin-bottom:8px; }
  table { max-width:100%; }
  .cart-row h3,.panel-heading { overflow-wrap:anywhere; }
 }
@@ -149,23 +162,44 @@ TTD_CARD_SCRIPT = r"""
   const country = fields.querySelector('select');
   const postal = fields.querySelector('input[type=text]');
   const absent = fields.querySelector('input[type=checkbox]');
+  const error = fields.querySelector('[role=alert]');
   const customer = JSON.parse(fields.dataset.customer);
+  function clearError() {
+   error.hidden = true;
+   error.textContent = '';
+   country.removeAttribute('aria-invalid');
+   postal.removeAttribute('aria-invalid');
+  }
   function postalRequirement(required = false) {
    country.required = required;
    postal.required = required && !absent.checked;
    postal.disabled = absent.checked;
   }
-  absent.addEventListener('change', () => postalRequirement());
+  absent.addEventListener('change', () => { postalRequirement(); clearError(); });
+  country.addEventListener('change', clearError);
+  postal.addEventListener('input', clearError);
   postalRequirement();
   const original = pretixstripe.pm_request;
   pretixstripe.pm_request = function (method, element, kwargs = {}) {
    if (method !== 'card') return original.call(this, method, element, kwargs);
    postalRequirement(true);
-   const valid = country.reportValidity() && (absent.checked || postal.reportValidity());
+   clearError();
+   const countryValid = country.reportValidity();
+   const valid = countryValid && (absent.checked || postal.reportValidity());
+   const invalidField = countryValid ? postal : country;
+   const message = valid ? '' : invalidField.validationMessage;
    // Only the new-card branch validates these fields. Keeping native HTML
    // constraints active would also block gift cards, saved cards or wallets.
    postalRequirement();
-   if (!valid) return;
+   if (!valid) {
+    // Retain an accessible error after clearing native required constraints
+    // so other providers/saved cards remain free of new-card validation.
+    error.textContent = message;
+    error.hidden = false;
+    invalidField.setAttribute('aria-invalid', 'true');
+    invalidField.focus();
+    return;
+   }
    const details = { ...customer, ...(kwargs.billing_details || {}) };
    details.address = { ...(details.address || {}), country: country.value };
    // An explicit no-postcode choice omits the value; never invent a postcode.
@@ -200,14 +234,24 @@ def ttd_billing_fields(request, event, order=None):
     from pretix.base.models import InvoiceAddress
     from pretix.presale.views.cart import cart_session
 
-    cs = cart_session(request)
+    # Existing-order pages must never fall back to an unrelated active cart.
+    cs = (cart_session(request, create=False) or {}) if order is None else {}
+    contact = cs.get('contact_form_data', {})
     ia = getattr(order, 'invoice_address', None) if order else None
     if ia is None and cs.get('invoice_address'):
-        ia = InvoiceAddress.objects.filter(pk=cs['invoice_address'], order__isnull=True).first()
+        # Match pinned CartMixin.invoice_address: unattached cart addresses
+        # cannot match InvoiceAddress's order__event__organizer scope. The
+        # identifier comes only from this authorized server-side cart session.
+        from django_scopes import scopes_disabled
+        with scopes_disabled():
+            ia = InvoiceAddress.objects.filter(pk=cs['invoice_address'], order__isnull=True).first()
     customer = {key: str(value) for key, value in {
-        'name': getattr(ia, 'name', ''),
-        'email': order.email if order else cs.get('email', ''),
-        'phone': order.phone if order else cs.get('phone', ''),
+        # Studio API orders can retain full_name under given_family, leaving
+        # Pretix's computed name empty. Use that stored buyer value only as a
+        # fallback; never invent name components or rewrite authoritative data.
+        'name': getattr(ia, 'name', '') or (getattr(ia, 'name_parts', {}) or {}).get('full_name', ''),
+        'email': order.email if order else contact.get('email') or cs.get('email', ''),
+        'phone': order.phone if order else contact.get('phone', ''),
     }.items() if value}
     existing_country = str(getattr(ia, 'country', '') or '')
     country = existing_country or 'DK'  # editable, never inferred from a phone number
@@ -215,25 +259,50 @@ def ttd_billing_fields(request, event, order=None):
     danish = getattr(request, 'LANGUAGE_CODE', 'en').startswith('da')
     labels = ('Faktureringsland', 'Postnummer', 'Min faktureringsadresse har ikke et postnummer') if danish else ('Billing country', 'Postal code', 'My billing address has no postal code')
     options = ''.join('<option value="' + escape(code) + '"' + (' selected' if code == country else '') + '>' + escape(str(name)) + '</option>' for code, name in countries)
-    return '<div id="ttd-card-billing" data-ink="' + ttd_theme(event)[1] + '" data-customer="' + escape(json.dumps(customer), quote=True) + '"><div class="form-group"><label for="ttd-billing-country">' + labels[0] + '</label><select id="ttd-billing-country" class="form-control" autocomplete="country">' + options + '</select></div><div class="form-group"><label for="ttd-billing-postal">' + labels[1] + '</label><input id="ttd-billing-postal" class="form-control" type="text" autocomplete="postal-code" maxlength="20" value="' + escape(postal, quote=True) + '"><label class="ttd-no-postal"><input type="checkbox"> ' + labels[2] + '</label></div></div>'
+    return '<div id="ttd-card-billing" data-ink="' + ttd_theme(event)[1] + '" data-customer="' + escape(json.dumps(customer), quote=True) + '"><div class="form-group"><label for="ttd-billing-country">' + labels[0] + '</label><select id="ttd-billing-country" class="form-control" autocomplete="country" aria-describedby="ttd-billing-error">' + options + '</select></div><div class="form-group"><label for="ttd-billing-postal">' + labels[1] + '</label><input id="ttd-billing-postal" class="form-control" type="text" autocomplete="postal-code" aria-describedby="ttd-billing-error" maxlength="20" value="' + escape(postal, quote=True) + '"><label class="ttd-no-postal"><input type="checkbox"> ' + labels[2] + '</label></div><p id="ttd-billing-error" class="help-block ttd-billing-error" role="alert" hidden></p></div>'
 
 
 def configure_ttd_card():
     from functools import wraps
+    from django.utils.safestring import mark_safe
+    from django.utils.functional import cached_property
     from pretix.plugins.stripe.payment import StripeCC
+    from pretix.presale.views.order import OrderPaymentStart
     original = StripeCC.payment_form_render
 
     @wraps(original)
     def render(self, request, total, order=None):
+        order = order if order is not None else getattr(request, '_ttd_payment_order', None)
         html = original(self, request, total, order)
         if not ttd_theme(self.event):
             return html
         marker = '<div id="stripe-card"'
         if marker not in html:
             raise RuntimeError('TTD card template changed; review pinned Pretix adapter')
-        return html.replace(marker, ttd_billing_fields(request, self.event, order) + marker, 1) + ttd_csp_block(request, "script", TTD_CARD_SCRIPT.split("<script>", 1)[1].split("</script>", 1)[0])
+        # replace/concatenation strip upstream SafeString. The outer payment
+        # templates autoescape p.form/form. Only trusted template output and
+        # constructed markup with escaped customer values cross this boundary.
+        return mark_safe(html.replace(marker, ttd_billing_fields(request, self.event, order) + marker, 1) + ttd_csp_block(request, "script", TTD_CARD_SCRIPT.split("<script>", 1)[1].split("</script>", 1)[0]))
 
     StripeCC.payment_form_render = render
+
+    # Pinned OrderPaymentStart.form omits order even though its access-checked
+    # view already has it. Carry it only while that existing form is rendered;
+    # preserve the upstream cached property and every provider/session branch.
+    original_form = OrderPaymentStart.form.func
+
+    def order_form(view):
+        if not ttd_theme(view.request.event) or not isinstance(view.payment.payment_provider, StripeCC):
+            return original_form(view)
+        view.request._ttd_payment_order = view.order
+        try:
+            return original_form(view)
+        finally:
+            del view.request._ttd_payment_order
+
+    form_property = cached_property(order_form)
+    form_property.__set_name__(OrderPaymentStart, 'form')
+    OrderPaymentStart.form = form_property
 
 
 

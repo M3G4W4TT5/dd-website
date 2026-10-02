@@ -152,6 +152,24 @@ class UpgradePathTests(unittest.TestCase):
         self.assertEqual(before, {p.name: p.read_bytes() for p in self.root.iterdir() if p.is_file()})
         self.assertEqual(self.commands, [])
 
+    def test_reviewed_rendering_adapter_upgrade_preserves_running_images(self):
+        destination = self.root / 'pretix-settings.py'
+        old = b'synthetic reviewed installed adapter'
+        destination.write_bytes(old)
+        original_sha = release.sha
+
+        def inspected_sha(path):
+            if path == destination and path.read_bytes() == old:
+                return release.PRE_RENDER_TARGET['pretix-settings.py']
+            return original_sha(path)
+
+        with self.context(), patch.object(release, 'sha', side_effect=inspected_sha):
+            release.install(self.source)
+        self.assertEqual(original_sha(destination), release.TARGET['pretix-settings.py'])
+        report = json.loads((self.state / 'config-install.json').read_text())
+        self.assertEqual(report['status'], 'installed')
+        self.assertEqual(report['running_revisions'], self.running['revisions'])
+
     def test_stale_manifest_install_preserves_images_and_rotates_private_header(self):
         with self.context():
             release.install(self.source)

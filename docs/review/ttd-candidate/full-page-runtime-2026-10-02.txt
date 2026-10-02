@@ -1,0 +1,48 @@
+PASS isolated migrations
+PASS full outer studio/en/initial/new
+PASS full outer studio/en/initial/saved
+PASS full outer studio/en/existing/new
+PASS full outer studio/en/existing/saved
+PASS full outer studio/en/retry/new
+PASS full outer studio/en/retry/saved
+PASS full outer studio/da/initial/new
+PASS full outer studio/da/initial/saved
+PASS full outer studio/da/existing/new
+PASS full outer studio/da/existing/saved
+PASS full outer studio/da/retry/new
+PASS full outer studio/da/retry/saved
+PASS full native studio/confirmation branding
+PASS full native studio/management branding
+PASS native gift-card provider isolation studio
+PASS full outer street-dance-workshop-dd-dev/en/initial/new
+PASS full outer street-dance-workshop-dd-dev/en/initial/saved
+PASS full outer street-dance-workshop-dd-dev/en/existing/new
+PASS full outer street-dance-workshop-dd-dev/en/existing/saved
+PASS full outer street-dance-workshop-dd-dev/en/retry/new
+PASS full outer street-dance-workshop-dd-dev/en/retry/saved
+PASS full outer street-dance-workshop-dd-dev/da/initial/new
+PASS full outer street-dance-workshop-dd-dev/da/initial/saved
+PASS full outer street-dance-workshop-dd-dev/da/existing/new
+PASS full outer street-dance-workshop-dd-dev/da/existing/saved
+PASS full outer street-dance-workshop-dd-dev/da/retry/new
+PASS full outer street-dance-workshop-dd-dev/da/retry/saved
+PASS full native street-dance-workshop-dd-dev/confirmation branding
+PASS full native street-dance-workshop-dd-dev/management branding
+PASS native gift-card provider isolation street-dance-workshop-dd-dev
+PASS full outer dance-with-dd-dev/en/initial/new
+PASS full outer dance-with-dd-dev/en/initial/saved
+PASS full outer dance-with-dd-dev/en/existing/new
+PASS full outer dance-with-dd-dev/en/existing/saved
+PASS full outer dance-with-dd-dev/en/retry/new
+PASS full outer dance-with-dd-dev/en/retry/saved
+PASS full outer dance-with-dd-dev/da/initial/new
+PASS full outer dance-with-dd-dev/da/initial/saved
+PASS full outer dance-with-dd-dev/da/existing/new
+PASS full outer dance-with-dd-dev/da/existing/saved
+PASS full outer dance-with-dd-dev/da/retry/new
+PASS full outer dance-with-dd-dev/da/retry/saved
+PASS full native dance-with-dd-dev/confirmation branding
+PASS full native dance-with-dd-dev/management branding
+PASS native gift-card provider isolation dance-with-dd-dev
+PASS unrelated organizer byte-equal upstream Stripe + full outer DOM + no TTD CSP
+PASS 36 full outer page cases; real pinned consumers/templates/CSP; gateway and browser iframe unverified
