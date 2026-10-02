@@ -224,11 +224,16 @@ def rotate_webhook():
     path = ROOT / 'secrets' / 'pretix-webhook-header.conf'
     marker = STATE / 'webhook-rotation.json'
     marker_data = json.loads(marker.read_text()) if marker.exists() else {}
-    completed = marker_data.get('status') == 'complete'
+    relay_marker = STATE / 'webhook-relay-rotation.json'
+    if relay_marker.exists(): trusted(relay_marker, private=True)
+    relay_data = json.loads(relay_marker.read_text()) if relay_marker.exists() else {}
+    completed = marker_data.get('status') == 'complete' and relay_data.get('status') == 'complete'
     old = credentials['webhook_password']
     next_password = credentials.get('webhook_password_next')
     if next_password is not None and not re.fullmatch(r'[a-f0-9]{64}', next_password):
         raise ValueError('Invalid pending webhook credential')
+    if completed and relay_data.get('credential_sha256') != hashlib.sha256(old.encode()).hexdigest():
+        raise ValueError('Relay credential rotation registry differs')
     if completed and next_password is None:
         if web.get('PRETIX_MANAGE_WEBHOOK_PASSWORD') != old or not path.exists():
             raise ValueError('Completed webhook rotation differs from running files')
@@ -272,6 +277,7 @@ def finish_webhook_rotation(password):
     credentials['webhook_password'] = password
     credentials.pop('webhook_password_next', None)
     put(registry, (json.dumps(credentials, sort_keys=True) + '\n').encode(), 0o400)
+    put(STATE / 'webhook-relay-rotation.json', (json.dumps({'status':'complete','credential_sha256':hashlib.sha256(password.encode()).hexdigest()})+'\n').encode(), 0o600)
     put(STATE / 'webhook-rotation.json', b'{"status":"complete"}\n', 0o600)
 
 

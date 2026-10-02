@@ -34,13 +34,16 @@ test('distributed webhook admission bounds rotating IDs and keeps duplicate/unre
 });
 test('HTTP webhook retries rejected durable intake and preserves authentication/scope',{skip:!process.env.SECURITY_TEST_DATABASE_URL},async()=>{
  const f=await securityFixture();Object.assign(process.env,{BOOKING_DATABASE_URL:f.url,PRETIX_MANAGE_WEBHOOK_USER:'dd-booking',PRETIX_MANAGE_WEBHOOK_PASSWORD:'a'.repeat(64),PRETIX_ORGANIZER_SLUG:'fixture',PRETIX_EVENT_SLUG:'studio',WEBHOOK_INBOX_PENDING:'1',WEBHOOK_INBOX_TOTAL:'10',WEBHOOK_HOURLY:'600',WEBHOOK_BURST:'100'});
- const request=(p:any,auth=true)=>new Request('http://booking/api/manage/pretix-webhook',{method:'POST',headers:{'Content-Type':'application/json',...(auth?{Authorization:'Basic '+Buffer.from('dd-booking:'+'a'.repeat(64)).toString('base64')}:{})},body:JSON.stringify(p)});
+ const request=(p:any,auth=true,password=process.env.PRETIX_MANAGE_WEBHOOK_PASSWORD)=>new Request('http://booking/api/manage/pretix-webhook',{method:'POST',headers:{'Content-Type':'application/json',...(auth?{Authorization:'Basic '+Buffer.from('dd-booking:'+password).toString('base64')}:{})},body:JSON.stringify(p)});
  try {
   assert.equal((await POST(request(trigger,false))).status,401);assert.equal((await POST(request({}))).status,400);
   assert.equal((await POST(request({...trigger,event:'unrelated'}))).status,200);assert.equal((await f.pool.query('SELECT count(*)::int n FROM webhook_inbox')).rows[0].n,0);
   assert.equal((await POST(request(trigger))).status,200);assert.equal((await POST(request(trigger))).status,200);
   const reject=await POST(request({...trigger,notification_id:'new'}));assert.equal(reject.status,429);assert.equal(reject.headers.get('Retry-After'),'30');
   assert.equal((await f.pool.query('SELECT count(*)::int n FROM webhook_inbox')).rows[0].n,1);
+  process.env.PRETIX_MANAGE_WEBHOOK_PASSWORD='b'.repeat(64);
+  assert.equal((await POST(request(trigger,true,'a'.repeat(64)))).status,401);
+  assert.equal((await POST(request(trigger))).status,200);
   await f.pool.query('DROP TABLE webhook_inbox');assert.equal((await POST(request(trigger))).status,503);
  } finally {await bookingDb().end();await f.close();}
 });

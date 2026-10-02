@@ -18,7 +18,7 @@ spec.loader.exec_module(backup)
 
 
 def run(*args, input=None, env=None, check=True):
-    launch = ('sudo', '-n', *args) if args[0] == 'docker' and os.geteuid() != 0 else args
+    launch = args  # Fixture requires existing Docker access; never escalate.
     result = subprocess.run(launch, input=input, text=True, capture_output=True, env=env, timeout=120)
     if check and result.returncode:
         raise RuntimeError('Disposable PostgreSQL check failed: ' + args[0])

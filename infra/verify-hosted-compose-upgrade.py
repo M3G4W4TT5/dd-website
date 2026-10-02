@@ -259,6 +259,13 @@ except urllib.error.URLError:raise SystemExit(0)
                 (HERE / 'pretix-settings.py').read_bytes() + b'\n# recreated\n').hexdigest()
             wait_request(project, 'http://proxy:8080/api/availability', 200)
             wait_request(project, 'http://pretix-webhook-relay:8081/api/manage/pretix-webhook', 400, 'POST')
+            old_auth="""import urllib.request,urllib.error,base64
+request=urllib.request.Request('http://booking:3000/api/manage/pretix-webhook',data=b'{}',method='POST',headers={'Authorization':'Basic '+base64.b64encode(('dd-booking:'+('a'*64)).encode()).decode()})
+try:urllib.request.urlopen(request,timeout=5)
+except urllib.error.HTTPError as e:assert e.code==401
+else:raise AssertionError('Legacy proxy credential retained authority')
+"""
+            run('docker','exec',project+'-pretix-1','python3','-c',old_auth)
             print('PASS isolated Compose: pinned Pretix, atomic mounts, explicit recreation, credential denial and retry, image preservation, proxy routing')
         except Exception:
             for service in ('booking', 'pretix', 'proxy', 'pretix-webhook-relay'):

@@ -202,6 +202,16 @@ class UpgradePathTests(unittest.TestCase):
         self.assertNotIn('webhook_password_next', registry)
         self.assertEqual(release.webhook_header(registry['webhook_password']), header.read_bytes())
 
+    def test_legacy_completed_rotation_rotates_once_for_relay_isolation(self):
+        (self.state/'webhook-rotation.json').write_text(json.dumps({'status':'complete'}))
+        with self.context():release.install(self.source)
+        first=json.loads((self.state/'provisioning'/'runtime-private.json').read_text())['webhook_password']
+        self.assertNotEqual(first,self.old)
+        self.assertEqual(json.loads((self.state/'webhook-relay-rotation.json').read_text())['status'],'complete')
+        with self.context():release.install(self.source)
+        self.assertEqual(json.loads((self.state/'provisioning'/'runtime-private.json').read_text())['webhook_password'],first)
+        self.assertNotIn(self.old,(self.root/'secrets'/'booking-web.env').read_text())
+
     def test_interrupted_recreation_reports_phase_and_reuses_pending_rotation(self):
         with self.context():
             self.fail_service = 'proxy'

@@ -116,7 +116,7 @@ def main():
         version.update(b"\0")
     result["host_config_version"] = version.hexdigest()
     for name in ("current.json", "previous.json", "attempt.json", "failed.json",
-                 "config-install.json", "sandbox-gates.json", "mail-gates.json", "webhook-rotation.json"):
+                 "config-install.json", "sandbox-gates.json", "mail-gates.json", "webhook-rotation.json", "webhook-relay-rotation.json"):
         result["release"][name] = manifest(name)
     ids = command("docker", "ps", "-aq", "--filter", "label=com.docker.compose.project=dd-hosted").splitlines()
     for cid in ids:
