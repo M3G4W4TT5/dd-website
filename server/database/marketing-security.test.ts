@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { marketing } from "../marketing/index";
 import { securityFixture } from "./security-fixture";
-import { clientIdentity } from "./admission";
+import { admission, clientIdentity } from "./admission";
 import { cleanupMarketing } from "./retention";
 import { pollDelivery } from "./delivery";
 import { digest } from "./index";
@@ -30,6 +30,8 @@ test("distributed marketing admission is atomic, persistent, site scoped and wit
   assert.equal(await list.consume(token,"unsubscribe",clientIdentity("192.0.2.1")),true);
   assert.equal(await list.consume(token,"unsubscribe"),false);
   // Queue allocation failure rolls back subscription, idempotency and all budgets.
+  await a.pool.query("UPDATE deliveries SET state='ambiguous'");
+  await list.request("after-ambiguity@example.invalid","en","confirm","fixture","after-ambiguity-key");
   await a.pool.query("UPDATE deliveries SET state='sent'");
   const before=(await a.pool.query("SELECT sum(hits)::int n FROM admission_budgets")).rows[0].n;
   await a.pool.query("CREATE FUNCTION reject_delivery() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'fixture rejected insert'; END $$; CREATE TRIGGER reject_delivery BEFORE INSERT ON deliveries FOR EACH ROW EXECUTE FUNCTION reject_delivery()");
@@ -59,4 +61,15 @@ test("bounded retention preserves active/suppression/withdrawal and ambiguous ev
   assert.equal((await f.pool.query("SELECT count(*)::int n FROM delivery_attempts")).rows[0].n,1);
   assert.equal((await f.pool.query("SELECT count(*)::int n FROM internal_requests")).rows[0].n,0);
  }finally{await f.close();}
+});
+
+// Reserve action/withdrawal allocation before a database connection is available.
+test("signup pre-pool saturation leaves withdrawal and actions admitted",async()=>{
+ let waiting=0;const parked=new Promise<any>(()=>{});
+ const pool={connect:()=>{waiting++;return parked;}} as any;
+ for(let i=0;i<8;i++)void admission(pool,"marketing-confirm",async()=>{});
+ await assert.rejects(()=>admission(pool,"marketing-confirm",async()=>{}));
+ void admission(pool,"marketing-unsubscribe",async()=>{});
+ void admission(pool,"marketing-action-unsubscribe",async()=>{});
+ assert.equal(waiting,10);
 });

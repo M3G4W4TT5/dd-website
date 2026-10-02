@@ -37,7 +37,7 @@ export function marketing(
       }
       await budget(c,privateKey(key,"marketing-site",lane),setting(purpose==="confirm" ? "MARKETING_SIGNUP_HOURLY" : "MARKETING_WITHDRAWAL_HOURLY",purpose==="confirm"?60:120),3600,"capacity");
       const kind=purpose==="confirm" ? "marketing" : "marketing-withdrawal";
-      const outstanding=await c.query<{n:string}>("SELECT count(*) AS n FROM deliveries WHERE kind=$1 AND state IN ('queued','leased','sending','ambiguous')",[kind]);
+      const outstanding=await c.query<{n:string}>("SELECT count(*) AS n FROM deliveries WHERE kind=$1 AND state IN ('queued','leased','sending')",[kind]);
       if(Number(outstanding.rows[0].n)>=setting(purpose==="confirm" ? "MARKETING_SIGNUP_QUEUE_MAX" : "MARKETING_WITHDRAWAL_QUEUE_MAX",purpose==="confirm"?50:20)) throw new AdmissionDenied("capacity");
       if(purpose==="confirm") {
         const pending=await c.query<{n:string}>("SELECT count(*) AS n FROM marketing_subscriptions WHERE status='pending'");
@@ -130,7 +130,7 @@ export function marketing(
     return ttdMarketingEmail(email, purpose, url.toString(), language);
   }
   async function consume(token: string, purpose: "confirm" | "unsubscribe", client?: ReturnType<typeof clientIdentity>) {
-    return admission(pool, "marketing-action", async (c) => {
+    return admission(pool, "marketing-action-"+purpose, async (c) => {
       if(client) {
         await budget(c,privateKey(key,"action-client-"+purpose,client.address),120,3600);
         await budget(c,privateKey(key,"action-prefix-"+purpose,client.prefix),1200,3600);

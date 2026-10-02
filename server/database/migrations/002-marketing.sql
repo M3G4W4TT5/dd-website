@@ -42,3 +42,8 @@ GRANT SELECT ON marketing_consent_history TO dd_backup;
 
 -- Preserve the separate lane for already queued withdrawal messages.
 UPDATE deliveries SET kind='marketing-withdrawal' WHERE kind='marketing' AND identity LIKE '%:unsubscribe:%';
+
+DO $$ DECLARE operator_role text; BEGIN
+ operator_role := CASE current_schema() WHEN 'primary_marketing' THEN 'primary_marketing_operator' WHEN 'booking_marketing' THEN 'booking_marketing_operator' ELSE NULL END;
+ IF operator_role IS NOT NULL THEN EXECUTE format('GRANT SELECT,INSERT ON marketing_consent_history TO %I',operator_role); END IF;
+END $$;

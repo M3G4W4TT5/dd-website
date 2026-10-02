@@ -55,6 +55,10 @@ try {
     [b, "primary_marketing"],
   ] as const) {
     await current.query("SELECT count(*) FROM marketing_subscriptions");
+    await current.query("SELECT count(*) FROM marketing_consent_history");
+    await denied(() => current.query("DELETE FROM marketing_consent_history"));
+    await denied(() => current.query("UPDATE marketing_consent_history SET source=source"));
+    await denied(() => current.query("TRUNCATE marketing_consent_history"));
     await denied(() =>
       current.query(`SELECT * FROM ${other}.marketing_subscriptions`),
     );
@@ -157,6 +161,16 @@ try {
       env.MARKETING_ACTION_BASE_URL,
       env.PAYLOAD_KEY,
     );
+    const operator = pool(roles[site.toUpperCase()+"_MARKETING_OPERATOR_DATABASE_URL"],site === "primary" ? "primary_marketing" : "booking_marketing");
+    for(const status of ["unsubscribed","suppressed"]) {
+      const probe=fixture+"-"+status+"@example.invalid";
+      await current.query("INSERT INTO marketing_subscriptions(email,status,consent_version,source,language,confirmed_at) VALUES($1,'active','fixture','fixture','en',now())",[probe]);
+      await current.query("INSERT INTO marketing_action_tokens(token_hash,email,purpose,expires_at) VALUES($1,$2,'unsubscribe',now()+interval '1 hour')",[digest(probe),probe]);
+      await transaction(operator,async c=>{await c.query("UPDATE marketing_subscriptions SET status=$2,unsubscribed_at=now() WHERE email=$1",[probe,status]);await c.query("DELETE FROM marketing_action_tokens WHERE email=$1",[probe]);});
+      assert.equal((await current.query("SELECT status FROM marketing_subscriptions WHERE email=$1",[probe])).rows[0].status,status);
+      assert.equal((await current.query("SELECT 1 FROM marketing_action_tokens WHERE email=$1",[probe])).rowCount,0);
+      assert.equal((await current.query("SELECT 1 FROM marketing_consent_history WHERE email=$1 AND status=$2",[probe,status])).rowCount,1);
+    }
     await list.request(email, "en", "confirm", "fixture", fixture);
     await list.request(email, "en", "confirm", "fixture", fixture);
     assert.equal(
@@ -263,7 +277,7 @@ try {
       beforeExpiry + 1,
     );
     // Expiry and manual withdrawal invalidate activation even with a correctly bound token.
-    const expiry = "z".repeat(43);
+    const expiry = randomUUID().replaceAll("-", "") + "z".repeat(11);
     await current.query(
       "INSERT INTO marketing_action_tokens(token_hash,email,purpose,expires_at) VALUES($1,$2,'confirm',now()-interval '1 second')",
       [digest(expiry), email],
