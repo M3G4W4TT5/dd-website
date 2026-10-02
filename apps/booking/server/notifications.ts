@@ -1,3 +1,4 @@
+import { invalidateCatalog } from "./catalog-work";
 import { database, transaction, enqueue } from "@dd/database";
 import type { ManagedBooking, Language } from "@dd/contracts";
 import type { Pool } from "pg";
@@ -22,6 +23,7 @@ export async function intakeWebhook(p: {
     "INSERT INTO webhook_inbox(notification_id,organizer,event,code,action) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
     [String(p.notification_id), p.organizer, p.event, p.code, p.action],
   );
+  invalidateCatalog();
 }
 export function transitionKinds(
   previous: ManagedBooking | null,

@@ -1,3 +1,4 @@
+import { catalogWork, paginationGuard } from "./catalog-work";
 import { DateTime } from "luxon";
 import { z } from "zod";
 import { Availability, MAX_HOURS, Slot, STUDIO_ZONE } from "../src/lib/booking";
@@ -124,7 +125,9 @@ async function listAll<T>(
 ): Promise<T[]> {
   const results: T[] = [];
   let next: URL | null = url;
+  const guard = paginationGuard();
   while (next) {
+    guard(next);
     const page = z
       .object({ results: z.array(schema), next: z.string().nullable() })
       .parse(await getJson(next, config));
@@ -304,8 +307,10 @@ async function pretixAvailability(
   };
 }
 
-export async function getAvailability(date: string): Promise<Availability> {
+export async function getAvailability(date: string, options: { fresh?: boolean } = {}): Promise<Availability> {
   const day = parseDay(date);
   const config = readConfig();
-  return config ? pretixAvailability(day, config) : demoAvailability(day);
+  return config ? catalogWork("availability:" + date, () => pretixAvailability(day, config), options.fresh) : demoAvailability(day);
 }
+
+export const getFreshAvailability = (date: string) => getAvailability(date, { fresh: true });

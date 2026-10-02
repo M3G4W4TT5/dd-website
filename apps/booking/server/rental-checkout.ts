@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { z } from "zod";
-import { getAvailability } from "./availability";
+import { getAvailability, getFreshAvailability } from "./availability";
 import { pretixFetch, pretixHeaders } from "./pretix-http";
 import { MAX_HOURS, quoteInterval, type Quote } from "../src/lib/booking";
 import type { z as zType } from "zod";
@@ -103,7 +103,7 @@ async function api(url: URL, token: string, method = "GET", body?: unknown): Pro
 }
 
 type CheckoutDependencies = { availability: typeof getAvailability; request: typeof api };
-const checkoutDependencies: CheckoutDependencies = { availability: getAvailability, request: api };
+const checkoutDependencies: CheckoutDependencies = { availability: getFreshAvailability, request: api };
 
 async function existingOrder(cfg: ReturnType<typeof config>, code: string, request: typeof api): Promise<Order | null> {
   const response = await request(new URL(`${cfg.path}${code}/`, cfg.base), cfg.readToken);

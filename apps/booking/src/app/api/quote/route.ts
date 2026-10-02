@@ -1,3 +1,5 @@
+import { catalogRequest } from "../../../../server/catalog-work";
+import { AdmissionDenied } from "../../../../../../server/database/admission";
 import { boundedJson, HttpError } from "@dd/runtime";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -30,6 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid selection" }, { status: 400 });
 
   try {
+    await catalogRequest(request);
     const availability = await getAvailability(parsed.data.date);
     const quote = quoteInterval(
       availability,
@@ -52,6 +55,8 @@ export async function POST(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
+    if (error instanceof HttpError) return NextResponse.json({error:error.message},{status:error.status,headers:{"Cache-Control":"no-store"}});
+    if (error instanceof AdmissionDenied) return NextResponse.json({error:"Too many requests"},{status:429,headers:{"Cache-Control":"no-store","Retry-After":String(error.retryAfter)}});
     const isDateError = error instanceof RangeError;
     return NextResponse.json(
       {

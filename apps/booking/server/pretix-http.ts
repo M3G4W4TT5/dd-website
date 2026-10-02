@@ -1,4 +1,4 @@
-import { pretixSignal } from "./pretix-deadline";
+import { pretixSignal, trackPretix } from "./pretix-deadline";
 import { request } from "node:http";
 
 /** Keep API traffic on the private Docker network while using Pretix's public vhost. */
@@ -28,10 +28,26 @@ export function pretixHeaders(
 }
 
 /** Node's fetch replaces Host with the URL host, so hosted requests use http.request. */
-export async function pretixFetch(url: URL, init: RequestInit): Promise<Response> {
+export function pretixFetch(url: URL, init: RequestInit): Promise<Response> {
+  return trackPretix(fetchPretix(url, init));
+}
+async function fetchPretix(url: URL, init: RequestInit): Promise<Response> {
   init = { ...init, signal: pretixSignal(url, init) };
   const headers = new Headers(init.headers);
-  if (!headers.has("Host")) return fetch(url, init);
+  if (!headers.has("Host")) {
+    const response = await fetch(url, init);
+    if (!response.body) return response;
+    const chunks: Uint8Array[] = [], reader = response.body.getReader();
+    let bytes = 0;
+    for (;;) {
+      const {done,value} = await reader.read();
+      if (done) break;
+      bytes += value.length;
+      if (bytes > 8 * 1024 * 1024) { await reader.cancel(); throw new Error("Pretix response limit exceeded"); }
+      chunks.push(value);
+    }
+    return new Response(Buffer.concat(chunks), { status: response.status, headers: response.headers });
+  }
   if (url.protocol !== "http:") throw new Error("Invalid private Pretix URL");
   if (init.body !== undefined && init.body !== null && typeof init.body !== "string")
     throw new Error("Invalid private Pretix request body");
