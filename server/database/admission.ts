@@ -35,12 +35,16 @@ export function privateKey(secret: string, lane: string, value: string) {
   if (secret.length < 32) throw new Error("Admission hash key missing");
   return createHmac("sha256", secret).update(lane + "\n" + value).digest("hex");
 }
+const admissions = new WeakMap<Pool, number>();
 export async function admission<T>(pool: Pool, lane: string, fn: (c: PoolClient) => Promise<T>) {
-  return transaction(pool, async (c) => {
+  const pending=admissions.get(pool) ?? 0;
+  if(pending>=32) throw new AdmissionDenied("capacity");
+  admissions.set(pool,pending+1);
+  try { return await transaction(pool, async (c) => {
     await c.query("SET LOCAL statement_timeout='5s'; SET LOCAL lock_timeout='2s'");
     await c.query("SELECT pg_advisory_xact_lock(hashtext(current_schema()),hashtext($1))", ["admission:" + lane]);
     return fn(c);
-  });
+  }); } finally { admissions.set(pool,(admissions.get(pool) ?? 1)-1); }
 }
 /** All reservations and allocation MUST share the caller's admission transaction. */
 export async function budget(c: PoolClient, key: string, max: number, seconds: number, reason: AdmissionDenied["reason"] = "client") {

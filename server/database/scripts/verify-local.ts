@@ -193,7 +193,7 @@ try {
     assert.equal(await list.consume(token, "confirm"), false);
     await list.request(email, "da", "unsubscribe", "fixture");
     const requested = await current.query(
-      "UPDATE deliveries SET state='permanent' WHERE identity LIKE $1 AND kind='marketing' RETURNING *",
+      "UPDATE deliveries SET state='permanent' WHERE identity LIKE $1 AND kind IN ('marketing','marketing-withdrawal') RETURNING *",
       [site + ":%:" + digest(email) + ":%"],
     );
     message = await list.render(

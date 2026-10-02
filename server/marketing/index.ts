@@ -1,3 +1,4 @@
+import { admission, budget, setting, privateKey, AdmissionDenied, clientIdentity } from "../database/admission";
 import { ttdMarketingEmail } from "./ttd-templates";
 import { personalMarketingEmail } from "./templates";
 import { randomBytes } from "node:crypto";
@@ -22,9 +23,26 @@ export function marketing(
     purpose: "confirm" | "unsubscribe",
     source: string,
     idempotencyKey?: string,
+    client?: ReturnType<typeof clientIdentity>,
   ) {
     const email = normalizeEmail(rawEmail);
-    return transaction(pool, async (c) => {
+    if(client && clientIdentity(client.address).prefix!==client.prefix) throw new Error("Invalid marketing client");
+    if(!["confirm","unsubscribe"].includes(purpose) || !["da","en"].includes(language) || source.length>128 || (idempotencyKey && idempotencyKey.length>128)) throw new Error("Invalid marketing request");
+    return admission(pool, "marketing-"+purpose, async (c) => {
+      if (idempotencyKey && (await c.query("SELECT 1 FROM internal_requests WHERE key=$1",[digest(idempotencyKey)])).rowCount) return;
+      const lane=purpose==="confirm" ? "signup" : "withdrawal";
+      if(client) {
+        await budget(c,privateKey(key,lane+"-client",client.address),setting("MARKETING_CLIENT_HOURLY",30),3600);
+        await budget(c,privateKey(key,lane+"-prefix",client.prefix),setting("MARKETING_PREFIX_HOURLY",300),3600);
+      }
+      await budget(c,privateKey(key,"marketing-site",lane),setting(purpose==="confirm" ? "MARKETING_SIGNUP_HOURLY" : "MARKETING_WITHDRAWAL_HOURLY",purpose==="confirm"?60:120),3600,"capacity");
+      const kind=purpose==="confirm" ? "marketing" : "marketing-withdrawal";
+      const outstanding=await c.query<{n:string}>("SELECT count(*) AS n FROM deliveries WHERE kind=$1 AND state IN ('queued','leased','sending','ambiguous')",[kind]);
+      if(Number(outstanding.rows[0].n)>=setting(purpose==="confirm" ? "MARKETING_SIGNUP_QUEUE_MAX" : "MARKETING_WITHDRAWAL_QUEUE_MAX",purpose==="confirm"?50:20)) throw new AdmissionDenied("capacity");
+      if(purpose==="confirm") {
+        const pending=await c.query<{n:string}>("SELECT count(*) AS n FROM marketing_subscriptions WHERE status='pending'");
+        if(Number(pending.rows[0].n)>=setting("MARKETING_PENDING_MAX",200)) throw new AdmissionDenied("capacity");
+      }
       await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [email]);
       if (idempotencyKey) {
         const r = await c.query(
@@ -46,7 +64,7 @@ export function marketing(
         )
           return;
         await c.query(
-          `INSERT INTO marketing_subscriptions(email,status,consent_version,source,language) VALUES($1,'pending',$2,$3,$4) ON CONFLICT(email) DO UPDATE SET status='pending',consent_version=EXCLUDED.consent_version,source=EXCLUDED.source,language=EXCLUDED.language,requested_at=now(),confirmed_at=NULL,unsubscribed_at=NULL`,
+          `INSERT INTO marketing_subscriptions(email,status,consent_version,source,language) VALUES($1,'pending',$2,$3,$4) ON CONFLICT(email) DO UPDATE SET status='pending',consent_version=EXCLUDED.consent_version,source=EXCLUDED.source,language=EXCLUDED.language,requested_at=now(),confirmed_at=marketing_subscriptions.confirmed_at,unsubscribed_at=marketing_subscriptions.unsubscribed_at`,
           [email, consentVersion[site], source, language],
         );
       } else if (row?.status !== "active") return;
@@ -66,7 +84,7 @@ export function marketing(
       await enqueue(
         c,
         identity,
-        "marketing",
+        kind,
         { email, language, purpose },
         key,
       );
@@ -111,8 +129,13 @@ export function marketing(
     if (site === "primary") return personalMarketingEmail(email, purpose, url.toString());
     return ttdMarketingEmail(email, purpose, url.toString(), language);
   }
-  async function consume(token: string, purpose: "confirm" | "unsubscribe") {
-    return transaction(pool, async (c) => {
+  async function consume(token: string, purpose: "confirm" | "unsubscribe", client?: ReturnType<typeof clientIdentity>) {
+    return admission(pool, "marketing-action", async (c) => {
+      if(client) {
+        await budget(c,privateKey(key,"action-client-"+purpose,client.address),120,3600);
+        await budget(c,privateKey(key,"action-prefix-"+purpose,client.prefix),1200,3600);
+      }
+      await budget(c,privateKey(key,"action-site",purpose),600,60,"capacity");
       // Discover the address without locking the token, then take the common
       // per-address lock before row locks. Operator withdrawal uses this order.
       const candidate = await c.query<{ email: string }>(

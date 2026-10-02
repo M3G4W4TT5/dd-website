@@ -1,3 +1,4 @@
+import { cleanupMarketing } from "../database/retention";
 import { Readable } from "node:stream";
 import { createServer } from "node:http";
 import { lookup } from "node:dns/promises";
@@ -64,7 +65,7 @@ server.maxHeadersCount = 40;
 server.listen(cfg.port, cfg.host, () =>
   console.log(`${site} communications listening`),
 );
-let stopping = false;
+let stopping = false, cleanupRound=0;
 async function loop() {
   while (!stopping) {
     try {
@@ -77,9 +78,7 @@ async function loop() {
         }
         if (mail) await marketingMailer("marketing", mail, id);
       });
-      await s.pool.query(
-        "DELETE FROM abuse_limits WHERE expires_at<now(); DELETE FROM internal_requests WHERE created_at<now()-interval '7 days'; DELETE FROM marketing_action_tokens WHERE expires_at<now()",
-      );
+      if(cleanupRound++ % 60 === 0) await cleanupMarketing(s.pool);
     } catch {
       console.error("Marketing worker dependency failure");
     }
