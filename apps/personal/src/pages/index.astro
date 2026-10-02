@@ -67,9 +67,11 @@ const flowerMask = await getImage({ src: flower, width: 512, format: "png" });
       <section class="hero" aria-labelledby="hero-heading">
         <div class="hero-name"><h1 id="hero-heading">IN MOTION.</h1></div>
         <div class="hero-image" data-reveal>
-          <img src={media.heroPortrait} alt="Close-up portrait of DD looking into the camera" fetchpriority="high" />
-          <div class="hero-overlay-type" aria-hidden="true">DD.</div>
-          <div class="hero-image-caption"><span>DD / HALO</span></div>
+          <picture>
+            <source media="(max-width:760px)" srcset={media.mobileHeroPortrait} />
+            <img src={media.heroPortrait} alt="DD in a HALO campaign portrait" fetchpriority="high" />
+          </picture>
+          <div class="hero-overlay-type" aria-hidden="true">DD<span class="hero-overlay-period">.</span></div>
         </div>
       </section>
 
