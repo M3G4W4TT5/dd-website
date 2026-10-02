@@ -126,6 +126,7 @@ test("exact CORS and caller identities rejected before dependencies", async () =
   assert.equal(res.headers.get("vary"), "Origin");
   assert.equal(res.headers.get("access-control-allow-credentials"), null);
 });
+const fixtureAdmission = (ack:()=>Promise<boolean>) => ({inquiry:async()=>async()=>{},acknowledgement:async()=>await ack()?async()=>{}:undefined});
 test("both contact inquiries and acknowledgements preserve copy, envelope and inline asset; acknowledgement failure does not fail inquiry", async () => {
   for (const site of ["primary", "booking"] as const) {
     const captured: any[] = [];
@@ -153,7 +154,7 @@ test("both contact inquiries and acknowledgements preserve copy, envelope and in
             message: "A fixture studio inquiry.",
             privacyAccepted: true,
           };
-    await contact(site, input, send, async () => true);
+    await contact(site, input, send, fixtureAdmission(async () => true));
     assert.equal(captured.length, 2);
     assert.equal(captured[0].replyTo.address, "fixture@example.com");
     assert.equal(
@@ -171,18 +172,18 @@ test("both contact inquiries and acknowledgements preserve copy, envelope and in
         count++;
         if (kind === "acknowledgement") throw new Error("fixture rejection");
       },
-      async () => true,
+      fixtureAdmission(async () => true),
     );
     assert.equal(count, 2);
     count = 0;
-    await contact(site, input, async () => { count++; }, async () => {
+    await contact(site, input, async () => { count++; }, fixtureAdmission(async () => {
       throw new Error("fixture reservation database failure");
-    });
+    }));
     assert.equal(count, 1, "accepted inquiry survives acknowledgement reservation failure");
     let reservations = 0;
     await assert.rejects(() => contact(site, input, async () => {
       throw new Error("inquiry rejected");
-    }, async () => { reservations++; return true; }));
+    }, fixtureAdmission(async () => { reservations++; return true; })));
     assert.equal(reservations, 0);
   }
 });

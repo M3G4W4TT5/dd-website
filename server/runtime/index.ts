@@ -1,7 +1,8 @@
+import { contactAdmission } from "../database/contact-admission";
 import { clientIdentity, AdmissionDenied } from "../database/admission";
 import { contact } from "@dd/contact";
 import { marketing } from "@dd/marketing";
-import { database, limit } from "@dd/database";
+import { database } from "@dd/database";
 import {
   primaryContact,
   bookingContact,
@@ -78,15 +79,6 @@ export function service(
         const header = request.headers.get("x-real-ip");
         if (header && /^[a-fA-F0-9:.]{3,64}$/.test(header)) ip = header;
       }
-      if (path === "/api/contact" &&
-        !(await limit(
-          pool,
-          "request:" + path + ":" + ip,
-          30,
-          3600,
-        ))
-      )
-        throw new HttpError(429, "Too many requests");
       if (internal) {
         const p = internalSubscription.safeParse(body);
         if (!p.success) throw new HttpError(400, "Invalid subscription");
@@ -109,13 +101,7 @@ export function service(
           cfg.site,
           parsed.data,
           send,
-          async (email) =>
-            (await limit(
-              pool,
-              "ack-address:" + email.toLowerCase(),
-              1,
-              3600,
-            )) && (await limit(pool, "ack-total", 30, 3600)),
+          contactAdmission(pool,cfg.key,clientIdentity(ip)),
         );
         return json({ ok: true }, 200, allowed);
       }
