@@ -15,11 +15,13 @@ class CardAdapter(unittest.TestCase):
         javascript = SCRIPT.removeprefix('\n<script>\n').removesuffix('\n</script>\n')
         harness = r'''
 const assert = require('node:assert/strict');
-let submitted, updated, valid = true;
-const country = {value:'GB', reportValidity:()=>valid};
-const postal = {value:' SW1A 1AA ', reportValidity:()=>valid};
+let submitted, updated, focused, valid = true;
+const error = {hidden:true,textContent:''};
+const inputApi = {addEventListener:()=>{},removeAttribute:()=>{},setAttribute:()=>{},validationMessage:'Choose a billing value',focus(){focused=this;}};
+const country = {...inputApi,value:'GB', reportValidity:()=>valid};
+const postal = {...inputApi,value:' SW1A 1AA ', reportValidity:()=>valid};
 const absent = {checked:false, addEventListener:()=>{}};
-const fields = {dataset:{customer:JSON.stringify({name:'Anne <Buyer>',email:'anne@example.test',phone:'+4512345678'})},querySelector:(s)=>s==='select'?country:s==='input[type=text]'?postal:absent};
+const fields = {dataset:{customer:JSON.stringify({name:'Anne <Buyer>',email:'anne@example.test',phone:'+4512345678'})},querySelector:(s)=>s==='select'?country:s==='input[type=text]'?postal:s==='[role=alert]'?error:absent};
 global.window = {addEventListener:()=>{}};
 global.document = {readyState:'complete',getElementById:()=>fields};
 global.pretixstripe = window.pretixstripe = {card:{update:(v)=>updated=v},pm_request:function(...args){ submitted=args; return 'upstream'; }};
@@ -40,7 +42,7 @@ assert.equal(submitted[2].billing_details.address.postal_code,undefined);
 assert.equal(postal.disabled,true);
 pretixstripe.pm_request('sepa_debit',{}, {billing_details:{name:'Original'}});
 assert.deepEqual(submitted[2],{billing_details:{name:'Original'}});
-const previous = submitted;valid=false;pretixstripe.pm_request('card',{});assert.equal(submitted,previous);
+const previous = submitted;valid=false;pretixstripe.pm_request('card',{});assert.equal(submitted,previous);assert.equal(error.hidden,false);assert.equal(error.textContent,'Choose a billing value');assert.equal(focused,country);
 assert.equal(country.required,false);
 assert.equal(postal.required,false);
 '''
@@ -79,6 +81,13 @@ assert.equal(postal.required,false);
         parser = Parser(); parser.feed(html)
         self.assertEqual(parser.customer['phone'], '+4520123456')
         self.assertEqual(parser.customer['name'], '<script>alert(1)</script>')
+        order.invoice_address.name = ''
+        order.invoice_address.name_parts = {'_scheme': 'given_family', 'full_name': '<Stored Buyer>'}
+        with patch.dict('sys.modules', modules):
+            html = namespace['ttd_billing_fields'](SimpleNamespace(LANGUAGE_CODE='en'), None, order)
+        parser = Parser(); parser.feed(html)
+        self.assertEqual(parser.customer['name'], '<Stored Buyer>')
+        self.assertNotIn('<Stored Buyer>', html)
 
     def test_scoped_theme(self):
         from types import SimpleNamespace

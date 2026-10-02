@@ -82,3 +82,20 @@ sudo docker exec -w /pretix/src dd-hosted-pretix-1 python /tmp/ttd-native-review
 
 These commands are prepared for review, not authorization to run them. No hosted
 settings, templates, release or approval gates were changed by this local work.
+
+
+## 2 October rendering correction — approved release plan
+
+The owner approved the correction release plan on 2 October after reviewing its
+root cause, local correction and regression evidence. This authorizes PR/checks,
+merge, owner configuration install and exact-digest sandbox release.
+Both actual payment paths failed rendering; see TTD_CHECKOUT_REVIEW.md for the
+verified root cause, final diff/evidence and release plan. Current installed adapter
+is 6f5090ee; new reviewed candidate is `64bc655a068f0bbe501ca8dfd93ee38a2d154cf51f65aa064d32443e94e1dbbd`.
+The installer accepts the verified old adapter baseline and retains current running
+images during configuration installation. Current hosted/main application identity
+6014e46 must be preserved or superseded only by a reviewed descendant. The normal
+exact-digest release must reconcile the new host-config manifest after install.
+No native event policy/email reactivation is necessary for this presentation fix.
+Installed corrective identity and hosted behavior remain unverified until
+installation and direct hosted checks. Payment acceptance remains owner-performed.

@@ -17,9 +17,9 @@ details or raw customer records belong here. Record safe order references only.
 | Local corrections and verification | Passed locally | All approved corrections implemented; fresh tests/builds, browser checks and actual isolated pinned Pretix runtime passed; see TTD_CHECKOUT_REVIEW.md |
 | Step 6 review in situ | Unverified | Owner superseded the earlier separate predeployment gate; perform the planned review on the corrected private VPS release, preserving TTD_STEP6_PREDEPLOY_REVIEW.md |
 | Approved PR/main integration | Passed | Owner authorized release; PR29 merged as 3e72b830ff4d927f5237e4cafbb191b471326d67 after all CI checks/image builds passed |
-| Actual hosted release identity | Passed | Owner status and independent manifest comparison: all three running revisions/digests match merge3e72b83, runtime mounts/startup match, current/successful attempt and host config148e0d8d agree; healthy, zero restarts; primary be350a1 preserved |
-| Effective native adapter | Unverified | Owner installer PASS; both web/cron mounted hashes match 6f5090ee and pinned 2026.7.0 identity, supervised processes RUNNING. Actual response CSP/card behavior still unverified |
-| Effective event settings | Unverified | Inspect all three sandbox events; DK/colours; both ticket events disable modifications and unpaid/paid customer cancellation |
+| Actual hosted release identity | Passed before correction | Fresh 2 October owner status: all three revisions/digests match 6014e460b9b9516fec6966a6a903ee1ca4f5a4d6, healthy, zero restarts, runtime mounts/startup match; host config148e0d8d, old adapter6f5090ee; primary be350a1 preserved. Corrective installed identity pending approval |
+| Effective native adapter | Failed | Owner installer PASS; both web/cron mounted hashes match 6f5090ee and pinned 2026.7.0 identity, supervised processes RUNNING. Hosted payment source escapes as visible text; studio DOM has no mount/iframe. Earlier installation evidence does not certify rendering. Correction and hosted browser recheck pending |
+| Effective event settings | Passed | Owner applied both reviewed native packages; all three policy/DK/colour settings and all14 email keys independently read back already match. Both ticket events disable modifications and unpaid/paid customer cancellation. No orders or mail sends |
 | Access and release gates | Unverified | Freshly confirm both hosts protected, exact webhook exception only; preserve deployment/live-payment/unrestricted-mail gates |
 | Stripe sandbox | Unverified | Confirm connected Total Entertainment sandbox, test-mode event/providers and effective payment methods; no secret values in evidence |
 | Actual mail route | Unverified | Check application and native Pretix routes separately; approved inbox only, sender/envelope restrictions retained; capture is insufficient |
@@ -59,6 +59,8 @@ if only part passes; no required subcase may disappear into a broad pass.
 | B4 | Mobile studio customer details: larger readable field labels; “ENTER YOUR DETAILS” heading; no separate “YOUR DETAILS” eyebrow; Back/heading/form moved higher and much closer beneath the step indicator; approved removal of intro/divider/payment reminder with form directly beneath heading; remaining form copy and details retained; equivalent one-hour step also checked | Unverified | Implemented and checked locally 1 October; final real-phone/hosted acceptance pending |
 | P1 | Card-method boundaries: explicit no-postcode case; saved/new-card retry, wallet or gift card where actually enabled/supported; invoice requirements and SCA remain authoritative | Unverified | Record supported methods explicitly; unsupported cases require evidence of non-applicability |
 
+| F4 | Studio/event payment form renders as real controls; Stripe mount/iframe; exact effective CSP; initial, existing-order and retry/saved-new-card behavior; consistent native confirmation/order branding | Failed | Owner reports both hosted payment forms displayed HTML/JS as text; 2 October direct Chrome studio reproduction has no billing controls or Stripe mount/iframe. Owner advanced Dance with DD to payment; direct Chrome reproduces escaped markup/script with no mount/iframe there too. No payment submitted |
+
 ## Results entries
 
 For each scenario/subcase record: date/time, passed/failed/unverified,
@@ -68,5 +70,40 @@ Attribute failures to application, Pretix, Stripe, mail routing or browser only
 when supported by evidence; otherwise record the cause as unknown. Local tests,
 HTTP 200, captures and provider acceptance cannot establish human acceptance.
 
-No human results recorded yet. Required failures and unverified cases remain
-open; acceptance cannot be marked complete until they are resolved.
+F4 is recorded as a failed hosted rendering scenario. Other required human
+results remain unverified; acceptance cannot be marked complete until all
+required failures and checks are resolved.
+
+
+## 2 October 2026 — hosted checkout rendering failure (acceptance blocked)
+
+Owner reports studio and event payment forms displayed the complete Stripe form,
+new billing controls and TTD script as visible source; Continue remained clickable.
+Studio's escaped prefill was empty; event's escaped prefill contained email only.
+This is a **failed hosted rendering scenario**, not payment acceptance. No GPT
+purchase, payment, refund, cancellation or customer submission was performed.
+
+Direct Chrome inspection of the existing studio OrderPaymentStart page confirmed
+escaped markup/script, no `#stripe-card`, no billing controls and zero Stripe
+iframes. The open Dance with DD event tab was on the preceding questions step;
+its normal rendering does not resolve the reported payment failure. Both inspected
+pages contain one supplied proportioned TTD logo and the correct palette, with no
+native duplicate logo. Native button alignment and form styling remain unfinished.
+Private action URLs/tokens and customer values are excluded from this evidence.
+
+The broader queue stays blocked until **both actual hosted payment paths render
+and operate correctly after an approved correction**. Local full-page checks and
+HTTP status cannot clear this gate. Owner retains payment acceptance.
+
+
+### Confirmed failure and local correction evidence
+
+Both actual hosted payment paths were directly reproduced as failed on 2 October.
+Owner diagnostics independently establish that studio's exact script hash and all
+three theme hashes are permitted; autoescaping remains the rendering root cause.
+Fresh application identity is 6014e46 with matching digests/runtime mounts, adapter
+6f5090ee on web/cron, host config148e0d8d, 19 orders and preserved gates. See
+`ttd-candidate/hosted-render-failure-2026-10-02.json` and the current corrective
+section of TTD_CHECKOUT_REVIEW.md. Local full-page/runtime/browser results do not
+clear F4. Corrective installed identity and both hosted corrected paths remain
+unverified pending explicit release approval. Owner retains all payment actions.

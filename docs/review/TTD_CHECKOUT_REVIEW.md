@@ -540,3 +540,186 @@ settings activation. No orders/payments/mail sends. Separate 5 adapter/settings,
 1 response-CSP and 11 mocked installer tests also pass. The earlier test
 coverage limitation is preserved as review history; hosted inspection and
 activation remain pending. Evidence: ttd-candidate/inherited-email-runtime.txt.
+
+
+## Hosted native inspection passed — 2 October 2026
+
+Owner checksum-verified the corrected a12c8c2 native email package and ran
+read-only inspection successfully. Both ticket events independently report
+seven settings each as approved wording replacement only (14 settings total);
+all EN/DA effective values pass the exact before/after drift guard. No writes
+occurred. Earlier checkout inspection reports only approved DK/colour and
+event modification/cancellation deltas; paid cancellation already matches.
+Fresh unauthenticated GET probes: booking root302, checkout root302, nearby
+callback302, exact callback GET403. This is fresh Access-boundary evidence,
+not proof of authenticated runtime behavior or signed payment delivery.
+PR30 required checks and all three image builds passed. Native activator
+correction merged separately; deployed application remains merge3e72b83.
+Native settings/template activation and final CSP/card/mail acceptance pending.
+
+
+## Native packages activated and effective values verified — 2 October 2026
+
+Owner explicitly ran both apply commands. Scoped checkout policies/colours/DK
+settings verified in all three sandbox events. Corrected email reader applied
+all 14 keys (seven types per ticket event), strict EN/DA phrase-only replacements
+with other supported native translations preserved. Separate fresh read-only
+invocations report every policy and email setting already matches. Application
+release/digests remain3e72b83, target host config148e0d8d, healthy; primary remains
+be350a1. Existing order count16 and all configuration cardinalities unchanged,
+backup fresh, testmode true, sandbox/payment/unrestricted-mail gates retained.
+Evidence: ttd-candidate/vps-after-native-activation.json. No purchase, message
+send, payment/refund or human acceptance performed. Actual native mail route,
+HTTP response CSP/card behavior and sandbox provider checks still pending.
+
+
+## Hosted rendering failure and corrective candidate — 2 October 2026
+
+**Hosted checkout failed; Step 6 remains incomplete.** This section supersedes
+prior local-rendering confidence, without deleting earlier review/release evidence.
+The original dd-platform checkout and personal-site source were untouched. Local
+HEAD remains a12c8c2; changes are uncommitted. Remote main and fresh owner status
+both identify the newer application release 6014e460b9b9516fec6966a6a903ee1ca4f5a4d6.
+No correction push, PR/merge, activation, purchase or mail send has occurred.
+
+### Hosted evidence and rendering chain
+
+Direct Chrome inspection reproduced source-as-text on studio's existing-order
+payment page and Dance with DD's initial payment step. Both have zero billing DOM
+controls, no #stripe-card mount and no Stripe iframe. Continue being clickable
+is not acceptance. One supplied TTD logo appears on each inspected page, with
+240:105 intrinsic / 180:78.75 rendered proportions, correct green/purple backgrounds
+and no native duplicate logo. Native Bootstrap controls and staggered buttons
+showed that the earlier branding pass was incomplete.
+
+Owner diagnostics verified web/cron mounts read-only and byte-identical to
+6f5090eeb05be4460299bdec3fdcbc98604e2bb69eb0dfee965a1038779d4123, pinned image
+sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02,
+and nginx/pretixtask/pretixweb RUNNING. Effective studio payment CSP permits the
+exact installed TTD script hash and Stripe script/frame origins; all three event
+index responses permit the exact installed theme hash. No unsafe-inline exists.
+Thus this observed failure is escaping, independently of CSP execution restrictions.
+Event payment response CSP must still be checked after the corrective release.
+
+Pinned Pretix 2026.7.0 chain:
+
+- StripeCC.payment_form_render renders checkout_payment_form_card.html as safe
+  Django template output.
+- TTD's replace/concatenation converts it to ordinary str.
+- PaymentStep.provider_forms puts it into p.form; OrderPayChangeMethod also puts
+  it into p.form, passing order. OrderPaymentStart.form puts it into form but omits
+  order, even though the access-checked view already has self.order.
+- Complete outer checkout_payment.html / order_pay_change.html / order_pay.html
+  autoescape those slots. They do not apply a safe filter. The adapter's markup
+  and script consequently become text rather than DOM/executable script.
+
+### Narrow correction and prefill
+
+The Stripe wrapper now marks safe only the final trusted upstream template output,
+constructed billing markup with escaped dynamic values, and constant hashed script.
+Global autoescape remains active; customer content is never marked safe by itself.
+The native marker guard, session/token handling and Stripe renderer are retained.
+
+A scoped wrapper around the pinned OrderPaymentStart cached form property carries
+its already-access-checked order only during native form rendering and clears the
+request context in finally. Non-TTD organizers and non-Stripe providers use their
+original path. Initial checkout reads phone/email from contact_form_data, retaining
+the native email fallback. It resolves unattached invoice addresses exactly as
+CartMixin does, using the active server-side cart ID and order__isnull=True inside
+a narrowly bounded scopes_disabled block. Existing orders never fall back to a cart.
+
+Hosted event orders contain name/phone/email; the previous initial-cart lookup read
+phone from the wrong session key and its organizer-scoped invoice query excluded
+unattached cart addresses. Studio's current pending order has email/phone and a
+stored full_name, but Pretix's given_family scheme produces an empty computed name.
+Use that existing full_name only when the rendered name is blank. An older expired
+order actually lacks name components; no name is invented. No authoritative order
+or producer payload is rewritten. Billing country stays invoice country or editable
+DK; it is never inferred from a phone. Country/postcode are absent in inspected
+event invoice records, so no existing values are claimed there.
+
+New-card validation retains a localized browser error in a role=alert region with
+aria-invalid, field focus and correction clearing. Native required constraints
+still reset so saved cards, wallets, gift cards, retries and other methods bypass
+these added checks. Card number/expiry/CVC remain inside the native Stripe iframe.
+The upstream saved-card switch, wallet dispatch, payment sessions and SCA code are
+unchanged; completion of these methods still requires owner sandbox acceptance.
+
+### Finished local presentation
+
+Preserved supplied artwork and green #116E3A / purple #7349CD palette. Improved
+readable 16px labels/controls, 44px controls/checkbox labels, focus/error contrast,
+muted text, full-width billing groups and responsive spacing. Removed the Bootstrap
+column offset/flex clash so desktop Back/Continue align; mobile buttons stack.
+The same scoped header/style is present on native confirmation and order management
+outer templates. No control-dashboard, Stripe-hosted screen or ticket-PDF redesign.
+
+### Meaningful verification and limits
+
+- Five adapter/settings stub tests and one pinned-middleware contract test pass.
+  These are explicitly distinct from the runtime checks.
+- verify-ttd-full-page.py exercises actual pinned PaymentStep.provider_forms,
+  OrderPaymentStart.form and OrderPayChangeMethod.provider_forms, native ORM invoice
+  data, complete outer templates/context processors, response signals and real CSP
+  middleware in disposable no-network SQLite. 36 payment cases cover all three
+  events, EN/DA, initial/existing-order/retry and saved/new-card states; six native
+  confirmation/management templates, three native gift-card provider cases and an
+  unrelated organizer's byte-equal upstream Stripe/full DOM/CSP isolation also pass.
+  Hostile quote/angle/ampersand prefill and the actual studio name-scheme mismatch
+  are included. Eligibility/amount inputs are isolated fixture inputs; no gateway
+  calls, real orders or mail delivery occur.
+- Applying the exact reviewed baseline configure_ttd_card implementation to the
+  complete outer regression fails at the missing DOM mount. The new check catches
+  the escaped boundary that the earlier native card+HttpResponse test bypassed.
+- Reproducible runner: python3 infra/run-ttd-full-page.py (local Docker sudo: add
+  --sudo). It is now in booking CI with the contract checks. CI has not run for this
+  unpushed candidate. Runtime output: ttd-candidate/full-page-runtime-2026-10-02.txt.
+- Direct Chrome synthetic local full-page checks: real Stripe iframe mounted,
+  16px iframe card text; 16px/44px billing controls; desktop buttons align; no
+  overflow at 320/390px; error text/focus and no-postcode toggle work; saved card
+  hides billing/new-card fields and native Use a different card restores them.
+  No card input/payment submitted. These fixtures have no authenticated sandbox
+  key/session, so iframe mounting is not provider/payment acceptance.
+- Twelve installer mocks pass, including approved old-adapter upgrade preserving
+  running images. Python compilation and git diff --check pass. No application
+  source changed; prior application tests/builds are historical, not rerun claims.
+- Actual phone zoom/orientation/keyboard, hosted corrected iframe/CSP/prefill,
+  authenticated sandbox wallet/SCA/retry behavior, paid confirmation/order pages
+  and owner payment acceptance remain unverified.
+
+Screenshots: [studio mobile](screenshots/ttd-studio-payment-corrected-mobile.jpg),
+[event mobile](screenshots/ttd-event-payment-corrected-mobile.jpg). These are
+synthetic local native pages, not installed hosted corrections.
+
+### Installed identity and release plan — owner approved 2 October
+
+Fresh owner status verifies all three application images/revisions at 6014e46,
+healthy with matching runtime mounts; primary communications remains be350a1.
+Host config is 148e0d8d, old adapter 6f5090ee, 19 orders, fresh backup, sandbox and
+restricted-mail gates preserved. Sanitized evidence:
+ttd-candidate/hosted-render-failure-2026-10-02.json. No private order URLs/tokens or
+customer values are retained. This is the identity **before** correction.
+
+Reviewed candidate adapter SHA-256: `64bc655a068f0bbe501ca8dfd93ee38a2d154cf51f65aa064d32443e94e1dbbd`.
+Owner approved this release plan after reviewing the correction/evidence.
+After-correction installed identity: **unverified; not yet installed**.
+
+1. After approval, reconcile this scoped diff onto current main, preserving 6014e46
+   and any newer work. Push/open PR, require checks including the full-page runtime,
+   merge and publish the exact reviewed main release. Do not release this old
+   worktree's application snapshot over newer main/personal work.
+2. Prepare the immutable, checksummed root-owned owner package. The installer now
+   accepts the verified old 6f5090ee adapter as a baseline and checks the candidate
+   hash. Use the normal reviewed owner installer to recreate web/cron while
+   preserving running application image identities. Complete the exact-digest
+   normal release so the current manifest and new host-config identity agree.
+   Give short exact commands only once the approved commit/package identities exist.
+   Existing event settings/email packages need no reapplication for this correction.
+3. Verify installed host/web/cron hashes, pinned image, processes, actual application
+   revisions/digests, primary identity and all gates. Inspect both real payment
+   paths without submitting purchase: DOM controls, iframe, exact effective CSP,
+   trusted prefill, saved/new/retry, keyboard/errors and desktop/mobile branding.
+4. Record actual installed identity and hosted results. Keep F4 failed/open until
+   both hosted checkout paths function. Only then resume owner-performed sandbox
+   payment/confirmation/management and the broader acceptance queue. Step 6 remains
+   incomplete until all required human checks pass.

@@ -336,3 +336,44 @@ settings activation. No orders/payments/mail sends. Separate 5 adapter/settings,
 1 response-CSP and 11 mocked installer tests also pass. The earlier test
 coverage limitation is preserved as review history; hosted inspection and
 activation remain pending. Evidence: ttd-candidate/inherited-email-runtime.txt.
+
+
+## Hosted native inspection passed — 2 October 2026
+
+Owner checksum-verified the corrected a12c8c2 native email package and ran
+read-only inspection successfully. Both ticket events independently report
+seven settings each as approved wording replacement only (14 settings total);
+all EN/DA effective values pass the exact before/after drift guard. No writes
+occurred. Earlier checkout inspection reports only approved DK/colour and
+event modification/cancellation deltas; paid cancellation already matches.
+Fresh unauthenticated GET probes: booking root302, checkout root302, nearby
+callback302, exact callback GET403. This is fresh Access-boundary evidence,
+not proof of authenticated runtime behavior or signed payment delivery.
+PR30 required checks and all three image builds passed. Native activator
+correction merged separately; deployed application remains merge3e72b83.
+Native settings/template activation and final CSP/card/mail acceptance pending.
+
+
+## Native packages activated and effective values verified — 2 October 2026
+
+Owner explicitly ran both apply commands. Scoped checkout policies/colours/DK
+settings verified in all three sandbox events. Corrected email reader applied
+all 14 keys (seven types per ticket event), strict EN/DA phrase-only replacements
+with other supported native translations preserved. Separate fresh read-only
+invocations report every policy and email setting already matches. Application
+release/digests remain3e72b83, target host config148e0d8d, healthy; primary remains
+be350a1. Existing order count16 and all configuration cardinalities unchanged,
+backup fresh, testmode true, sandbox/payment/unrestricted-mail gates retained.
+Evidence: ttd-candidate/vps-after-native-activation.json. No purchase, message
+send, payment/refund or human acceptance performed. Actual native mail route,
+HTTP response CSP/card behavior and sandbox provider checks still pending.
+
+
+## 2 October hosted payment rendering failure
+
+Both actual hosted payment paths fail: escaped Stripe markup/script, no billing
+DOM or Stripe iframe. Step 6 is incomplete and the broader queue is blocked.
+See TTD_CHECKOUT_REVIEW.md for the verified rendering/prefill causes, complete
+outer-template regression, final local correction and approval-gated release plan.
+Current running application6014e46/host-config148e0d8d/adapter6f5090ee and all
+gates were freshly owner-verified. No corrective push or activation occurred.
