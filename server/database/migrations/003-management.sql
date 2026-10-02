@@ -9,3 +9,4 @@ CREATE INDEX rental_active_client ON rental_intents(client_key) WHERE state<>'te
 CREATE INDEX rental_expiry ON rental_intents(remote_expires) WHERE state='pending';
 GRANT SELECT,INSERT,UPDATE ON rental_intents TO booking_web_runtime;
 GRANT SELECT ON rental_intents TO dd_backup;
+GRANT SELECT(order_code),UPDATE(state,updated_at,remote_expires) ON rental_intents TO booking_worker_runtime;

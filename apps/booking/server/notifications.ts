@@ -61,6 +61,9 @@ export async function observeOrder(
       "SELECT state,revision FROM order_snapshots WHERE order_code=$1 FOR UPDATE",
       [code],
     );
+    // Only an authoritative terminal lifecycle observation releases an allocation.
+    if (next.status === "paid" || next.status === "cancelled")
+      await c.query("UPDATE rental_intents SET state='terminal',updated_at=now() WHERE order_code=$1",[code]);
     const previous = found.rows[0]?.state ?? null;
     const revision = Number(found.rows[0]?.revision ?? 0) + 1;
     const kinds = transitionKinds(previous, next);

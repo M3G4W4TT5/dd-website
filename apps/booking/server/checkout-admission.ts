@@ -70,3 +70,6 @@ export async function reconciliationCandidate(email:string,client:CheckoutIdenti
     return result.rows[0];
   });
 }
+export async function intentState(code:string) {
+  return (await bookingDb().query<{state:string}>("SELECT state FROM rental_intents WHERE order_code=$1",[code])).rows[0]?.state;
+}

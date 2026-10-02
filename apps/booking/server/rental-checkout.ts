@@ -1,5 +1,5 @@
 import { AdmissionDenied } from "../../../server/database/admission";
-import { CheckoutIntentChanged, lockedCheckout, reserveIntent, reconciliationCandidate, markIntent, type CheckoutIdentity } from "./checkout-admission";
+import { CheckoutIntentChanged, lockedCheckout, reserveIntent, reconciliationCandidate, intentState, markIntent, type CheckoutIdentity } from "./checkout-admission";
 import { boundedPretix } from "./pretix-deadline";
 import { invalidateCatalog } from "./catalog-work";
 import { createHmac } from "node:crypto";
@@ -237,19 +237,22 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
       const candidate=await reconciliationCandidate(parsed.details.email,client);
       if(!candidate) throw error;
       await lockedCheckout(candidate.order_code,async()=>{
+        const currentState=await intentState(candidate.order_code);
         const remote=await existingOrder(cfg,candidate.order_code,dependencies.request);
         if(remote && remote.api_meta?.ttd_checkout_intent===candidate.intent_hash &&
           (["e","c","p"].includes(remote.status) || (remote.status==="n" && remote.expires && Date.parse(remote.expires)<=Date.now())))
           await markIntent(candidate.order_code,"terminal",remote.expires);
-        else if(!remote && candidate.state==="reserved") await markIntent(candidate.order_code,"terminal");
+        else if(!remote && currentState==="reserved") await markIntent(candidate.order_code,"terminal");
       });
       admittedState=await reserveIntent(code,intent,parsed.details.email,parsed.acceptedQuote,client);
     }
-    let submitted = false;
+    let submitted = false, definitiveRejection = false;
     const request: typeof api = async (url,token,method,body) => {
       const allocation=method==="POST" && url.pathname===cfg.path && !(body as {simulate?:boolean})?.simulate;
       if (allocation) { await markIntent(code,"uncertain"); submitted=true; }
-      return dependencies.request(url,token,method,body);
+      const response=await dependencies.request(url,token,method,body);
+      if(allocation && [400,409].includes(response.status)) definitiveRejection=true;
+      return response;
     };
     try {
       const result = await boundedPretix(()=>performRentalCheckout(parsed,idempotencyKey,{...dependencies,request}),60000,100);
@@ -266,7 +269,7 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
           if(["e","c","p"].includes(remote.status) || (remote.status==="n" && remote.expires && Date.parse(remote.expires)<=Date.now()))
             await markIntent(code,"terminal",remote.expires);
           else await markIntent(code,"pending",remote.expires);
-        } else if (!submitted && admittedState==="reserved" && !remote) await markIntent(code,"terminal");
+        } else if ((!submitted || definitiveRejection) && admittedState==="reserved" && !remote) await markIntent(code,"terminal");
         // A 404 after an uncertain write is not proof that a delayed commit cannot arrive.
       } catch { /* Keep allocation occupied when reconciliation is unavailable. */ }
       throw error;

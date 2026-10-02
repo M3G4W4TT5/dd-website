@@ -365,3 +365,11 @@ test("authority-confirmed expiration reclaims capacity for a new intent without 
  await startRentalCheckout(input(),randomUUID(),deps);
  assert.equal(expiries,0);assert.equal((await fixture.pool.query("SELECT count(*)::int n FROM rental_intents WHERE state<>'terminal'")).rows[0].n,1);
 });
+
+
+test("definitive creation rejection releases capacity for a corrected new intent",async()=>{
+ configure();await assert.rejects(()=>startRentalCheckout(input(),key,service({createStatus:409}).dependencies),RentalConflict);
+ assert.equal((await fixture.pool.query("SELECT state FROM rental_intents")).rows[0].state,"terminal");
+ await startRentalCheckout(input(),randomUUID(),service().dependencies);
+ assert.equal((await fixture.pool.query("SELECT count(*)::int n FROM rental_intents WHERE state<>'terminal'")).rows[0].n,1);
+});
