@@ -7,6 +7,7 @@ new private [ttd-mail] section. Recreate Pretix web/cron separately afterward.
 """
 import argparse
 import configparser
+import fcntl
 import getpass
 import hashlib
 import io
@@ -88,12 +89,14 @@ def main():
     parser.add_argument('--expected-adapter',required=True)
     parser.add_argument('--apply',action='store_true')
     args=parser.parse_args()
-    path,metadata,cfg,original=inspect(args.expected_commit,args.expected_adapter)
-    if not args.apply:
-        print('PASS reviewed adapter/release and global capture; inspection only')
-        return
-    password=getpass.getpass('Dedicated Pretix Purelymail app password for booking@didde-mie.com (hidden): ')
-    activate(path,metadata,cfg,original,password)
+    with (STATE / 'deploy.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX | fcntl.LOCK_NB)
+        path,metadata,cfg,original=inspect(args.expected_commit,args.expected_adapter)
+        if not args.apply:
+            print('PASS reviewed adapter/release and global capture; inspection only')
+            return
+        password=getpass.getpass('Dedicated Pretix Purelymail app password for booking@didde-mie.com (hidden): ')
+        activate(path,metadata,cfg,original,password)
 
 
 if __name__=='__main__':
