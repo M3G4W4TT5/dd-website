@@ -14,7 +14,7 @@ import uuid
 ROOT = Path(__file__).resolve().parent
 COMPOSE = '''services:
   postgres:
-    image: postgres:17.6-alpine
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
     environment:
       POSTGRES_DB: pretix
       POSTGRES_USER: pretix
@@ -25,9 +25,9 @@ COMPOSE = '''services:
       timeout: 2s
       retries: 30
   redis:
-    image: redis:7.4.5-alpine
+    image: redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08
   pretix:
-    image: pretix/standalone:2026.7.0
+    image: pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02
     environment:
       PRETIX_PRETIX_URL: http://pretix
       PRETIX_PRETIX_CURRENCY: DKK

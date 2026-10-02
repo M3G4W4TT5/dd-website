@@ -17,7 +17,7 @@ x-node: &node
 
 services:
   postgres:
-    image: postgres:17.6-alpine
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
     restart: unless-stopped
     mem_limit: 512m
     cpus: 0.75
@@ -39,7 +39,7 @@ services:
       timeout: 3s
       retries: 20
   redis:
-    image: redis:7.4.5-alpine
+    image: redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08
     restart: unless-stopped
     mem_limit: 128m
     cpus: 0.25
@@ -56,7 +56,7 @@ services:
       timeout: 3s
       retries: 5
   mail-capture:
-    image: axllent/mailpit:v1.31.1
+    image: axllent/mailpit:v1.31.1@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365
     user: "10005:10005"
     restart: unless-stopped
     read_only: true
@@ -79,7 +79,7 @@ services:
     ports: ["127.0.0.1:8025:8025"]
     networks: [pretix, capture-ui]
   pretix:
-    image: pretix/standalone:2026.7.0
+    image: pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02
     restart: unless-stopped
     command: all
     mem_limit: 1024m
@@ -104,7 +104,7 @@ services:
       redis: {condition: service_healthy}
       mail-capture: {condition: service_healthy}
   pretix-cron:
-    image: pretix/standalone:2026.7.0
+    image: pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02
     restart: unless-stopped
     mem_limit: 384m
     cpus: 0.5
@@ -123,7 +123,7 @@ services:
       - ./pretix-settings.py:/pretix/src/production_settings.py:ro
     networks: [pretix, database, ingress]
   pretix-migrate:
-    image: pretix/standalone:2026.7.0
+    image: pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02
     profiles: [migration]
     command: migrate
     mem_limit: 768m
@@ -188,7 +188,7 @@ services:
       timeout: 4s
       retries: 6
   proxy:
-    image: nginxinc/nginx-unprivileged:1.29-alpine
+    image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6
     # Compose bind-mounts local secrets with their host ownership and mode.
     # The dedicated group reads only the internal webhook header, not other secrets.
     group_add: ["10006"]

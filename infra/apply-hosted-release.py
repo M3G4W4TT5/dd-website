@@ -68,6 +68,9 @@ PREVIOUS_TARGET = {**TARGET,
 # Accept both its reviewed bytes and the earlier installed baseline on retry.
 PARTIAL = {**TARGET,
            'compose.production.yaml': '1624e087cc906881d7f207e037dd5e1bf1fdb05d4fe7e1c0aaa21444dbbe5d6f'}
+# Preserve all historical accepted bytes; this new target is the security package.
+PRE_SECURITY_TARGET = TARGET.copy()
+TARGET = {**TARGET, **{'compose.production.yaml': '95aaa432f1b2ee927ba563da6176fa6d2ffcaa8cf06165aaaec40145306bdc63', 'proxy.conf': 'b5a711691c741d3334c86d12c9f5dae305476f0bafc5376d736a7829e070f616'}}
 PROXY_GROUP = 10006
 APP_SERVICES = {'booking': 'booking', 'communications': 'booking-communications',
                 'worker': 'booking-worker'}
@@ -379,7 +382,7 @@ def install(source):
             raise ValueError('Staged file differs from reviewed release: ' + name)
         if sha(destination) not in (BASELINE[name], PARTIAL[name], PREVIOUS_TARGET[name],
                                     CURRENT_INSTALLED[name], PRE_PAGES_TARGET[name], PRE_TTD_TARGET[name],
-                                    PRE_RENDER_TARGET[name], PRE_MAIL_TARGET[name], TARGET[name]):
+                                    PRE_RENDER_TARGET[name], PRE_MAIL_TARGET[name], PRE_SECURITY_TARGET[name], TARGET[name]):
             raise ValueError('Installed configuration version differs: ' + name)
     verify_bridge()
     verify_proxy_group()

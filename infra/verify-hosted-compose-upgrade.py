@@ -37,7 +37,7 @@ http.createServer((req,res)=>{
 COMPOSE = '''name: {project}
 services:
   booking:
-    image: node:24.20.0-bookworm-slim
+    image: node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e
     user: "10001:10001"
     command: [node, --env-file=/run/secrets/runtime, /app/booking.mjs]
     volumes: ["{root}/booking.mjs:/app/booking.mjs:ro"]
@@ -46,16 +46,16 @@ services:
         target: runtime
     networks: [ingress, booking-internal]
   booking-communications:
-    image: node:24.20.0-bookworm-slim
+    image: node:24.20.0-bookworm-slim@sha256:ba849c60be29959425b8734d57b8b4b7d56f98edd9504c9af091d5281095a71e
     command: [node, -e, "require('http').createServer((q,r)=>{{r.end('communications')}}).listen(3012,'0.0.0.0')"]
     networks: [ingress]
   pretix:
-    image: pretix/standalone:2026.7.0
+    image: pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02
     entrypoint: [python3, -m, http.server, "80", --bind, 0.0.0.0]
     volumes: ["{root}/pretix-settings.py:/pretix/src/production_settings.py:ro"]
     networks: [ingress, booking-internal]
   proxy:
-    image: nginxinc/nginx-unprivileged:1.29-alpine
+    image: nginxinc/nginx-unprivileged:1.29-alpine@sha256:0c79d56aee561a1d81c63f00eee5fb5fe29279560cdc55e91425133104c7fbe6
     group_add: ["10006"]
     volumes: ["{root}/proxy.conf:/etc/nginx/conf.d/default.conf:ro"]
     secrets: [pretix-webhook-header]
@@ -91,7 +91,7 @@ def write_atomic(path, body, mode=0o644, gid=None):
     if gid is not None and os.geteuid() != 0:
         run('docker', 'run', '--rm', '--user', '0:0',
             '--mount', 'type=bind,src=' + str(temporary) + ',dst=/target',
-            '--entrypoint', 'chown', 'pretix/standalone:2026.7.0',
+            '--entrypoint', 'chown', 'pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02',
             '0:' + str(gid), '/target')
     temporary.replace(path)
 
@@ -188,7 +188,7 @@ print('PASS pinned Pretix private HTTP exception')
             # Root-only plus proxy group: an unprivileged host identity cannot read it.
             denied = run('docker', 'run', '--rm', '--user', '65534:65534',
                          '--mount', 'type=bind,src=' + str(secret / 'webhook-header.conf') + ',dst=/target,readonly',
-                         '--entrypoint', 'test', 'pretix/standalone:2026.7.0', '-r', '/target', check=False)
+                         '--entrypoint', 'test', 'pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02', '-r', '/target', check=False)
             assert denied.returncode != 0
             write_atomic(secret / 'booking.env', ('VERSION=new\nWEBHOOK_PASSWORD=' + new + '\n').encode())
             write_atomic(secret / 'webhook-header.conf', header(new), 0o440, 10006)

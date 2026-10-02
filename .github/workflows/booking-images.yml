@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 30
     services:
       security-postgres:
-        image: postgres:17.6-alpine
+        image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
         env:
           POSTGRES_USER: dd_fixture
           POSTGRES_PASSWORD: synthetic-fixture-only
@@ -51,6 +51,8 @@ jobs:
       - run: npm run typecheck:server
       - run: npm run build:server
       - run: python3 infra/runtime-probes.test.py
+      - run: python3 infra/check-image-pins.py
+      - run: python3 infra/image-pins.test.py
       - run: python3 infra/deploy.test.py
       - run: python3 infra/apply-hosted-release.test.py
       - run: python3 infra/ttd-checkout.test.py
