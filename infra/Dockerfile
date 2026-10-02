@@ -15,6 +15,9 @@ FROM dependencies AS source
 COPY server ./server
 COPY apps/booking ./apps/booking
 COPY infra/run.mjs ./infra/run.mjs
+COPY infra/build-runtime-probes.mjs ./infra/build-runtime-probes.mjs
+COPY infra/probes ./infra/probes
+RUN node infra/build-runtime-probes.mjs
 ENV NEXT_TELEMETRY_DISABLED=1
 
 FROM source AS booking-build
@@ -26,16 +29,19 @@ ENV NODE_ENV=production HOSTNAME=0.0.0.0 PORT=3000
 COPY --from=booking-build /app/apps/booking/.next/standalone ./
 COPY --from=booking-build /app/apps/booking/.next/static ./apps/booking/.next/static
 COPY --from=booking-build /app/apps/booking/public ./apps/booking/public
+COPY --from=source /app/artifacts/runtime-probes/booking ./probes
 USER 10001:10001
 EXPOSE 3000
 CMD ["node", "--env-file=/run/secrets/runtime", "apps/booking/server.js"]
 
 FROM source AS communications
+RUN mv artifacts/runtime-probes/communications probes && rm -rf artifacts/runtime-probes
 ENV NODE_ENV=production HOST=0.0.0.0
 USER 10002:10002
 CMD ["node", "--env-file=/run/secrets/runtime", "--import", "tsx", "server/runtime/main.ts", "booking"]
 
 FROM source AS worker
+RUN mv artifacts/runtime-probes/worker probes && rm -rf artifacts/runtime-probes
 ENV NODE_ENV=production HOST=0.0.0.0
 USER 10003:10003
 CMD ["node", "--env-file=/run/secrets/runtime", "--import", "tsx", "apps/booking/server/worker.ts"]

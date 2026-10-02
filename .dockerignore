@@ -11,3 +11,5 @@ artifacts/private
 **/*.log
 **/__pycache__
 .codex
+
+artifacts/runtime-probes
