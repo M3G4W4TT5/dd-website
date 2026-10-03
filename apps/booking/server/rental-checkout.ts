@@ -240,7 +240,7 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
         const currentState=await intentState(candidate.order_code);
         const remote=await existingOrder(cfg,candidate.order_code,dependencies.request);
         if(remote && remote.api_meta?.ttd_checkout_intent===candidate.intent_hash &&
-          (["e","c","p"].includes(remote.status) || (remote.status==="n" && remote.expires && Date.parse(remote.expires)<=Date.now())))
+          ["e","c","p"].includes(remote.status))
           await markIntent(candidate.order_code,"terminal",remote.expires);
         else if(!remote && currentState==="reserved") await markIntent(candidate.order_code,"terminal");
       });
@@ -266,7 +266,7 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
       try {
         const remote=await existingOrder(cfg,code,dependencies.request);
         if(remote && remote.api_meta?.ttd_checkout_intent===intent) {
-          if(["e","c","p"].includes(remote.status) || (remote.status==="n" && remote.expires && Date.parse(remote.expires)<=Date.now()))
+          if (["e","c","p"].includes(remote.status))
             await markIntent(code,"terminal",remote.expires);
           else await markIntent(code,"pending",remote.expires);
         } else if ((!submitted || definitiveRejection) && admittedState==="reserved" && !remote) await markIntent(code,"terminal");
