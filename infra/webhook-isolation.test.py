@@ -52,6 +52,13 @@ class IsolationTests(unittest.TestCase):
   commands=[]
   with patch.object(release,'safe_run',side_effect=lambda args,**_:commands.append(args)):release.migrate_webhook_target()
   code=commands[0][-1];self.assertIn("hook.save(update_fields=['target_url'])",code);self.assertIn("('http://proxy:8081/api/manage/pretix-webhook',target)",code);self.assertNotIn('objects.create',code);self.assertNotIn('listeners.',code)
+ def test_builtin_networks_without_ipam_preserve_overlap_guard(self):
+  builtin=[{'Name':'host','IPAM':{'Config':None}},{'Name':'none','IPAM':{'Config':None}}]
+  with patch.object(release,'safe_run',side_effect=['host none',json.dumps(builtin)]):release.verify_relay_subnets()
+  overlap={'Name':'unrelated','IPAM':{'Config':[{'Subnet':'172.27.0.0/16'}]}}
+  with patch.object(release,'safe_run',side_effect=['host none other',json.dumps(builtin+[overlap])]),self.assertRaisesRegex(ValueError,'overlaps'):release.verify_relay_subnets()
+  changed={'Name':'dd-hosted_webhook-producer','IPAM':{'Config':[{'Subnet':'172.26.0.0/28'}]}}
+  with patch.object(release,'safe_run',side_effect=['host none producer',json.dumps(builtin+[changed])]),self.assertRaisesRegex(ValueError,'differs'):release.verify_relay_subnets()
  def test_disposable_fixture_uses_same_interface_bindings_and_no_sudo(self):
   with tempfile.TemporaryDirectory() as folder:
    path=Path(folder)/'compose.yaml';path.write_text(fixture.COMPOSE.format(project='synthetic',root=folder));data=compose(path)

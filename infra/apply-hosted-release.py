@@ -385,7 +385,7 @@ def verify_relay_subnets():
     ids=safe_run(['docker','network','ls','--format','{{.ID}}'],capture=True).split()
     data=json.loads(safe_run(['docker','network','inspect',*ids],capture=True)) if ids else []
     for network in data:
-        for row in network.get('IPAM',{}).get('Config',[]):
+        for row in network.get('IPAM',{}).get('Config') or []:
             if not row.get('Subnet'):continue
             subnet=ipaddress.ip_network(row['Subnet'])
             if network['Name'] in expected:
