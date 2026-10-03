@@ -24,7 +24,11 @@ npm run dev:booking
 npm run dev:personal
 ```
 
-The booking app reads only its scoped `.env.local`; communications and worker never load it. The local private files are ignored and mode 0600. Capture messages contain tokens/addresses and must remain private. They are RFC822 files under the configured capture directory; no external SMTP is contacted. Native Pretix uses loopback-only Mailpit at port 8025, SMTP service `mail-capture:1025`, without an external relay.
+The booking app reads only its scoped `.env.local`; communications and worker never load it.
+
+`npm run dev:booking` binds a trusted local ingress at `http://127.0.0.1:3000` and starts the Next.js backend on loopback port 3001. The ingress overwrites client identity from its socket and supplies an ephemeral private key shared only with that child process, including HMR WebSocket upgrades. Use port 3000 in the browser; direct API access to 3001 fails authentication. The launcher rejects production mode and closes both listeners on shutdown. With `DD_MODE=development`, no Pretix identities/tokens and all write gates closed, sample availability needs no database/hash key. Configuring any provider identity/token or write gate restores normal durable admission requirements; production has no demo admission exception.
+
+The local private files are ignored and mode 0600. Capture messages contain tokens/addresses and must remain private. They are RFC822 files under the configured capture directory; no external SMTP is contacted. Native Pretix uses loopback-only Mailpit at port 8025, SMTP service `mail-capture:1025`, without an external relay.
 
 ## Public and private API contracts
 

@@ -3,6 +3,7 @@ import { admission, budget, emergency, lease, privateKey, setting, AdmissionDeni
 import { bookingDb } from "./notifications";
 import { boundedPretix, inPretixScope } from "./pretix-deadline";
 import { bookingClient } from "./client-identity";
+import { localCatalogDemo } from "./local-demo";
 
 const cache = new Map<string, { until: number; value: unknown }>();
 let waiting = 0, databaseAdmissions = 0;
@@ -57,6 +58,7 @@ export async function catalogWork<T>(key: string, fn: () => Promise<T>, fresh = 
 }
 export async function catalogRequest(request: Request) {
   const client = bookingClient(request), secret = process.env.MANAGE_RECOVERY_HASH_KEY ?? "";
+  if (localCatalogDemo()) return;
   await guardedAdmission(()=>admission(bookingDb(), "catalog-client", async c => {
     await budget(c, privateKey(secret, "catalog-client", client.address), setting("CATALOG_CLIENT_MINUTE", 60), 60);
     await budget(c, privateKey(secret, "catalog-prefix", client.prefix), setting("CATALOG_PREFIX_MINUTE", 600), 60);

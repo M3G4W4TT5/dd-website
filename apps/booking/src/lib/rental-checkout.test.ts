@@ -361,6 +361,7 @@ test("authority-confirmed expiration reclaims capacity for a new intent without 
  };
  const deps={availability:async()=>availability,request};await startRentalCheckout(input(),key,deps);
  orders.get(code)!.expires=new Date(Date.now()-1000).toISOString();
+ orders.get(code)!.status="e";
  await fixture.pool.query("UPDATE rental_intents SET remote_expires=now()-interval '1 second'");
  await startRentalCheckout(input(),randomUUID(),deps);
  assert.equal(expiries,0);assert.equal((await fixture.pool.query("SELECT count(*)::int n FROM rental_intents WHERE state<>'terminal'")).rows[0].n,1);
@@ -372,4 +373,21 @@ test("definitive creation rejection releases capacity for a corrected new intent
  assert.equal((await fixture.pool.query("SELECT state FROM rental_intents")).rows[0].state,"terminal");
  await startRentalCheckout(input(),randomUUID(),service().dependencies);
  assert.equal((await fixture.pool.query("SELECT count(*)::int n FROM rental_intents WHERE state<>'terminal'")).rows[0].n,1);
+});
+
+
+test("elapsed expiry while authority still says pending cannot free capacity", async()=>{
+ configure();const orders=new Map<string,TestOrder>();let expiries=0;
+ const request=async(url:URL,_token:string,method="GET",body?:unknown)=>{
+  if(method==="GET") {const code=url.pathname.split("/").filter(Boolean).at(-1)!;const order=orders.get(code);return order?Response.json(order):Response.json({}, {status:404});}
+  if(url.pathname.endsWith("mark_expired/")){expiries++;throw new Error("automatic expiry forbidden in fixture");}
+  const payload=body as Record<string,unknown>,candidate=orderFrom(payload);
+  if(!payload.simulate)orders.set(String(candidate.code),candidate);return Response.json(candidate);
+ };
+ const deps={availability:async()=>availability,request};await startRentalCheckout(input(),key,deps);
+ orders.get(code)!.expires=new Date(Date.now()-1000).toISOString();
+ await fixture.pool.query("UPDATE rental_intents SET remote_expires=now()-interval '1 second'");
+ await assert.rejects(()=>startRentalCheckout(input(),randomUUID(),deps));
+ assert.equal(expiries,0);assert.equal(orders.size,1);
+ assert.equal((await fixture.pool.query("SELECT state FROM rental_intents")).rows[0].state,"pending");
 });

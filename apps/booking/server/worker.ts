@@ -1,4 +1,6 @@
 import { cleanupWebhookInbox } from "../../../server/database/webhook-admission";
+import { cleanupAdmissionBudgets } from "../../../server/database/admission-retention";
+import { reconcileAllocations } from "./checkout-reconciliation";
 import { createServer } from "node:http";
 import { pretixFetch, pretixHeaders, pretixNextPage } from "./pretix-http";
 import { createCapture, createMailer, DeliveryError } from "@dd/mail";
@@ -143,6 +145,7 @@ async function loop() {
         "DELETE FROM abuse_limits WHERE expires_at<now(); DELETE FROM manage_link_tokens WHERE expires_at<now()",
       );
       await cleanupWebhookInbox(pool);
+      await cleanupAdmissionBudgets(pool);
       lastSuccess = Date.now();
     } catch {
       console.error("Booking worker dependency failure; inspect queue status");
@@ -167,6 +170,14 @@ async function recoveryLoop() {
   }
 }
 void recoveryLoop();
+async function allocationLoop() {
+  while (!stopping) {
+    try { await reconcileAllocations(pool); }
+    catch { console.error("Allocation reconciliation unavailable; reservations retained"); }
+    await new Promise(r => setTimeout(r, 10000));
+  }
+}
+void allocationLoop();
 void loop();
 for (const signal of ["SIGTERM", "SIGINT"])
   process.on(signal, () => {
