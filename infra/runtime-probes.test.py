@@ -15,7 +15,7 @@ class ProbesTests(unittest.TestCase):
   for filename,(target,uid,key,role) in probes.BINDINGS.items():
    cmd=probes.command(IMAGES,filename,'config',Path('/synthetic')/filename)
    self.assertIn(IMAGES[target],cmd);self.assertIn(f'{uid}:{uid}',cmd);self.assertIn('none',cmd)
-   self.assertNotIn('tsx',cmd);self.assertNotIn('-e',cmd);self.assertEqual(cmd[-1],'/app/probes/config.mjs')
+   self.assertNotIn('tsx',cmd);self.assertNotIn('-e',cmd);self.assertEqual(cmd[-1],'/app/probes/'+('primary-' if filename=='primary-communications.env' else '')+'config.mjs')
    crossed={**IMAGES,target:IMAGES['worker' if target!='worker' else 'booking']}
    with self.assertRaises(ValueError):probes.command(crossed,filename,'config',Path(filename))
    with self.assertRaises(ValueError):probes.command(IMAGES,filename,'config',Path('wrong-runtime.env'))
@@ -44,6 +44,37 @@ class ProbesTests(unittest.TestCase):
    self.assertIn(['docker','network','connect','dd-hosted_ingress',commands[0][commands[0].index('--name')+1]],commands)
    self.assertFalse(any('private-not-for-probe' in s for s in snapshots))
    self.assertEqual(list(Path(folder).iterdir()),[])
+ def test_primary_credentials_and_uid_stay_with_primary_probe(self):
+  filename='primary-communications.env'
+  cfg={'MARKETING_DATABASE_URL':'postgresql://primary_marketing_runtime:x@postgres/marketing','PAYLOAD_KEY':'private','PRIMARY_PROXY_KEY':'private'}
+  self.assertEqual(probes.BINDINGS[filename],('communications',10004,'MARKETING_DATABASE_URL','primary_marketing_runtime'))
+  self.assertEqual(probes.subset(cfg,filename,'database'),{'MARKETING_DATABASE_URL':cfg['MARKETING_DATABASE_URL']})
+  self.assertEqual(probes.command(IMAGES,filename,'database',Path('probe.env'))[-1],'/app/probes/primary-database.mjs')
+  for source,target in [('primary_marketing_runtime','booking-communications.env'),('booking_marketing_runtime',filename)]:
+   with self.assertRaises(ValueError):probes.subset({'MARKETING_DATABASE_URL':'postgresql://'+source+':x@postgres/marketing'},target,'database')
+  with self.assertRaises(ValueError):probes.command(IMAGES,filename,'availability',Path('probe.env'),'dd-probe-'+'b'*32)
+  commands=[]
+  with tempfile.TemporaryDirectory() as folder,patch.object(probes,'read_private',return_value=cfg) as read,patch.object(probes.os,'chown') as chown:
+   def run(args):
+    commands.append(args)
+    mount=next(a for a in args if a.startswith('type=bind,src='))
+    self.assertEqual(Path(mount.split('src=')[1].split(',')[0]).read_text(),'MARKETING_DATABASE_URL='+cfg['MARKETING_DATABASE_URL']+'\n')
+   probes.run_probe(run,IMAGES,filename,'database',folder,folder)
+   read.assert_called_once_with(Path(folder)/'secrets'/filename,10004)
+   self.assertEqual(chown.call_args.args[1:],(10004,10004))
+   self.assertEqual(commands[0][-1],'/app/probes/primary-database.mjs')
+   self.assertEqual(list(Path(folder).iterdir()),[])
+ def test_primary_compiled_config_rejects_booking_identity(self):
+  cfg={'DD_MODE':'production','SERVICE_SITE':'primary','PAYMENT_ENVIRONMENT':'sandbox','MAIL_DELIVERY':'capture',
+   'MARKETING_DATABASE_URL':'postgresql://primary_marketing_runtime:x@localhost/marketing',
+   'PAYLOAD_KEY':'a'*64,'PRIMARY_PROXY_KEY':'b'*64,'ALLOWED_ORIGINS':'https://didde-mie.com','MARKETING_ACTION_BASE_URL':'https://didde-mie.com'}
+  file=HERE.parent/'artifacts/runtime-probes/communications/primary-config.mjs'
+  def run(config):return subprocess.run(['node',str(file)],env={'PATH':os.environ['PATH'],**config},capture_output=True,text=True)
+  self.assertEqual(run(cfg).returncode,0)
+  for change in ({'SERVICE_SITE':'booking'},{'MARKETING_DATABASE_URL':'postgresql://booking_marketing_runtime:x@localhost/marketing'},{'PRIMARY_PROXY_KEY':''}):
+   self.assertNotEqual(run({**cfg,**change}).returncode,0)
+  booking=HERE.parent/'artifacts/runtime-probes/communications/config.mjs'
+  self.assertNotEqual(subprocess.run(['node',str(booking)],env={'PATH':os.environ['PATH'],**cfg},capture_output=True).returncode,0)
  def test_failure_still_removes_probe_and_private_subset(self):
   cfg={k:'synthetic' for k in probes.AVAILABILITY_KEYS};cfg['BOOKING_DATABASE_URL']='postgresql://booking_web_runtime:x@postgres/booking_management'
   commands=[]

@@ -18,3 +18,21 @@ test('compiled standalone booking parser uses synthetic catalog and durable admi
   assert.equal((await f.pool.query('SELECT count(*)::int n FROM admission_leases')).rows[0].n,0);
  }finally{await f.close();}
 });
+
+test('compiled communications database probes enforce distinct primary and booking roles',{skip:!process.env.SECURITY_TEST_DATABASE_URL},async()=>{
+ const f=await securityFixture('marketing');
+ async function probe(file:string,role:string){
+  const url=new URL(f.url);url.searchParams.set('options','-c role='+role);
+  const child=spawn(process.execPath,['artifacts/runtime-probes/communications/'+file+'.mjs'],{env:{PATH:process.env.PATH,MARKETING_DATABASE_URL:url.toString()},stdio:['ignore','pipe','pipe']});
+  let output='';child.stdout.on('data',c=>output+=c);child.stderr.on('data',c=>output+=c);
+  const timer=setTimeout(()=>child.kill('SIGKILL'),15000);
+  const status=await new Promise<number|null>(r=>child.on('exit',r));clearTimeout(timer);return {status,output};
+ }
+ try{
+  for(const [file,role] of [['primary-database','primary_marketing_runtime'],['database','booking_marketing_runtime']]){
+   const matching=await probe(file,role);assert.equal(matching.status,0,matching.output);
+   const crossed=await probe(file,role==='primary_marketing_runtime'?'booking_marketing_runtime':'primary_marketing_runtime');
+   assert.notEqual(crossed.status,0);assert.match(crossed.output,/Database role probe failed/);
+  }
+ }finally{await f.close();}
+});

@@ -11,6 +11,7 @@ BINDINGS = {
  'booking-web.env': ('booking',10001,'BOOKING_DATABASE_URL','booking_web_runtime'),
  'booking-communications.env': ('communications',10002,'MARKETING_DATABASE_URL','booking_marketing_runtime'),
  'booking-worker.env': ('worker',10003,'BOOKING_DATABASE_URL','booking_worker_runtime'),
+ 'primary-communications.env': ('communications',10004,'MARKETING_DATABASE_URL','primary_marketing_runtime'),
 }
 AVAILABILITY_KEYS = ('BOOKING_DATABASE_URL','PRETIX_API_BASE','PRETIX_ORGANIZER_SLUG',
  'PRETIX_EVENT_SLUG','PRETIX_ITEM_ID','PRETIX_API_TOKEN','PRETIX_SHOP_BASE')
@@ -91,7 +92,8 @@ def command(images,filename,mode,path=None,name=None):
   args+=['--mount',f'type=bind,src={path},dst=/run/secrets/runtime,readonly']
  args+=['--entrypoint','node',image]
  if path is not None:args+=['--env-file=/run/secrets/runtime']
- return args+['/app/probes/'+mode+'.mjs']
+ probe=('primary-'+mode) if filename=='primary-communications.env' and mode in ('config','database') else mode
+ return args+['/app/probes/'+probe+'.mjs']
 
 def run_probe(run,images,filename,mode,root,private):
  _,uid,_,_,_=binding(images,filename,mode)

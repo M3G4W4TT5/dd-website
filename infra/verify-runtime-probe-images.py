@@ -20,7 +20,9 @@ def main():
  credentials=dict.fromkeys(setup['KEYS'],'a'*64)
  passwords=dict.fromkeys(('booking_web_runtime','booking_worker_runtime','booking_marketing_runtime'),'b'*64)
  with tempfile.TemporaryDirectory(prefix='dd-synthetic-probes-') as folder:
-  for filename,(uid,config) in setup['runtime_files'](credentials,passwords).items():
+  configs=setup['runtime_files'](credentials,passwords)
+  configs['primary-communications.env']=(10004,{'DD_MODE':'production','SERVICE_SITE':'primary','PAYMENT_ENVIRONMENT':'sandbox','MAIL_DELIVERY':'capture','MARKETING_DATABASE_URL':'postgresql://primary_marketing_runtime:synthetic@postgres/marketing','PAYLOAD_KEY':'a'*64,'PRIMARY_PROXY_KEY':'b'*64,'ALLOWED_ORIGINS':'https://didde-mie.com','MARKETING_ACTION_BASE_URL':'https://didde-mie.com'})
+  for filename,(uid,config) in configs.items():
    path=Path(folder)/filename
    path.write_text(''.join(k+'='+v+'\n' for k,v in config.items()))
    path.chmod(0o444) # Public synthetic values only; allows the fixed container UID.
