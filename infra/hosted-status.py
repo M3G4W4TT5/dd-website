@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 ROOT = Path("/etc/dd-hosted")
 STATE = Path("/var/lib/dd-hosted")
 CONFIGS = ("compose.production.yaml", "compose.hosted.yaml", "proxy.conf",
-           "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf")
+           "pretix-nginx.conf", "pretix-settings.py", "pretix-task.conf", "pretix-webhook-relay.conf")
 GATES = ("DD_MODE", "PREVIEW", "PAYMENT_ENVIRONMENT", "PAYMENT_RELEASE_ENABLED",
          "MAIL_DELIVERY", "MAIL_RELEASE_ENABLED", "PRETIX_EVENTS_CHECKOUT_ENABLED",
          "BOOKING_SELF_SERVICE_ENABLED")
@@ -116,7 +116,7 @@ def main():
         version.update(b"\0")
     result["host_config_version"] = version.hexdigest()
     for name in ("current.json", "previous.json", "attempt.json", "failed.json",
-                 "config-install.json", "sandbox-gates.json", "mail-gates.json", "webhook-rotation.json"):
+                 "config-install.json", "sandbox-gates.json", "mail-gates.json", "webhook-rotation.json", "webhook-relay-rotation.json"):
         result["release"][name] = manifest(name)
     ids = command("docker", "ps", "-aq", "--filter", "label=com.docker.compose.project=dd-hosted").splitlines()
     for cid in ids:

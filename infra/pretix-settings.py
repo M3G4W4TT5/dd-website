@@ -12,7 +12,7 @@ STORAGES['staticfiles']['BACKEND'] = 'django.contrib.staticfiles.storage.Manifes
 
 # Keep the pinned image's private-network protection active. Its urllib3 hook
 # checks the resolved socket address at connect time; allow only the unpublished
-# proxy webhook listener, whose sole route authenticates booking notifications.
+# dedicated relay producer listener, whose sole route authenticates booking notifications.
 ALLOW_HTTP_TO_PRIVATE_NETWORKS = False
 
 
@@ -27,11 +27,11 @@ class HostedPretixHelpersConfig(PretixHelpersConfig):
             host, port = address[:2]
             if port == 8081:
                 try:
-                    proxy_ips = {info[4][0] for info in socket.getaddrinfo('proxy', 8081,
+                    proxy_ips = {info[4][0] for info in socket.getaddrinfo('pretix-webhook-relay', 8081,
                                  type=socket.SOCK_STREAM)}
                 except OSError:
                     proxy_ips = set()
-                if host in proxy_ips:
+                if host == '172.26.0.3' and host in proxy_ips:
                     return False, ''
             return upstream_should_block_access(address)
 

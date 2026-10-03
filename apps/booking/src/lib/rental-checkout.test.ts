@@ -1,9 +1,17 @@
+import { securityFixture } from "../../../../server/database/security-fixture";
+import { clientIdentity } from "../../../../server/database/admission";
 import assert from "node:assert/strict";
-import { createHmac } from "node:crypto";
-import test from "node:test";
+import { createHmac, randomUUID } from "node:crypto";
+import test, { before, beforeEach, after } from "node:test";
 import { DateTime } from "luxon";
-import { startRentalCheckout, type RentalCheckoutInput, RentalConflict, RentalPhoneRejected, RentalPriceChanged } from "../../server/rental-checkout";
+import { startRentalCheckout as checkout, type RentalCheckoutInput, RentalConflict, RentalPhoneRejected, RentalPriceChanged } from "../../server/rental-checkout";
 import { quoteInterval, type Availability } from "./booking";
+
+let fixture: Awaited<ReturnType<typeof securityFixture>>;
+before(async()=>{ fixture=await securityFixture(); process.env.BOOKING_DATABASE_URL=fixture.url; process.env.MANAGE_RECOVERY_HASH_KEY="a".repeat(64); });
+beforeEach(async()=>{await fixture.pool.query("TRUNCATE rental_intents,admission_budgets,admission_leases");});
+after(async()=>{await fixture.close();});
+const startRentalCheckout = (input: RentalCheckoutInput, key: string, deps?: Parameters<typeof checkout>[2]) => checkout(input,key,deps,clientIdentity("192.0.2.1"));
 
 const key = "12345678-1234-1234-1234-123456789abc";
 const writeToken = "synthetic-write-token";
@@ -45,31 +53,22 @@ function orderFrom(payload: Record<string, unknown>, hourlyOre = 25_000): TestOr
   const positions = payload.positions as Array<Record<string, unknown>>;
   const total = positions.filter(position => position.discount == null).length * hourlyOre / 100;
   return {
-    code, event: "studio", status: "n", testmode: true, email: payload.email,
+    code: payload.code ?? code, event: "studio", status: "n", testmode: true, email: payload.email,
     total: `${total}.00`, expires: "2099-01-01T00:00:00Z",
-    url: `https://shop.example.invalid/synthetic/studio/order/${code}/`,
+    url: `https://shop.example.invalid/synthetic/studio/order/${payload.code ?? code}/`,
     api_meta: payload.api_meta as Record<string, unknown>,
     positions: positions.map(position => ({ ...position, price: position.discount ? "0.00" : `${hourlyOre / 100}.00` })),
     payments: [{ provider: "stripe", amount: `${total}.00`, state: "created",
-      payment_url: `https://shop.example.invalid/synthetic/studio/order/${code}/pay/change` }],
+      payment_url: `https://shop.example.invalid/synthetic/studio/order/${payload.code ?? code}/pay/change` }],
   };
 }
 
 test("concurrent conflicting key cannot expire the winning pending reservation", async () => {
   configure();
   let held: TestOrder | null = null;
-  let lookups = 0;
-  let releaseLookups!: () => void;
-  const bothLookedUp = new Promise<void>(resolve => { releaseLookups = resolve; });
   let expiries = 0;
   const request = async (url: URL, _token: string, method = "GET", body?: unknown) => {
     if (method === "GET") {
-      lookups += 1;
-      if (lookups <= 2) {
-        if (lookups === 2) releaseLookups();
-        await bothLookedUp;
-        return Response.json({}, { status: 404 });
-      }
       return held ? Response.json(held) : Response.json({}, { status: 404 });
     }
     if (url.pathname.endsWith("mark_expired/")) {
@@ -113,11 +112,6 @@ function service(options: {
   const bothLookedUp = new Promise<void>(resolve => { releaseInitial = resolve; });
   const request = async (url: URL, _token: string, method = "GET", body?: unknown) => {
     if (method === "GET") {
-      if (options.simultaneousLookups && initialReads++ < 2) {
-        if (initialReads === 2) releaseInitial();
-        await bothLookedUp;
-        return Response.json({}, { status: 404 });
-      }
       return held ? Response.json(held) : Response.json({}, { status: 404 });
     }
     if (url.pathname.endsWith("mark_expired/")) {
@@ -248,7 +242,7 @@ test("provider failure is distinct from phone, inventory, and price changes", as
   await assert.rejects(startRentalCheckout(input(), key, fake.dependencies), error =>
     error instanceof Error && !(error instanceof RentalConflict) && !(error instanceof RentalPhoneRejected));
   const changed = { ...input(), acceptedQuote: { ...input().acceptedQuote, totalOre: 1 } };
-  await assert.rejects(startRentalCheckout(changed, key, service().dependencies), RentalPriceChanged);
+  await assert.rejects(startRentalCheckout(changed, "22345678-1234-1234-1234-123456789abc", service().dependencies), RentalPriceChanged);
 });
 
 test("full-day selection uses configured price, final positions and rule identity", async () => {
@@ -257,6 +251,7 @@ test("full-day selection uses configured price, final positions and rule identit
     const priced = { ...availability, slots: availability.slots.map(slot => ({ ...slot, priceOre: hourlyOre })) };
     const fake = service({ available: priced });
     const body = { ...input("Synthetic full day", 14), acceptedQuote: quoteInterval(priced, "1", 14)! };
+    await fixture.pool.query("TRUNCATE rental_intents,admission_budgets");
     await startRentalCheckout(body, key, fake.dependencies);
     const held = fake.order as TestOrder;
     const positions = held.positions as Array<Record<string, unknown>>;
@@ -324,4 +319,75 @@ test("payment completed during mismatch cleanup is never expired", async () => {
   await assert.rejects(startRentalCheckout(input(), key, { availability: async () => availability, request }), RentalConflict);
   assert.equal(expiries, 0);
   assert.equal((held as TestOrder | null)?.status, "p");
+});
+
+
+test("durable contact/client caps reject UUID rotation and preserve independent clients", async()=>{
+ configure();
+ const results=await Promise.allSettled(Array.from({length:40},()=>startRentalCheckout(input(),randomUUID(),service().dependencies)));
+ assert.equal(results.filter(r=>r.status==="fulfilled").length,1);
+ assert.equal((await fixture.pool.query("SELECT count(*)::int n FROM rental_intents WHERE state<>'terminal'")).rows[0].n,1);
+ assert.equal((await fixture.pool.query("SELECT sum(hits)::int n FROM admission_budgets")).rows[0].n,3);
+ await assert.rejects(()=>checkout(input(),randomUUID(),service().dependencies,clientIdentity("198.51.100.1")));
+ const other=input();other.details.email="independent@example.invalid";
+ await checkout(other,randomUUID(),service().dependencies,clientIdentity("198.51.100.1"));
+ assert.equal((await fixture.pool.query("SELECT count(*)::int n FROM rental_intents WHERE state<>'terminal'")).rows[0].n,2);
+});
+
+test("uncertain allocation survives initial 404 and failed retry, then recovers same code", async()=>{
+ configure(); let held:TestOrder|null=null,hidden=true,creates=0;
+ const request=async(url:URL,_token:string,method="GET",body?:unknown)=>{
+  if(method==="GET")return held&&!hidden?Response.json(held):Response.json({}, {status:404});
+  const payload=body as Record<string,unknown>,candidate=orderFrom(payload);
+  if(payload.simulate)return Response.json(candidate);
+  creates++;held=candidate;throw new Error("fixture lost response with delayed visibility");
+ };
+ const deps={availability:async()=>availability,request};
+ await assert.rejects(()=>startRentalCheckout(input(),key,deps));
+ assert.equal((await fixture.pool.query("SELECT state FROM rental_intents")).rows[0].state,"uncertain");
+ await assert.rejects(()=>startRentalCheckout(input(),randomUUID(),deps));
+ await assert.rejects(()=>startRentalCheckout(input(),key,{...deps,availability:async()=>{throw new Error("fixture unavailable");}}));
+ assert.equal((await fixture.pool.query("SELECT state FROM rental_intents")).rows[0].state,"uncertain");
+ hidden=false;await startRentalCheckout(input(),key,deps);assert.equal(creates,1);
+});
+
+test("authority-confirmed expiration reclaims capacity for a new intent without cancelling orders", async()=>{
+ configure();const orders=new Map<string,TestOrder>();let expiries=0;
+ const request=async(url:URL,_token:string,method="GET",body?:unknown)=>{
+  if(method==="GET") {const code=url.pathname.split("/").filter(Boolean).at(-1)!;const order=orders.get(code);return order?Response.json(order):Response.json({}, {status:404});}
+  if(url.pathname.endsWith("mark_expired/")){expiries++;throw new Error("automatic expiry forbidden in fixture");}
+  const payload=body as Record<string,unknown>,candidate=orderFrom(payload);
+  if(!payload.simulate)orders.set(String(candidate.code),candidate);return Response.json(candidate);
+ };
+ const deps={availability:async()=>availability,request};await startRentalCheckout(input(),key,deps);
+ orders.get(code)!.expires=new Date(Date.now()-1000).toISOString();
+ orders.get(code)!.status="e";
+ await fixture.pool.query("UPDATE rental_intents SET remote_expires=now()-interval '1 second'");
+ await startRentalCheckout(input(),randomUUID(),deps);
+ assert.equal(expiries,0);assert.equal((await fixture.pool.query("SELECT count(*)::int n FROM rental_intents WHERE state<>'terminal'")).rows[0].n,1);
+});
+
+
+test("definitive creation rejection releases capacity for a corrected new intent",async()=>{
+ configure();await assert.rejects(()=>startRentalCheckout(input(),key,service({createStatus:409}).dependencies),RentalConflict);
+ assert.equal((await fixture.pool.query("SELECT state FROM rental_intents")).rows[0].state,"terminal");
+ await startRentalCheckout(input(),randomUUID(),service().dependencies);
+ assert.equal((await fixture.pool.query("SELECT count(*)::int n FROM rental_intents WHERE state<>'terminal'")).rows[0].n,1);
+});
+
+
+test("elapsed expiry while authority still says pending cannot free capacity", async()=>{
+ configure();const orders=new Map<string,TestOrder>();let expiries=0;
+ const request=async(url:URL,_token:string,method="GET",body?:unknown)=>{
+  if(method==="GET") {const code=url.pathname.split("/").filter(Boolean).at(-1)!;const order=orders.get(code);return order?Response.json(order):Response.json({}, {status:404});}
+  if(url.pathname.endsWith("mark_expired/")){expiries++;throw new Error("automatic expiry forbidden in fixture");}
+  const payload=body as Record<string,unknown>,candidate=orderFrom(payload);
+  if(!payload.simulate)orders.set(String(candidate.code),candidate);return Response.json(candidate);
+ };
+ const deps={availability:async()=>availability,request};await startRentalCheckout(input(),key,deps);
+ orders.get(code)!.expires=new Date(Date.now()-1000).toISOString();
+ await fixture.pool.query("UPDATE rental_intents SET remote_expires=now()-interval '1 second'");
+ await assert.rejects(()=>startRentalCheckout(input(),randomUUID(),deps));
+ assert.equal(expiries,0);assert.equal(orders.size,1);
+ assert.equal((await fixture.pool.query("SELECT state FROM rental_intents")).rows[0].state,"pending");
 });

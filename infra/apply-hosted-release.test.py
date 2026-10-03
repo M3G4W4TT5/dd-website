@@ -113,6 +113,9 @@ class UpgradePathTests(unittest.TestCase):
             patch.object(release, 'installed', side_effect=lambda name: self.root / name),
             patch.object(release, 'trusted', return_value=None),
             patch.object(release, 'verify_bridge', return_value=None),
+            patch.object(release, 'verify_relay_subnets', return_value=None),
+            patch.object(release, 'verify_relay_topology', return_value=None),
+            patch.object(release, 'migrate_webhook_target', return_value=None),
             patch.object(release, 'running_application', return_value=self.running),
             patch.object(release, 'current', return_value=self.manifest),
             patch.object(release, 'safe_run', side_effect=self.fake_run),
@@ -142,6 +145,17 @@ class UpgradePathTests(unittest.TestCase):
         self.assertEqual(report['status'], 'installed')
         self.assertEqual(report['running_revisions'], self.running['revisions'])
         self.assertTrue(any(cmd[-2:] == ['pretix', 'pretix-cron'] for cmd in self.commands))
+
+    def test_additive_relay_first_install_and_unknown_existing_file(self):
+        target=self.root/'pretix-webhook-relay.conf'
+        target.unlink()
+        with self.context():release.install(self.source)
+        self.assertEqual(release.sha(target),release.TARGET[target.name])
+        target.write_text('unreviewed relay')
+        self.commands=[]
+        with self.context(),self.assertRaisesRegex(ValueError,'Installed configuration version differs'):
+            release.install(self.source)
+        self.assertEqual(self.commands,[])
 
     def test_pre_ttd_adapter_drift_stops_before_host_mutation(self):
         fixture = HERE / 'tests' / 'fixtures' / 'pretix-pre-ttd-settings.py'
@@ -178,7 +192,7 @@ class UpgradePathTests(unittest.TestCase):
         self.assertTrue(report['release_record_stale'])
         self.assertEqual(report['running_revisions'], self.running['revisions'])
         recreations = [cmd for cmd in self.commands if 'up' in cmd]
-        self.assertEqual([cmd[-1] for cmd in recreations], ['pretix-cron', 'booking', 'proxy'])
+        self.assertEqual([cmd[-1] for cmd in recreations], ['pretix-cron', 'booking', 'proxy', 'pretix-webhook-relay'])
         self.assertTrue(all('--no-deps' in cmd and '--force-recreate' in cmd and '--pull' in cmd
                             and cmd[cmd.index('--pull') + 1] == 'never' for cmd in recreations))
         header = self.root / 'secrets' / 'pretix-webhook-header.conf'
@@ -187,6 +201,16 @@ class UpgradePathTests(unittest.TestCase):
         self.assertNotEqual(registry['webhook_password'], self.old)
         self.assertNotIn('webhook_password_next', registry)
         self.assertEqual(release.webhook_header(registry['webhook_password']), header.read_bytes())
+
+    def test_legacy_completed_rotation_rotates_once_for_relay_isolation(self):
+        (self.state/'webhook-rotation.json').write_text(json.dumps({'status':'complete'}))
+        with self.context():release.install(self.source)
+        first=json.loads((self.state/'provisioning'/'runtime-private.json').read_text())['webhook_password']
+        self.assertNotEqual(first,self.old)
+        self.assertEqual(json.loads((self.state/'webhook-relay-rotation.json').read_text())['status'],'complete')
+        with self.context():release.install(self.source)
+        self.assertEqual(json.loads((self.state/'provisioning'/'runtime-private.json').read_text())['webhook_password'],first)
+        self.assertNotIn(self.old,(self.root/'secrets'/'booking-web.env').read_text())
 
     def test_interrupted_recreation_reports_phase_and_reuses_pending_rotation(self):
         with self.context():

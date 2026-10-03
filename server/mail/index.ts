@@ -1,3 +1,4 @@
+import { connect, type Socket } from "node:net";
 import { ttdEmail } from "./ttd-branding";
 import nodemailer, { type SendMailOptions, type Transporter } from "nodemailer";
 import type { Site } from "@dd/contracts";
@@ -106,7 +107,8 @@ export function createMailer(
       messageId,
     };
     try {
-      const info = await transport.sendMail(mail);
+      const contactSmtp = policy.delivery !== "capture" && ["inquiry","acknowledgement"].includes(kind);
+      const info = contactSmtp ? await sendContactSmtp(policy,mail) : await transport.sendMail(mail);
       if (policy.delivery === "capture")
         await capture?.(mail, info.message as Buffer);
       return info;
@@ -115,6 +117,41 @@ export function createMailer(
       throw new DeliveryError(classifySmtp(error));
     }
   };
+}
+/** Own the socket: Nodemailer transport.close() does not cancel an active send.
+ * The deadline destroys the underlying TCP stream before returning uncertainty.
+ * A late DNS/connect callback cannot create a second connection after expiry. */
+async function sendContactSmtp(policy:MailPolicy,mail:SendMailOptions) {
+  let socket:Socket|undefined,expired=false;
+  let timer:ReturnType<typeof setTimeout>|undefined;
+  let connectTimer:ReturnType<typeof setTimeout>|undefined;
+  const transport=nodemailer.createTransport({
+    host:policy.host,port:policy.port ?? 465,secure:(policy.port ?? 465)===465,requireTLS:true,
+    auth:{user:policy.user,pass:policy.password},connectionTimeout:5000,greetingTimeout:5000,socketTimeout:5000,
+    getSocket(_options,callback) {
+      if(expired){callback(new DeliveryError("ambiguous"));return;}
+      let handedOff=false;
+      socket=connect({host:policy.host!,port:policy.port ?? 465});
+      connectTimer=setTimeout(()=>socket?.destroy(new Error("Contact SMTP connect deadline")),5000);
+      socket.once("error",error=>{if(!handedOff){handedOff=true;callback(error);}});
+      socket.once("connect",()=>{
+        clearTimeout(connectTimer);
+        if(expired){socket?.destroy();return;}
+        handedOff=true;callback(null,{connection:socket});
+      });
+    },
+  });
+  const deadline=new Promise<never>((_resolve,reject)=>{
+    timer=setTimeout(()=>{
+      expired=true;
+      const error=new DeliveryError("ambiguous");
+      if(socket && !socket.closed) {socket.once("close",()=>reject(error));socket.destroy();}
+      else reject(error);
+    },6000);
+  });
+  try {return await Promise.race([transport.sendMail(mail),deadline]);}
+  catch(error) {if(expired)throw new DeliveryError("ambiguous");throw error;}
+  finally {expired=true;clearTimeout(timer);clearTimeout(connectTimer);socket?.destroy();transport.close();}
 }
 export type Mailer = (
   kind: MailKind,

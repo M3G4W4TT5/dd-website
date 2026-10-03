@@ -12,7 +12,7 @@ import sys
 ROOT = Path('/etc/dd-hosted')
 PRIVATE = Path('/var/lib/dd-hosted/provisioning')
 FILES = ('compose.production.yaml', 'proxy.conf', 'pretix-nginx.conf',
-         'pretix-settings.py', 'pretix-task.conf')
+         'pretix-settings.py', 'pretix-task.conf', 'pretix-webhook-relay.conf')
 BEFORE = {
     'compose.production.yaml': '3ee9d6f87db627e008897b2a18b464346dd7dfb5841e38d06123557577c41822',
     'proxy.conf': '4f617850966d01ffe08e3b21c3a7193dedc3901c0591d600350f0ef01c3cdc21',

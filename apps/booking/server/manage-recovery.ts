@@ -1,5 +1,8 @@
+import { boundedPretix } from "./pretix-deadline";
+import { z } from "zod";
 import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
 import { enqueue, digest } from "@dd/database";
+import { admission, budget, emergency, privateKey, setting, AdmissionDenied, clientIdentity } from "../../../server/database/admission";
 import type { Mailer } from "@dd/mail";
 import { Pool } from "pg";
 import { DateTime } from "luxon";
@@ -60,35 +63,6 @@ function config() {
   };
 }
 
-async function reserveRequest(
-  database: string,
-  hashKey: string,
-  email: string,
-) {
-  const emailHash = createHmac("sha256", hashKey).update(email).digest("hex");
-  pool ??= new Pool({
-    connectionString: database,
-    max: 4,
-    connectionTimeoutMillis: 5000,
-    idleTimeoutMillis: 30000,
-    allowExitOnIdle: true,
-  });
-  await pool.query(
-    "DELETE FROM manage_link_requests WHERE window_start < now() - interval '1 day'",
-  );
-  await pool.query("DELETE FROM manage_link_tokens WHERE expires_at < now()");
-  const result = await pool.query<{ allowed: boolean }>(
-    `INSERT INTO manage_link_requests (email_hash, window_start, request_count)
-     VALUES ($1, now(), 1)
-     ON CONFLICT (email_hash) DO UPDATE SET
-       window_start = CASE WHEN manage_link_requests.window_start < now() - interval '1 hour' THEN now() ELSE manage_link_requests.window_start END,
-       request_count = CASE WHEN manage_link_requests.window_start < now() - interval '1 hour' THEN 1 ELSE manage_link_requests.request_count + 1 END
-     RETURNING request_count <= 3 AS allowed`,
-    [emailHash],
-  );
-  return result.rows[0]?.allowed === true;
-}
-
 function tokenHash(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -112,7 +86,7 @@ function publicBase() {
   return url.origin;
 }
 
-async function findOrders(cfg: ReturnType<typeof config>, email: string) {
+async function findOrdersUnbounded(cfg: ReturnType<typeof config>, email: string) {
   const prefix = `/api/v1/organizers/${encodeURIComponent(cfg.organizer)}/events/${encodeURIComponent(cfg.event)}/orders/`;
   let page: URL | null = new URL(prefix, cfg.api);
   page.searchParams.set("email", email);
@@ -170,20 +144,38 @@ async function findOrders(cfg: ReturnType<typeof config>, email: string) {
   ];
 }
 
-export async function requestManageLinks(rawEmail: string, language: Language, submissionId: string = randomUUID()) {
-  const email = rawEmail.trim().toLowerCase();
-  const cfg = config();
-  if (!(await reserveRequest(cfg.database, cfg.hashKey, email))) return;
+function findOrders(cfg: ReturnType<typeof config>, email: string) {
+  return boundedPretix(() => findOrdersUnbounded(cfg, email));
+}
+
+export async function requestManageLinks(rawEmail: string, language: Language, submissionId: string, client: ReturnType<typeof clientIdentity>) {
+  const email = z.email().max(254).parse(rawEmail.trim().toLowerCase()), cfg = config();
+  if (!["da", "en"].includes(language) || !submissionId || submissionId.length > 128) throw new Error("Invalid recovery intent");
   const key = process.env.PAYLOAD_KEY;
-  if (!key || !/^[0-9a-f]{64}$/.test(key))
-    throw new Error("Recovery queue unavailable");
-  await enqueue(
-    database(cfg),
-    `recovery:${createHmac("sha256", cfg.hashKey).update(email).digest("hex")}:${digest(submissionId)}`,
-    "recovery",
-    { email, language },
-    key,
-  );
+  if (!key || !/^[0-9a-f]{64}$/.test(key)) throw new Error("Recovery queue unavailable");
+  // Revalidate even trusted helper callers; identities never come from email or UUID.
+  if (!client || clientIdentity(client.address).prefix !== client.prefix) throw new Error("Verified recovery client required");
+  const clientKey = privateKey(cfg.hashKey, "recovery-client", client.address);
+  const identity = `recovery:${privateKey(cfg.hashKey, "recovery-email", email)}:${digest(submissionId)}`;
+  try {
+    await admission(database(cfg), "recovery", async (c) => {
+      if ((await c.query("SELECT 1 FROM deliveries WHERE identity=$1", [identity])).rowCount) return;
+      await budget(c, clientKey, setting("RECOVERY_CLIENT_HOURLY", 6), 3600);
+      await budget(c, privateKey(cfg.hashKey, "recovery-prefix", client.prefix), setting("RECOVERY_PREFIX_HOURLY", 60), 3600);
+      await budget(c, privateKey(cfg.hashKey, "recovery-email", email), 3, 3600, "contact");
+      const outstanding = await c.query<{ total: string; client: string }>(
+        "SELECT count(*) AS total,count(*) FILTER(WHERE admission_client=$1) AS client FROM deliveries WHERE kind='recovery' AND state IN ('queued','leased','sending')", [clientKey]);
+      if (Number(outstanding.rows[0].client) >= setting("RECOVERY_CLIENT_OUTSTANDING", 2)) throw new AdmissionDenied("client");
+      if (Number(outstanding.rows[0].total) >= setting("RECOVERY_QUEUE_MAX", 100)) throw new AdmissionDenied("capacity");
+      await emergency(c, "recovery", setting("RECOVERY_EMERGENCY_BURST", 200), setting("RECOVERY_REFILL_SECONDS", 10));
+      await enqueue(c, identity, "recovery", { email, language }, key);
+      await c.query("UPDATE deliveries SET admission_client=$2 WHERE identity=$1", [identity, clientKey]);
+    });
+  } catch (e) {
+    // Address throttle is deliberately indistinguishable from an unknown email.
+    if (e instanceof AdmissionDenied && e.reason === "contact") return;
+    throw e;
+  }
 }
 
 async function accessMessage(

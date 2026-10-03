@@ -1,3 +1,6 @@
+import { cleanupWebhookInbox } from "../../../server/database/webhook-admission";
+import { cleanupAdmissionBudgets } from "../../../server/database/admission-retention";
+import { reconcileAllocations } from "./checkout-reconciliation";
 import { createServer } from "node:http";
 import { pretixFetch, pretixHeaders, pretixNextPage } from "./pretix-http";
 import { createCapture, createMailer, DeliveryError } from "@dd/mail";
@@ -9,6 +12,7 @@ import {
   observeOrder,
   currentLifecycleMessage,
 } from "./notifications";
+import { lease } from "../../../server/database/admission";
 import { deliverAccess } from "./manage-recovery";
 import { orderState, view, ManageConflict } from "./pretix-live-management";
 import { validateWorker } from "./config";
@@ -136,10 +140,12 @@ async function loop() {
           // already distinguish rejection from unknown acceptance.
           throw new DeliveryError("retry");
         }
-      });
+      }, "lifecycle");
       await pool.query(
-        "DELETE FROM abuse_limits WHERE expires_at<now(); DELETE FROM manage_link_tokens WHERE expires_at<now(); DELETE FROM webhook_inbox WHERE state IN ('processed','ignored') AND created_at<now()-interval '30 days'",
+        "DELETE FROM abuse_limits WHERE expires_at<now(); DELETE FROM manage_link_tokens WHERE expires_at<now()",
       );
+      await cleanupWebhookInbox(pool);
+      await cleanupAdmissionBudgets(pool);
       lastSuccess = Date.now();
     } catch {
       console.error("Booking worker dependency failure; inspect queue status");
@@ -148,6 +154,30 @@ async function loop() {
   }
   await pool.end();
 }
+async function recoveryLoop() {
+  while (!stopping) {
+    let release: (() => Promise<void>) | undefined;
+    try {
+      // Separate loop plus a cross-process lease keeps recovery off lifecycle capacity.
+      release = await lease(pool, "recovery-worker", 1, 180);
+      await pollDelivery(pool, key, async (_row, payload, id) => {
+        try { await deliverAccess("recovery", payload, send, id); }
+        catch (e) { throw e instanceof DeliveryError ? e : new DeliveryError("retry"); }
+      }, "recovery");
+    } catch { /* Sanitized; saturation is expected under pressure. */ }
+    finally { if (release) await release().catch(() => {}); }
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+}
+void recoveryLoop();
+async function allocationLoop() {
+  while (!stopping) {
+    try { await reconcileAllocations(pool); }
+    catch { console.error("Allocation reconciliation unavailable; reservations retained"); }
+    await new Promise(r => setTimeout(r, 10000));
+  }
+}
+void allocationLoop();
 void loop();
 for (const signal of ["SIGTERM", "SIGINT"])
   process.on(signal, () => {

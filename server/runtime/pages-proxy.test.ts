@@ -4,7 +4,7 @@ import { proxyPrimary, type PrimaryPagesEnv, type PrimaryRoute } from "../contra
 import { PRIMARY_ORIGIN, verifyPrimaryIp, signPrimaryIp, validVisitorIp } from "../contracts/primary-proxy";
 import { communicationsConfig } from "./config";
 import { service } from "./index";
-import { digest } from "@dd/database";
+import { privateKey } from "../database/admission";
 const env: PrimaryPagesEnv = { PRIMARY_ENVIRONMENT: "production", PRIMARY_FORMS_ENABLED: "true",
   FORMS_ACCESS_CLIENT_ID: "synthetic-id", FORMS_ACCESS_CLIENT_SECRET: "synthetic-secret", PRIMARY_PROXY_KEY: "b".repeat(64) };
 const input = { site: "personal", name: "Fixture", email: "fixture@example.com", subject: "dance", message: "Fixture inquiry" };
@@ -92,14 +92,15 @@ test("primary production only trusts fresh signed identity from its recognized p
     ALLOWED_ORIGINS: PRIMARY_ORIGIN, MARKETING_ACTION_BASE_URL: PRIMARY_ORIGIN,
     MARKETING_DATABASE_URL: "postgresql://primary_marketing_runtime:fixture@localhost/marketing", PAYLOAD_KEY: "a".repeat(64), PRIMARY_PROXY_KEY: env.PRIMARY_PROXY_KEY }, "primary");
   const keys: string[] = [];
-  const pool = { query: async (_sql: string, args?: any[]) => { if (args?.[0]) keys.push(args[0]); return { rows: [{ allowed: true }] }; } } as any;
+  const query=async (sql:string,args?:any[])=>{if(args?.[0])keys.push(args[0]);return {rows:sql.includes("SELECT count(*)")?[{n:"0"}]:sql.includes("RETURNING hits")?[{hits:1,retry:60}]:[]};};
+  const pool = {query,connect:async()=>({query,release(){}})} as any;
   const primary = service(config, async () => {}, pool);
   const req = request(); const time = String(Date.now());
   req.headers.set("X-DD-Visitor-IP", "203.0.113.4"); req.headers.set("X-DD-Proxy-Time", time);
   req.headers.set("X-DD-Proxy-Signature", await signPrimaryIp(env.PRIMARY_PROXY_KEY!, "/api/contact", PRIMARY_ORIGIN, "203.0.113.4", time));
   assert.equal((await primary.handle(req.clone(), "192.0.2.8", false)).status, 403);
   assert.equal((await primary.handle(req.clone(), "192.0.2.8", true)).status, 200);
-  assert.ok(keys.includes(digest("request:/api/contact:203.0.113.4")));
+  assert.ok(keys.includes(privateKey("a".repeat(64),"contact-inquiry-client","203.0.113.4")));
   req.headers.set("X-DD-Visitor-IP", "192.0.2.9");
   assert.equal((await primary.handle(req, "192.0.2.8", true)).status, 403);
   const stale = request(); const old = String(Date.now() - 61000);

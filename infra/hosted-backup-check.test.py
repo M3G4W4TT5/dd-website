@@ -18,7 +18,7 @@ spec.loader.exec_module(backup)
 
 
 def run(*args, input=None, env=None, check=True):
-    launch = ('sudo', '-n', *args) if args[0] == 'docker' and os.geteuid() != 0 else args
+    launch = args  # Fixture requires existing Docker access; never escalate.
     result = subprocess.run(launch, input=input, text=True, capture_output=True, env=env, timeout=120)
     if check and result.returncode:
         raise RuntimeError('Disposable PostgreSQL check failed: ' + args[0])
@@ -36,7 +36,7 @@ def main():
         run('docker', 'run', '-d', '--rm', '--name', container, '--network', 'none',
             '--tmpfs', '/var/lib/postgresql/data:rw,size=128m',
             '-e', 'POSTGRES_USER=dd_admin', '-e', 'POSTGRES_PASSWORD=synthetic-admin',
-            '-e', 'POSTGRES_DB=postgres', 'postgres:17.6-alpine')
+            '-e', 'POSTGRES_DB=postgres', 'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94')
         try:
             for _ in range(80):
                 if run('docker', 'exec', container, 'pg_isready', '-U', 'dd_admin',

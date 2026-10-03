@@ -1,6 +1,8 @@
+import { contactAdmission } from "../database/contact-admission";
+import { clientIdentity, AdmissionDenied } from "../database/admission";
 import { contact } from "@dd/contact";
 import { marketing } from "@dd/marketing";
-import { database, limit } from "@dd/database";
+import { database } from "@dd/database";
 import {
   primaryContact,
   bookingContact,
@@ -77,15 +79,6 @@ export function service(
         const header = request.headers.get("x-real-ip");
         if (header && /^[a-fA-F0-9:.]{3,64}$/.test(header)) ip = header;
       }
-      if (
-        !(await limit(
-          pool,
-          "request:" + path + ":" + ip,
-          internal ? 120 : 30,
-          3600,
-        ))
-      )
-        throw new HttpError(429, "Too many requests");
       if (internal) {
         const p = internalSubscription.safeParse(body);
         if (!p.success) throw new HttpError(400, "Invalid subscription");
@@ -108,13 +101,7 @@ export function service(
           cfg.site,
           parsed.data,
           send,
-          async (email) =>
-            (await limit(
-              pool,
-              "ack-address:" + email.toLowerCase(),
-              1,
-              3600,
-            )) && (await limit(pool, "ack-total", 30, 3600)),
+          contactAdmission(pool,cfg.key,clientIdentity(ip)),
         );
         return json({ ok: true }, 200, allowed);
       }
@@ -129,6 +116,7 @@ export function service(
             p.data.language,
             p.data.action === "subscribe" ? "confirm" : "unsubscribe",
             list + "-site-form",
+            undefined, clientIdentity(ip),
           );
         return json({ ok: true }, 200, allowed);
       }
@@ -137,11 +125,12 @@ export function service(
         if (!p.success) throw new HttpError(400, "Invalid link");
         if (p.data.list && p.data.list !== list)
           throw new HttpError(403, "Identity not allowed");
-        const ok = await subscriptions.consume(p.data.token, p.data.purpose);
+        const ok = await subscriptions.consume(p.data.token, p.data.purpose, clientIdentity(ip));
         return json({ ok }, ok ? 200 : 410, allowed);
       }
       throw new HttpError(404, "Not found");
     } catch (e) {
+      if (e instanceof AdmissionDenied) return Response.json({error:"Too many requests"},{status:429,headers:{"Cache-Control":"no-store","Retry-After":String(e.retryAfter),...(allowed ? {"Access-Control-Allow-Origin":allowed}:{}),Vary:"Origin","Referrer-Policy":"no-referrer"}});
       if (e instanceof HttpError)
         return json({ error: e.message }, e.status, allowed);
       console.error("Communications dependency failure");

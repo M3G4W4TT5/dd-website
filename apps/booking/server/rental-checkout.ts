@@ -1,6 +1,10 @@
+import { AdmissionDenied } from "../../../server/database/admission";
+import { CheckoutIntentChanged, lockedCheckout, reserveIntent, reconciliationCandidate, intentState, markIntent, type CheckoutIdentity } from "./checkout-admission";
+import { boundedPretix } from "./pretix-deadline";
+import { invalidateCatalog } from "./catalog-work";
 import { createHmac } from "node:crypto";
 import { z } from "zod";
-import { getAvailability } from "./availability";
+import { getAvailability, getFreshAvailability } from "./availability";
 import { pretixFetch, pretixHeaders } from "./pretix-http";
 import { MAX_HOURS, quoteInterval, type Quote } from "../src/lib/booking";
 import type { z as zType } from "zod";
@@ -103,7 +107,7 @@ async function api(url: URL, token: string, method = "GET", body?: unknown): Pro
 }
 
 type CheckoutDependencies = { availability: typeof getAvailability; request: typeof api };
-const checkoutDependencies: CheckoutDependencies = { availability: getAvailability, request: api };
+const checkoutDependencies: CheckoutDependencies = { availability: getFreshAvailability, request: api };
 
 async function existingOrder(cfg: ReturnType<typeof config>, code: string, request: typeof api): Promise<Order | null> {
   const response = await request(new URL(`${cfg.path}${code}/`, cfg.base), cfg.readToken);
@@ -138,7 +142,7 @@ async function expireMismatch(cfg: ReturnType<typeof config>, code: string, requ
 
 // The pending Pretix order is the atomic reservation. Pretix validates the
 // explicit full-day discount, owns payment, and expires abandoned reservations.
-export async function startRentalCheckout(input: RentalCheckoutInput, idempotencyKey: string,
+async function performRentalCheckout(input: RentalCheckoutInput, idempotencyKey: string,
                                           dependencies: CheckoutDependencies = checkoutDependencies) {
   const cfg = config();
   if (!/^[0-9a-fA-F-]{36}$/.test(idempotencyKey)) throw new RentalConflict("Invalid submission identity");
@@ -214,4 +218,61 @@ export async function startRentalCheckout(input: RentalCheckoutInput, idempotenc
       await expireMismatch(cfg, code, dependencies.request);
     throw error;
   }
+}
+
+/** Admission and deterministic serialization apply to every caller before provider work. */
+export async function startRentalCheckout(input: RentalCheckoutInput, idempotencyKey: string,
+  dependencies: CheckoutDependencies = checkoutDependencies, client?: CheckoutIdentity) {
+  const parsed = rentalCheckoutSchema.parse(input), cfg = config();
+  if (!client) throw new Error("Verified checkout client required");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idempotencyKey)) throw new RentalConflict("Invalid submission identity");
+  const code = "R" + createHmac("sha256", cfg.writeToken).update(idempotencyKey).digest("hex").slice(0,15).toUpperCase();
+  const intent = createHmac("sha256", cfg.writeToken).update(JSON.stringify(parsed)).digest("hex");
+  return lockedCheckout(code, async () => {
+    let admittedState: string;
+    try { admittedState=await reserveIntent(code,intent,parsed.details.email,parsed.acceptedQuote,client); }
+    catch (error) {
+      if (error instanceof CheckoutIntentChanged) throw new RentalConflict("Submission changed");
+      if (!(error instanceof AdmissionDenied)) throw error;
+      const candidate=await reconciliationCandidate(parsed.details.email,client);
+      if(!candidate) throw error;
+      await lockedCheckout(candidate.order_code,async()=>{
+        const currentState=await intentState(candidate.order_code);
+        const remote=await existingOrder(cfg,candidate.order_code,dependencies.request);
+        if(remote && remote.api_meta?.ttd_checkout_intent===candidate.intent_hash &&
+          ["e","c","p"].includes(remote.status))
+          await markIntent(candidate.order_code,"terminal",remote.expires);
+        else if(!remote && currentState==="reserved") await markIntent(candidate.order_code,"terminal");
+      });
+      admittedState=await reserveIntent(code,intent,parsed.details.email,parsed.acceptedQuote,client);
+    }
+    let submitted = false, definitiveRejection = false;
+    const request: typeof api = async (url,token,method,body) => {
+      const allocation=method==="POST" && url.pathname===cfg.path && !(body as {simulate?:boolean})?.simulate;
+      if (allocation) { await markIntent(code,"uncertain"); submitted=true; }
+      const response=await dependencies.request(url,token,method,body);
+      if(allocation && [400,409].includes(response.status)) definitiveRejection=true;
+      return response;
+    };
+    try {
+      const result = await boundedPretix(()=>performRentalCheckout(parsed,idempotencyKey,{...dependencies,request}),60000,100);
+      const remote = await existingOrder(cfg,code,dependencies.request);
+      if (!remote) throw new Error("Checkout outcome remains uncertain");
+      await markIntent(code,remote.status==="p" ? "terminal" : "pending",remote.expires);
+      invalidateCatalog();
+      return result;
+    } catch (error) {
+      // Reconcile from authority. Never automatically cancel a reservation to admit another.
+      try {
+        const remote=await existingOrder(cfg,code,dependencies.request);
+        if(remote && remote.api_meta?.ttd_checkout_intent===intent) {
+          if (["e","c","p"].includes(remote.status))
+            await markIntent(code,"terminal",remote.expires);
+          else await markIntent(code,"pending",remote.expires);
+        } else if ((!submitted || definitiveRejection) && admittedState==="reserved" && !remote) await markIntent(code,"terminal");
+        // A 404 after an uncertain write is not proof that a delayed commit cannot arrive.
+      } catch { /* Keep allocation occupied when reconciliation is unavailable. */ }
+      throw error;
+    }
+  });
 }

@@ -1,3 +1,5 @@
+import { admitWebhook, type WebhookTrigger } from "../../../server/database/webhook-admission";
+import { invalidateCatalog } from "./catalog-work";
 import { database, transaction, enqueue } from "@dd/database";
 import type { ManagedBooking, Language } from "@dd/contracts";
 import type { Pool } from "pg";
@@ -11,17 +13,9 @@ export function payloadKey() {
     throw new Error("Booking payload key missing");
   return key;
 }
-export async function intakeWebhook(p: {
-  notification_id: string | number;
-  organizer: string;
-  event: string;
-  code: string;
-  action: string;
-}) {
-  await bookingDb().query(
-    "INSERT INTO webhook_inbox(notification_id,organizer,event,code,action) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING",
-    [String(p.notification_id), p.organizer, p.event, p.code, p.action],
-  );
+export async function intakeWebhook(p: WebhookTrigger) {
+  await admitWebhook(bookingDb(),p);
+  invalidateCatalog();
 }
 export function transitionKinds(
   previous: ManagedBooking | null,
@@ -59,6 +53,9 @@ export async function observeOrder(
       "SELECT state,revision FROM order_snapshots WHERE order_code=$1 FOR UPDATE",
       [code],
     );
+    // Only an authoritative terminal lifecycle observation releases an allocation.
+    if (next.status === "paid" || next.status === "cancelled")
+      await c.query("UPDATE rental_intents SET state='terminal',updated_at=now() WHERE order_code=$1",[code]);
     const previous = found.rows[0]?.state ?? null;
     const revision = Number(found.rows[0]?.revision ?? 0) + 1;
     const kinds = transitionKinds(previous, next);

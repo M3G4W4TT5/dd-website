@@ -27,7 +27,7 @@ x-pretix-environment: &pretix-environment
 
 services:
   mail-capture:
-    image: axllent/mailpit:v1.31.1
+    image: axllent/mailpit:v1.31.1@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365
     user: "1000:1000"
     environment:
       MP_MAX_MESSAGES: "1000"
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   pretix-migrate:
-    image: pretix/standalone:2026.7.0
+    image: pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02
     profiles: [migration]
     command: migrate
     environment:
@@ -48,7 +48,7 @@ services:
       - pretix-data:/data
 
   postgres:
-    image: postgres:17.6-alpine
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
     ports:
       - "127.0.0.1:5433:5432"
     environment:
@@ -65,7 +65,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7.4.5-alpine
+    image: redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - pretix-redis:/data
@@ -77,7 +77,7 @@ services:
     restart: unless-stopped
 
   pretix:
-    image: pretix/standalone:2026.7.0
+    image: pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02
     command: all
     environment: *pretix-environment
     ports:
@@ -92,7 +92,7 @@ services:
     restart: unless-stopped
 
   pretix-cron:
-    image: pretix/standalone:2026.7.0
+    image: pretix/standalone:2026.7.0@sha256:5df3b7aa852ee2d067b6756b6023e719dc53e039b9fdde58d631547dc7a1dc02
     entrypoint: ["/bin/sh", "-c"]
     command: ["while true; do pretix cron; sleep 1800; done"]
     environment: *pretix-environment

@@ -13,7 +13,7 @@ ROOT = Path('/etc/dd-hosted')
 STATE = Path('/var/lib/dd-hosted')
 PRIVATE = STATE / 'provisioning'
 CONFIGS = ('compose.production.yaml', 'compose.hosted.yaml', 'proxy.conf',
-           'pretix-nginx.conf', 'pretix-settings.py', 'pretix-task.conf')
+           'pretix-nginx.conf', 'pretix-settings.py', 'pretix-task.conf', 'pretix-webhook-relay.conf')
 
 
 def trusted(path, uid=0, private=False):
@@ -46,6 +46,8 @@ def main():
     trusted(source / 'release.json')
     deploy = runpy.run_path(str(source / 'deploy.py'))
     manifest = deploy['validate_manifest'](json.loads((source / 'release.json').read_text()))
+    trusted(source/'runtime-probes.py')
+    probes=runpy.run_path(str(source/'runtime-probes.py'))
     setup = runpy.run_path(str(source / 'setup-hosted-runtime.py'))
     for name, value in [('runtime-setup.complete', 'scoped-runtime-v1\n'),
                         ('limits-setup.complete', 'hosted-limits-v1\n')]:
@@ -100,27 +102,10 @@ def main():
                                 '{{index .Config.Labels "org.opencontainers.image.revision"}}', image], True)
                 if revision != manifest['commit']:
                     raise ValueError('Image revision differs from reviewed release')
-            image = manifest['images']['communications']
-            for name, (uid, _) in runtime.items():
-                validator = ('import {communicationsConfig} from "./server/runtime/config.ts"; communicationsConfig(process.env,"booking");'
-                             if uid == 10002 else 'import {' + ('validateWorker' if uid == 10003 else 'validateBooking') +
-                             '} from "./apps/booking/server/config.ts"; ' +
-                             ('validateWorker' if uid == 10003 else 'validateBooking') + '(process.env);')
-                database_key = 'MARKETING_DATABASE_URL' if uid == 10002 else 'BOOKING_DATABASE_URL'
-                role = {10001: 'booking_web_runtime', 10002: 'booking_marketing_runtime', 10003: 'booking_worker_runtime'}[uid]
-                validator += 'import pg from "pg"; const c=new pg.Client({connectionString:process.env.' + database_key + '}); await c.connect();'
-                validator += 'try {const r=await c.query("SELECT current_user, has_schema_privilege(current_user,\'public\',\'CREATE\') AS ddl"); if(r.rows[0].current_user!=="' + role + '" || r.rows[0].ddl) throw Error("Runtime role isolation failed");} finally {await c.end();}'
-                if uid != 10001:
-                    validator += 'import {createCapture} from "./server/mail/capture.ts"; const store=createCapture("/capture"); try {await store({},Buffer.from("Synthetic private capture check")); await store.prune();} finally {store.close();}'
-                args = ['docker', 'run', '--rm', '--read-only', '--user', f'{uid}:{uid}',
-                        '--network', 'dd-hosted_database', '--cap-drop', 'ALL',
-                        '--security-opt', 'no-new-privileges', '--memory', '256m', '--pids-limit', '64',
-                        '--tmpfs', '/tmp:rw,nosuid,noexec,size=64m,mode=1777',
-                        '--tmpfs', f'/capture:rw,nosuid,noexec,size=32m,mode=0700,uid={uid},gid={uid}',
-                        '--mount', f'type=bind,src={ROOT}/secrets/{name},dst=/run/secrets/runtime,readonly',
-                        '--entrypoint', 'node', image, '--env-file=/run/secrets/runtime',
-                        '--import', 'tsx', '--input-type=module', '-e', validator]
-                run(args)
+            for name in runtime:
+                for mode in ('config','database'):
+                    probes['run_probe'](run,manifest['images'],name,mode,ROOT,PRIVATE)
+                if name!='booking-web.env':probes['run_probe'](run,manifest['images'],name,'capture',ROOT,PRIVATE)
             fd = os.open(ROOT / 'ready', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
             with os.fdopen(fd, 'w') as stream:
                 stream.write('private-smoke ' + manifest['commit'] + '\n')

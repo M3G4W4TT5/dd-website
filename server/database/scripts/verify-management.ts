@@ -1,5 +1,6 @@
+import { clientIdentity } from "../admission";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { parseEnv } from "node:util";
 import { randomUUID, createHash } from "node:crypto";
 import { database, decrypt } from "../index";
@@ -15,9 +16,8 @@ const schema = "fixture_" + randomUUID().replaceAll("-", "");
 await migration.query(
   `CREATE SCHEMA ${schema}; SET search_path=${schema},pg_catalog`,
 );
-await migration.query(
-  readFileSync("server/database/migrations/001-management.sql", "utf8"),
-);
+for (const file of readdirSync("server/database/migrations").filter(f=>f.endsWith("-management.sql")).sort())
+  await migration.query(readFileSync("server/database/migrations/" + file, "utf8"));
 await migration.query(
   `GRANT USAGE ON SCHEMA ${schema} TO booking_web_runtime; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA ${schema} TO booking_web_runtime; GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA ${schema} TO booking_web_runtime`,
 );
@@ -40,7 +40,7 @@ Object.assign(process.env, {
   NODE_ENV: "test",
 });
 const now = Date.now() + 7 * 86400000,
-  start = new Date(Math.floor(now / 3600000) * 3600000).toISOString(),
+  start = new Date(Math.floor(now / 86400000) * 86400000 + 8 * 3600000).toISOString(),
   end = new Date(Date.parse(start) + 3600000).toISOString();
 let order = {
   code: "ABCDE",
@@ -208,8 +208,8 @@ try {
     "UPDATE manage_sessions SET expires_at=now()-interval '1 second'",
   );
   assert.equal(await authorizedSessionEmail("ABCDE", access.session), null);
-  await requestManageLinks(order.email, "en", "retry-one");
-  await requestManageLinks(order.email, "en", "retry-one");
+  await requestManageLinks(order.email, "en", "retry-one", clientIdentity("192.0.2.1"));
+  await requestManageLinks(order.email, "en", "retry-one", clientIdentity("192.0.2.1"));
   assert.equal(
     (
       await p.query(
@@ -218,14 +218,15 @@ try {
     ).rows[0].n,
     1,
   );
+  await p.query("UPDATE deliveries SET state='sent' WHERE kind='recovery'");
   // A consumed or expired token must permit another request in the same hour.
-  await requestManageLinks(order.email, "en", "replacement-after-consumption");
+  await requestManageLinks(order.email, "en", "replacement-after-consumption", clientIdentity("192.0.2.1"));
   await p.query(
     "UPDATE manage_link_tokens SET expires_at=now()-interval '1 second'",
   );
-  // Reset only the fixture request counter: first two calls include a retry.
-  await p.query("UPDATE manage_link_requests SET request_count=1");
-  await requestManageLinks(order.email, "en", "replacement-after-expiry");
+  await p.query("UPDATE deliveries SET state='sent' WHERE kind='recovery'");
+  await p.query("UPDATE admission_budgets SET hits=1");
+  await requestManageLinks(order.email, "en", "replacement-after-expiry", clientIdentity("192.0.2.1"));
   assert.equal(
     (
       await p.query(
@@ -234,8 +235,9 @@ try {
     ).rows[0].n,
     3,
   );
-  await requestManageLinks(order.email, "en", "allowed-third");
-  await requestManageLinks(order.email, "en", "blocked-fourth");
+  await p.query("UPDATE deliveries SET state='sent' WHERE kind='recovery'");
+  await requestManageLinks(order.email, "en", "allowed-third", clientIdentity("192.0.2.1"));
+  await requestManageLinks(order.email, "en", "blocked-fourth", clientIdentity("192.0.2.1"));
   assert.equal(
     (
       await p.query(
@@ -304,7 +306,7 @@ try {
     changeManagedBooking("ABCDE", order.email, newStart, newEnd),
     changeManagedBooking("ABCDE", order.email, newStart, newEnd),
   ]);
-  assert.equal(changes.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal(changes.filter((r) => r.status === "fulfilled").length, 1, changes.map(r => r.status === "rejected" ? String(r.reason?.message) : "fulfilled").join("; "));
   assert.equal(posts, 1);
   await observeOrder("ABCDE", () => getManagedBooking("ABCDE", order.email));
   // Keep subsequent transition-count assertions isolated from this independently verified change.

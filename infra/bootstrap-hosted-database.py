@@ -16,7 +16,7 @@ PASSWORD = ROOT / 'secrets/postgres-admin-password'
 MARKER = PRIVATE / 'hosted-bootstrap.json'
 COMMIT = '07110aeffffc649ab4d66dfcd34ae879f0802e65'
 IMAGE = 'ghcr.io/m3g4w4tt5/dd-website-communications@sha256:a3d41b983fe2920e3b57f1edb4a9c5ba085de6c1c453381448196bba232e3ce6'
-POSTGRES = 'postgres:17.6-alpine'
+POSTGRES = 'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94'
 
 
 def run(args, *, capture=False, stdin=None):
