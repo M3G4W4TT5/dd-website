@@ -2,7 +2,7 @@
 
 Approved for implementation on 28 September 2026. The current execution checkpoint is [HOSTED_CURRENT_CHECKPOINT.md](HOSTED_CURRENT_CHECKPOINT.md). Live payments and public launch remain separate.
 
-Execution note, 29 September: the owner has now completed the initial private three-database backup and isolated restore that step 2 below deferred. The dated sequence below records the approval and initial run, while the current checkpoint records actual later evidence and remaining recurring/recovery work.
+Execution note, 29 September: the owner completed the initial private three-database backup and isolated restore that step 2 below deferred. After the reviewed #18 correction, a second backup/isolated restore succeeded with snapshot-based verification; nightly local backup and five-minute Pretix Supervisor timers are active. The dated sequence below records the approval and initial run, while the current checkpoint records later evidence and remaining recovery work.
 
 ## Scope and preparation
 
@@ -43,7 +43,7 @@ References: [Pretix Stripe setup](https://docs.pretix.eu/guides/payment/stripe/)
 
 ### Pretix to booking
 
-Configure Pretix to POST to the credential-free internal target `http://proxy:8081/api/manage/pretix-webhook`. The unpublished proxy listener adds the existing dedicated Basic credential and forwards to `http://booking:3000/api/manage/pretix-webhook`. Pinned Pretix cannot attach that header itself, and a credential in its target URL would be retained in webhook-call diagnostics. Neither internal port is publicly published; deny the booking webhook at public ingress. No Access exception or Access service token is needed. Pretix requires its instance-wide `ALLOW_HTTP_TO_PRIVATE_NETWORKS=True` for this sandbox; reassess that setting before public launch.
+Configure Pretix to POST to the credential-free internal target `http://proxy:8081/api/manage/pretix-webhook`. The unpublished proxy listener adds the existing dedicated Basic credential and forwards to `http://booking:3000/api/manage/pretix-webhook`. Pinned Pretix cannot attach that header itself, and a credential in its target URL would be retained in webhook-call diagnostics. Neither internal port is publicly published; deny the booking webhook at public ingress. No Access exception or Access service token is needed. The initial deployment used Pretix's instance-wide `ALLOW_HTTP_TO_PRIVATE_NETWORKS=True`; reviewed PR #18 turned that setting off and allows only the resolved proxy target on port 8081 for this webhook. The current installed state and verification are recorded in the checkpoint.
 
 Booking retains bounded authenticated intake, organizer/event checks, durable notification-ID deduplication and authoritative Pretix reads. Verify wrong credentials, legitimate delivery and retries. If services are later split across hosts, replace this private-network arrangement with authenticated HTTPS as a separately reviewed configuration.
 
