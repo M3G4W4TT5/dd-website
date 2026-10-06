@@ -7,9 +7,10 @@
   .swipe-indicator::after { width:24px; background:#fff; }
   .swipe-indicator[data-state="playing"]::before { animation:swipe-hint-fade 2s linear 1 both; }
   .swipe-indicator[data-state="playing"]::after { opacity:1; animation:swipe-hint-left-right 2s linear 1 both; }
-  .clip-reel>.swipe-indicator { top:calc(var(--clip-reel-stage-height) * .27 - 12px); }
+  .clip-reel-stage>.swipe-indicator { top:calc(50% - 12px); }
   .work-mobile-media { position:relative; }
-  .work-mobile-media>.swipe-indicator { top:-12px; }
+  .work-mobile-media>.swipe-indicator { top:-24px; }
+  .work-item strong { margin-bottom:24px; }
 }
 
 @keyframes swipe-hint-left-right {

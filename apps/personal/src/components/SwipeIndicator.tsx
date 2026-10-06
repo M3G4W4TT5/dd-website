@@ -19,6 +19,7 @@ export function SwipeIndicator({ targetSelector }: { targetSelector?: string }) 
     const check = () => {
       frame = 0;
       if (played.current || !mobile.matches || reducedMotion.matches) return;
+      if (document.documentElement.classList.contains("desktop-intro-active")) return;
       const bounds = carousel.getBoundingClientRect();
       // A small centre band allows normal scrolling to reach the trigger.
       if (!bounds.width || !bounds.height || Math.abs(bounds.top + bounds.height / 2 - window.innerHeight / 2) > 24) return;
@@ -34,6 +35,7 @@ export function SwipeIndicator({ targetSelector }: { targetSelector?: string }) 
     schedule();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
+    window.addEventListener("dd:intro-complete", schedule);
     mobile.addEventListener("change", schedule);
     reducedMotion.addEventListener("change", schedule);
     return () => {
@@ -42,6 +44,7 @@ export function SwipeIndicator({ targetSelector }: { targetSelector?: string }) 
       clearTimeout(timer);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
+      window.removeEventListener("dd:intro-complete", schedule);
       mobile.removeEventListener("change", schedule);
       reducedMotion.removeEventListener("change", schedule);
     };

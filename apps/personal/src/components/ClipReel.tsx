@@ -47,8 +47,8 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
   if (!clips.length) return null;
 
   return <div className="clip-reel" id="motion" aria-label="DD in motion">
-    <SwipeIndicator />
     <div className="clip-reel-stage">
+      <SwipeIndicator />
       {!nativeMode && <FlexCarousel
         items={clips}
         preset="liquid"

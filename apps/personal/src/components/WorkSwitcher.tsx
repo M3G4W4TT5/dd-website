@@ -225,7 +225,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
               <span className="work-item-note">{item.note}</span>
             </div>
             <div className="work-mobile-media">
-              {index === 0 && <SwipeIndicator />}
+              {index === 0 && <SwipeIndicator targetSelector=".work-mobile-image" />}
               <MobileWorkImage item={item} />
             </div>
           </a>
