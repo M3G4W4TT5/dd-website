@@ -1,7 +1,7 @@
 .swipe-indicator { display:none; }
 
 @media(max-width:760px) {
-  .swipe-indicator { display:block; position:absolute; z-index:3; width:96px; height:24px; left:calc(50% - 48px); pointer-events:none; }
+  .swipe-indicator { display:block; position:absolute; z-index:3; width:96px; height:24px; left:calc(50% - 48px); opacity:.75; pointer-events:none; }
   .swipe-indicator::before,.swipe-indicator::after { content:""; position:absolute; height:24px; border-radius:12px; opacity:0; }
   .swipe-indicator::before { width:96px; background:#ffffff80; }
   .swipe-indicator::after { width:24px; background:#fff; }
