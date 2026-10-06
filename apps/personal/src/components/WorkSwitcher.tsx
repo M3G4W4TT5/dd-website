@@ -27,7 +27,7 @@ function ImageError() {
   return <div className="dd-image-error" role="status" aria-label="Project image could not load">DD.</div>;
 }
 
-function MobileWorkImage({ item, showSwipeHint }: { item: WorkItem; showSwipeHint: boolean }) {
+function MobileWorkImage({ item }: { item: WorkItem }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -39,7 +39,6 @@ function MobileWorkImage({ item, showSwipeHint }: { item: WorkItem; showSwipeHin
   if (!item.image) return null;
 
   return <div className="work-mobile-image">
-    {showSwipeHint && <SwipeIndicator />}
     {status === "loading" && <DDLoader label={`Loading image for ${item.title}`} />}
     {status === "error" && <ImageError />}
     <img
@@ -68,6 +67,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
   const [mobile, setMobile] = useState(false);
   const [mobileActive, setMobileActive] = useState(0);
   const [mobileHeight, setMobileHeight] = useState<number>();
+  const [mobileImageBounds, setMobileImageBounds] = useState<{ top: number; height: number }>();
   const focusSelectedCard = useRef(false);
   const [carouselRef, carousel] = useEmblaCarousel({
     active: false,
@@ -110,7 +110,17 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
       const card = carousel.slideNodes()[index];
       observer?.disconnect();
       if (!card) return;
-      const resize = () => setMobileHeight(card.offsetHeight);
+      const resize = () => {
+        setMobileHeight(card.offsetHeight);
+        const image = card.querySelector<HTMLElement>(".work-mobile-image");
+        const column = listRef.current?.parentElement;
+        if (!image || !column) {
+          setMobileImageBounds(undefined);
+          return;
+        }
+        const bounds = image.getBoundingClientRect();
+        setMobileImageBounds({ top: bounds.top - column.getBoundingClientRect().top, height: bounds.height });
+      };
       resize();
       observer = new ResizeObserver(resize);
       observer.observe(card);
@@ -188,6 +198,9 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
         </div>
       </div>
       <div className="work-list-column">
+      <div className="work-swipe-overlay" hidden={!mobileImageBounds} style={mobileImageBounds}>
+        <SwipeIndicator />
+      </div>
       <div
         className="work-list"
         id="selected-projects"
@@ -226,7 +239,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
               <span className="work-item-note">{item.note}</span>
             </div>
             <div className="work-mobile-media">
-              <MobileWorkImage item={item} showSwipeHint={index === 0} />
+              <MobileWorkImage item={item} />
             </div>
           </a>
         ))}

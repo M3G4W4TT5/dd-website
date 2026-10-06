@@ -1,4 +1,5 @@
 .swipe-indicator { display:none; }
+.work-swipe-overlay { display:none; }
 
 @media(max-width:760px) {
   .swipe-indicator { display:block; position:absolute; z-index:3; width:96px; height:24px; left:calc(50% - 48px); opacity:.75; pointer-events:none; }
@@ -8,7 +9,9 @@
   .swipe-indicator[data-state="playing"]::before { animation:swipe-hint-fade 2s linear 1 both; }
   .swipe-indicator[data-state="playing"]::after { opacity:1; animation:swipe-hint-left-right 2s linear 1 both; }
   .clip-reel-stage>.swipe-indicator { top:calc(50% - 12px); }
-  .work-mobile-image>.swipe-indicator { top:calc(50% - 12px); }
+  .work-list-column { position:relative; }
+  .work-swipe-overlay:not([hidden]) { display:block; position:absolute; z-index:3; left:0; right:0; pointer-events:none; }
+  .work-swipe-overlay>.swipe-indicator { top:calc(50% - 12px); }
 }
 
 @keyframes swipe-hint-left-right {
