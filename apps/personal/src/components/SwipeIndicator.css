@@ -1,10 +1,10 @@
 .swipe-indicator { display:none; }
 
 @media(max-width:760px) {
-  .swipe-indicator { display:block; position:absolute; z-index:3; width:48px; height:12px; left:calc(50% - 24px); pointer-events:none; }
-  .swipe-indicator::before,.swipe-indicator::after { content:""; position:absolute; height:12px; border-radius:6px; opacity:0; }
-  .swipe-indicator::before { width:48px; background:#ffffff80; }
-  .swipe-indicator::after { width:12px; background:#fff; }
+  .swipe-indicator { display:block; position:absolute; z-index:3; width:96px; height:24px; left:calc(50% - 48px); pointer-events:none; }
+  .swipe-indicator::before,.swipe-indicator::after { content:""; position:absolute; height:24px; border-radius:12px; opacity:0; }
+  .swipe-indicator::before { width:96px; background:#ffffff80; }
+  .swipe-indicator::after { width:24px; background:#fff; }
   .swipe-indicator[data-state="playing"]::before { animation:swipe-hint-fade 2s linear 1 both; }
   .swipe-indicator[data-state="playing"]::after { opacity:1; animation:swipe-hint-left-right 2s linear 1 both; }
   .clip-reel>.swipe-indicator { top:calc(var(--clip-reel-stage-height) * .27 - 12px); }
