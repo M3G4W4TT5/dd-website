@@ -15,7 +15,7 @@ test('preview sessions bind the editor, host, lifetime and signature',async()=>{
 });
 test('preview rejects anonymous authentication and keeps denials private',async()=>{
  await assert.rejects(accessIdentity(new Request(origin),{ACCESS_ISSUER:'https://memory-one.cloudflareaccess.com',ACCESS_AUDIENCE:'a'.repeat(64),PREVIEW_SESSION_SECRET:secret,SANITY_PREVIEW_READ_TOKEN:'not-used'}));
- const response=denial();assert.equal(response.status,401);assert.match(response.headers.get('Cache-Control')!,/no-store/);assert.equal(response.headers.get('X-Frame-Options'),'SAMEORIGIN');
+ const response=denial();assert.equal(response.status,401);assert.match(response.headers.get('Cache-Control')!,/no-store/);assert.equal(response.headers.get('Content-Security-Policy'),"frame-ancestors 'self' https://www.sanity.io");assert.equal(response.headers.has('X-Frame-Options'),false);
 });
 test('preview destinations and duplicate session cookies fail closed',()=>{
  assert.equal(safeRedirect('/privacy?sanity-preview-secret=hidden&x=y#rights',origin),'/privacy#rights');

@@ -23,10 +23,10 @@ export default {
         const redirect = safeRedirect(result.redirectTo, url.origin);
         const expires = Math.min(identity.expires, Math.floor(Date.now()/1000) + 3600);
         const session = await signSession(identity.subject, env.PREVIEW_SESSION_SECRET, url.origin, expires);
-        return new Response(null, {status: 302, headers: {...privateHeaders, Location: redirect, 'Set-Cookie': `${cookieName}=${session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.max(0,expires-Math.floor(Date.now()/1000))}`}});
+        return new Response(null, {status: 302, headers: {...privateHeaders, Location: redirect, 'Set-Cookie': `${cookieName}=${session}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=${Math.max(0,expires-Math.floor(Date.now()/1000))}`}});
       } catch {return denial('Preview link could not be validated. Reopen Preview in Studio.');}
     }
-    if (url.pathname === '/api/preview/disable') return new Response(null, {status:302, headers:{...privateHeaders, Location:'/studio/', 'Set-Cookie': `${cookieName}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`}});
+    if (url.pathname === '/api/preview/disable') return new Response(null, {status:302, headers:{...privateHeaders, Location:'/studio/', 'Set-Cookie': `${cookieName}=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0`}});
     if (url.pathname === '/studio' || url.pathname.startsWith('/studio/')) {
       const assetUrl = new URL(request.url);
       // Studio uses its own client router. The shell is behind the same Access
@@ -44,5 +44,7 @@ function privateResponse(response: Response) {
   const headers = new Headers();
   response.headers.forEach((value, key) => headers.append(key, value));
   for (const [key,value] of Object.entries(privateHeaders)) headers.set(key,value);
+  // Legacy SAMEORIGIN would contradict the exact dashboard allowlist above.
+  headers.delete('X-Frame-Options');
   return new Response(response.body, {status: response.status, statusText: response.statusText, headers});
 }

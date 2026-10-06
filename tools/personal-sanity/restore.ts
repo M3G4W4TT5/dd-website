@@ -24,6 +24,9 @@ for(const doc of docs)if(!['personalHome','personalSettings','personalPage','per
 if(!apply){console.log(JSON.stringify({validated:true,documents:docs.length,assets:assets.length,target:dataset}));process.exit(0);}
 if(!process.env.SANITY_AUTH_TOKEN)throw Error('Missing project token');
 const client=createClient({projectId:'i7lp8473',dataset,apiVersion:'2026-10-06',useCdn:false,perspective:'raw',token:process.env.SANITY_AUTH_TOKEN});
+const target=(await client.datasets.list()).find(item=>item.name===dataset);
+if(!target)throw Error('Restore target does not exist');
+if(docs.some((doc:any)=>doc._id.startsWith('drafts.'))&&target.aclMode!=='private')throw Error('Backups containing drafts require a private recovery dataset. The Free plan supports public datasets only; validate locally and review selected recovery before importing.');
 if(await client.fetch('count(*[!(_id in path("_.**"))])'))throw Error('Target dataset must be empty');
 const mapping=new Map<string,string>();
 for(const a of assets) {

@@ -4,7 +4,7 @@ export const personalPublishFilter = `coalesce(after()._type, before()._type) in
 export const personalWebhook = {
   name: 'Personal website — published content only', dataset: 'production',
   description: 'Rebuild dd-personal-private main after personal published content changes. No draft, release or booking events.',
-  httpMethod: 'POST', apiVersion: '2026-10-06',
+  httpMethod: 'POST', apiVersion: '2025-02-19',
   on: ['create','update','delete'], includeDrafts: false, includeAllVersions: false,
   filter: personalPublishFilter,
   projection: '{"id": coalesce(after()._id, before()._id), "type": coalesce(after()._type, before()._type), "operation": delta::operation()}',

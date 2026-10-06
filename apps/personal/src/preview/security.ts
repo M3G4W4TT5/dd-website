@@ -9,7 +9,9 @@ export const privateHeaders = {
   'Cache-Control': 'private, no-store, max-age=0', 'CDN-Cache-Control': 'no-store',
   'Cloudflare-CDN-Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer',
   'X-Robots-Tag': 'noindex, nofollow', 'X-Content-Type-Options': 'nosniff',
-  'Content-Security-Policy': "frame-ancestors 'self'", 'X-Frame-Options': 'SAMEORIGIN',
+  // Sanity's registered dashboard embeds Studio; Presentation nests the preview.
+  // Both remain authenticated. Only the exact dashboard origin may frame them.
+  'Content-Security-Policy': "frame-ancestors 'self' https://www.sanity.io",
 };
 export function denial(message = 'Preview access required.', status = 401) {
   return new Response(message, {status, headers: {...privateHeaders, 'Content-Type': 'text/plain; charset=utf-8'}});

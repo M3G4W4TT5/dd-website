@@ -5,9 +5,13 @@ import {schemaTypes} from './schema-types';
 
 const fixedTypes = new Set(['personalHome', 'personalSettings', 'personalPage']);
 export default defineConfig({
-  name: 'personal', title: 'Didde-Mie · Personal website', basePath: '/studio',
+  name: 'personal', title: 'Didde-Mie · Personal website',
   projectId: 'i7lp8473', dataset: 'production',
   releases: {enabled: false},
+  scheduledDrafts: {enabled: false},
+  scheduledPublishing: {enabled: false},
+  tasks: {enabled: false},
+  comments: {enabled: false},
   schema: {types: schemaTypes, templates: prev => prev.filter(t => !fixedTypes.has(t.schemaType))},
   document: {actions: (prev, {schemaType}) => fixedTypes.has(schemaType) ? prev.filter(a => !['delete', 'duplicate'].includes(a.action || '')) : prev},
   plugins: [

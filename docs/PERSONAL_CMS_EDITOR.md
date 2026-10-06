@@ -1,13 +1,15 @@
 # Personal website editor guide
 
-Status: local integration prepared; hosted release and URLs still require owner approval.
+Status: hosted Studio and protected draft preview verified on 6 October 2026; production publication verification is in progress.
 
 Local Studio: http://127.0.0.1:3333/studio/
-Planned protected Studio: https://dd-personal-preview.memory-one.workers.dev/studio/
-Planned protected preview: https://dd-personal-preview.memory-one.workers.dev/
+Protected Studio: https://dd-personal-preview.memory-one.workers.dev/studio/
+Protected preview: https://dd-personal-preview.memory-one.workers.dev/
 Website: https://didde-mie.com (existing access protection remains).
 
-Sign into the Didde-Mie project using admin@didde-mie.com. Cloudflare sign-in protects the hosted Studio and preview; Sanity sign-in grants editing permission. The project is i7lp8473, production. The integration uses the Free plan.
+Sign into the Didde-Mie project using admin@didde-mie.com. Cloudflare sign-in protects the hosted Studio and preview; Sanity sign-in grants editing permission. The project is i7lp8473, production. The integration uses features supported by the Free plan. Sanity currently shows its automatic 30-day Growth trial; no paid upgrade is configured. Scheduling, tasks, comments and releases are disabled.
+
+The Studio also appears in Sanity under **Studios & Apps → Didde-Mie · Personal website**. Direct Studio access is the reliable alternative if browser restrictions prevent dashboard embedding.
 
 ## Editing and ordering
 
@@ -29,11 +31,11 @@ Keep replacement clips compact and prepared before upload. Existing clips are si
 
 ## Preview and publication
 
-Changes autosave as drafts. Open **Presentation** / **Preview** to see unpublished content. Use its desktop/mobile views. Click editable text or images where visual overlays are available; canvas reel content remains editable through Reel clips and the homepage selection.
+Changes autosave as drafts. Open **Presentation** / **Preview** to see unpublished content. Use its desktop/mobile views. After changing content, use **Refresh preview** to load the latest draft. Click editable text or images where visual overlays are available; canvas reel content remains editable through Reel clips and the homepage selection.
 
 Preview is read-only for website forms. Do not use it to send an inquiry or manage a newsletter subscription. Preview access expires after at most one hour; reopen it from Studio to renew it. Copying its URL does not grant another person access.
 
-Publish reusable entries first, then the homepage selection. Publishing updates Sanity immediately; the website changes only after its static build and deployment complete. Expect a short build delay, usually measured in minutes; the actual delay must be recorded during release verification. Draft saves never rebuild production. Booking documents never trigger this personal-site workflow.
+Publish reusable entries first, then the homepage selection. Publishing updates Sanity immediately; the website changes only after its static build and deployment complete. Allow a few minutes for the build. The measured publication delay will be recorded in the operations guide after the hosted publication test. Draft saves never rebuild production. Booking documents never trigger this personal-site workflow.
 
 If the website does not change, check the personal Pages deployment status. A failed build leaves the previous version online. Fix the field named in the build error and publish again, or have the maintainer retry the personal build. Do not change deployment controls for booking or shared services.
 
@@ -41,6 +43,6 @@ Newsletter purpose/consent wording is locked to the version recorded by the back
 
 ## Recovery
 
-Before a substantial edit, create a personal content backup. The prepared weekly backup workflow stores documents, drafts, original assets and checksums off the PC after activation; Git source alone does not preserve CMS content.
+Before a substantial edit, create a personal content backup. A verified local backup includes documents, drafts, original assets and checksums. Automatic/off-PC backups are not enabled. Sanity contains the working content; the separate copy is protection against deletion or mistaken edits. Git source alone does not preserve CMS edits.
 
-For a small mistake, use the document history where your plan makes it available, or restore the previous field value and republish. For larger recovery, ask the maintainer to validate a backup and restore it into an isolated test dataset first. The verified procedure and deployment rollback are in PERSONAL_CMS_OPERATIONS.md. Never import a backup over production without reviewing current editorial changes.
+For a small mistake, use the document history where your plan makes it available, or restore the previous field value and republish. For larger recovery, ask the maintainer to validate a backup locally and review the values to recover. Free datasets are public; backups containing drafts must not be imported into a public recovery dataset. The verified procedure and deployment rollback are in PERSONAL_CMS_OPERATIONS.md. Never import a backup over production without reviewing current editorial changes.
