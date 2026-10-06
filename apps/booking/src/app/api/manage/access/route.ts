@@ -50,7 +50,7 @@ export async function POST(request: Request) {
         { error: "Link unavailable" },
         { status: 404, headers },
       );
-    const response = NextResponse.json({ codes: access.codes }, { headers });
+    const response = NextResponse.json({ codes: access.codes, bookings: access.bookings }, { headers });
     response.cookies.set(
       "ttd-manage-session",
       access.session,

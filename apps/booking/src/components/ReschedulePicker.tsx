@@ -139,7 +139,7 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
     {guided ? <MobileMonthCalendar language={language} month={month} onMonth={setMonth} date={date} min={todayDate} max={maxDate} onDate={day => { if (day !== date) { setDate(day); onSelect(null); } }} status={day => {
       const entry = days[day];
       const count = validDuration ? availableStarts(entry || undefined, hours, bookingStart).length : 0;
-      return {disabled: !entry || !count, unavailable: !!entry && !count, text: entry === undefined ? "…" : entry === null ? "!" : count ? String(count) : "–", description: entry === undefined ? t.loading : entry === null ? t.error : count ? `${count} ${t.available}` : t.full};
+      return {disabled: !entry || !count, unavailable: !!entry && !count, text: "", description: entry === undefined ? t.loading : entry === null ? t.error : count ? (language === "da" ? "Ledige tider" : "Times available") : t.full};
     }} /> : <>
     <div className="reschedule-navigation" aria-label={t.chooseDate}>
       <div className="reschedule-nav-group">
@@ -166,7 +166,7 @@ export function ReschedulePicker({ bookingStart, bookingEnd, language, selected,
       })}
     </div>
     </>}
-    <p className="reschedule-key">{language === "da" ? "Tal viser antal ledige starttider · – betyder ingen plads" : "Numbers show available start times · – means no space"}</p>
+    {!guided && <p className="reschedule-key">{language === "da" ? "Tal viser antal ledige starttider · – betyder ingen plads" : "Numbers show available start times · – means no space"}</p>}
     </div>
     <div hidden={!!guidedStep && guidedStep !== "start"}>
     {guidedStep && <p>{language === "da" ? "Nuværende starttid" : "Current start time"}: <strong>{DateTime.fromISO(bookingStart).setZone(STUDIO_ZONE).toFormat("HH:mm")}</strong></p>}

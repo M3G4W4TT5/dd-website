@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { SwipeIndicator } from "./SwipeIndicator";
 
 type WorkItem = {
   number: string;
@@ -66,6 +67,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
   const [mobile, setMobile] = useState(false);
   const [mobileActive, setMobileActive] = useState(0);
   const [mobileHeight, setMobileHeight] = useState<number>();
+  const [mobileImageBounds, setMobileImageBounds] = useState<{ top: number; height: number }>();
   const focusSelectedCard = useRef(false);
   const [carouselRef, carousel] = useEmblaCarousel({
     active: false,
@@ -108,7 +110,17 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
       const card = carousel.slideNodes()[index];
       observer?.disconnect();
       if (!card) return;
-      const resize = () => setMobileHeight(card.offsetHeight);
+      const resize = () => {
+        setMobileHeight(card.offsetHeight);
+        const image = card.querySelector<HTMLElement>(".work-mobile-image");
+        const column = listRef.current?.parentElement;
+        if (!image || !column) {
+          setMobileImageBounds(undefined);
+          return;
+        }
+        const bounds = image.getBoundingClientRect();
+        setMobileImageBounds({ top: bounds.top - column.getBoundingClientRect().top, height: bounds.height });
+      };
       resize();
       observer = new ResizeObserver(resize);
       observer.observe(card);
@@ -186,6 +198,9 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
         </div>
       </div>
       <div className="work-list-column">
+      <div className="work-swipe-overlay" hidden={!mobileImageBounds} style={mobileImageBounds}>
+        <SwipeIndicator interactionRef={listRef} />
+      </div>
       <div
         className="work-list"
         id="selected-projects"

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Pause, Play } from "lucide-react";
 import FlexCarousel from "./FlexCarousel";
+import { SwipeIndicator } from "./SwipeIndicator";
 import type { FlexCarouselApi, ReelClip } from "./flex-carousel-types";
 import "./ClipReel.css";
 
@@ -12,6 +13,7 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
   const [unsupported, setUnsupported] = useState(false);
   const apiRef = useRef<FlexCarouselApi | null>(null);
   const fallbackRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const nativeMode = reducedMotion || unsupported;
 
   useEffect(() => {
@@ -46,7 +48,8 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
   if (!clips.length) return null;
 
   return <div className="clip-reel" id="motion" aria-label="DD in motion">
-    <div className="clip-reel-stage">
+    <div className="clip-reel-stage" ref={stageRef}>
+      <SwipeIndicator interactionRef={stageRef} />
       {!nativeMode && <FlexCarousel
         items={clips}
         preset="liquid"

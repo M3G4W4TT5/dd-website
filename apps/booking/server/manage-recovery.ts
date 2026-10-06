@@ -17,6 +17,7 @@ import {
   getPaidOrderContact,
 } from "./pretix-live-management";
 import type { ManagedBooking } from "@dd/contracts";
+import { getManagedBookingSummaries } from "./managed-booking-summaries";
 
 type Language = "da" | "en";
 let pool: Pool | undefined;
@@ -299,6 +300,8 @@ export async function consumeManageLink(token: string) {
   if (!email) return null;
   const links = await findOrders(cfg, email);
   if (!links.length) return null;
+  // Read current dates before consuming the one-time token, allowing read failures to be retried.
+  const bookings = await getManagedBookingSummaries(links.map(({ code }) => code), email);
   const session = randomBytes(32).toString("base64url");
   const client = await database(cfg).connect();
   try {
@@ -316,7 +319,7 @@ export async function consumeManageLink(token: string) {
       [tokenHash(session), email, links.map(({ code }) => code)],
     );
     await client.query("COMMIT");
-    return { session, codes: links.map(({ code }) => code) };
+    return { session, codes: links.map(({ code }) => code), bookings };
   } catch (error) {
     await client.query("ROLLBACK");
     throw error;
