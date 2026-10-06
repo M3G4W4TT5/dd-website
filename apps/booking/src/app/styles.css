@@ -1579,6 +1579,7 @@ h3 {
 .manage-access-links { display: grid; gap: 10px; max-width: 690px; margin: 30px 0; padding: 0; list-style: none; }
 
 .manage-access-links a { display: block; border: 1px solid var(--line); padding: 18px; font-weight: 700; }
+.manage-access-links a span { display: block; }
 
 .manage-access-links a:hover { background: var(--theme-soft-bg); }
 
