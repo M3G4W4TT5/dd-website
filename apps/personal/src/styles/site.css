@@ -265,3 +265,10 @@ input,textarea,select,[contenteditable="true"],[contenteditable=""] { -webkit-us
   .work-item strong { margin-top:0; }
   .work-mobile-media { grid-row:4; }
 }
+
+/* Mobile contact starts at the former inquiry copy's top edge. */
+@media(max-width:760px) {
+  .contact-copy>p { display:none; }
+  .contact-layout { gap:42px; }
+}
+@media(max-width:500px) { .contact-layout { gap:27px; } }
