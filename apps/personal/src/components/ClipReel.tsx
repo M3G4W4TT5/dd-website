@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Pause, Play } from "lucide-react";
 import FlexCarousel from "./FlexCarousel";
+import { SwipeIndicator } from "./SwipeIndicator";
 import type { FlexCarouselApi, ReelClip } from "./flex-carousel-types";
 import "./ClipReel.css";
 
@@ -46,6 +47,7 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
   if (!clips.length) return null;
 
   return <div className="clip-reel" id="motion" aria-label="DD in motion">
+    <SwipeIndicator />
     <div className="clip-reel-stage">
       {!nativeMode && <FlexCarousel
         items={clips}

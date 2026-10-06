@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { SwipeIndicator } from "./SwipeIndicator";
 
 type WorkItem = {
   number: string;
@@ -224,6 +225,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
               <span className="work-item-note">{item.note}</span>
             </div>
             <div className="work-mobile-media">
+              {index === 0 && <SwipeIndicator />}
               <MobileWorkImage item={item} />
             </div>
           </a>

@@ -1,0 +1,28 @@
+.swipe-indicator { display:none; }
+
+@media(max-width:760px) {
+  .swipe-indicator { display:block; position:absolute; z-index:3; width:48px; height:12px; left:calc(50% - 24px); pointer-events:none; }
+  .swipe-indicator::before,.swipe-indicator::after { content:""; position:absolute; height:12px; border-radius:6px; opacity:0; }
+  .swipe-indicator::before { width:48px; background:#ffffff80; }
+  .swipe-indicator::after { width:12px; background:#fff; }
+  .swipe-indicator[data-state="playing"]::before { animation:swipe-hint-fade 2s linear 1 both; }
+  .swipe-indicator[data-state="playing"]::after { opacity:1; animation:swipe-hint-left-right 2s linear 1 both; }
+  .clip-reel>.swipe-indicator { top:calc(var(--clip-reel-stage-height) * .27 - 12px); }
+  .work-mobile-media { position:relative; }
+  .work-mobile-media>.swipe-indicator { top:-12px; }
+}
+
+@keyframes swipe-hint-left-right {
+  0% { transform:translateX(300%) scale(0); }
+  40% { transform:translateX(0) scale(1); }
+  50% { transform:translateX(0) scale(0); }
+  90% { transform:translateX(300%) scale(1); }
+  100% { transform:translateX(300%) scale(0); }
+}
+@keyframes swipe-hint-fade {
+  0%,50%,100% { opacity:0; }
+  40%,90% { opacity:1; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .swipe-indicator::before,.swipe-indicator::after { animation:none!important; opacity:0!important; }
+}
