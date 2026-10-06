@@ -199,7 +199,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
       </div>
       <div className="work-list-column">
       <div className="work-swipe-overlay" hidden={!mobileImageBounds} style={mobileImageBounds}>
-        <SwipeIndicator />
+        <SwipeIndicator interactionRef={listRef} />
       </div>
       <div
         className="work-list"

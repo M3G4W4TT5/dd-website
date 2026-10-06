@@ -13,6 +13,7 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
   const [unsupported, setUnsupported] = useState(false);
   const apiRef = useRef<FlexCarouselApi | null>(null);
   const fallbackRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const nativeMode = reducedMotion || unsupported;
 
   useEffect(() => {
@@ -47,8 +48,8 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
   if (!clips.length) return null;
 
   return <div className="clip-reel" id="motion" aria-label="DD in motion">
-    <div className="clip-reel-stage">
-      <SwipeIndicator />
+    <div className="clip-reel-stage" ref={stageRef}>
+      <SwipeIndicator interactionRef={stageRef} />
       {!nativeMode && <FlexCarousel
         items={clips}
         preset="liquid"
