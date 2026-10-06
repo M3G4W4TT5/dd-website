@@ -1,0 +1,6 @@
+---
+import {imageUrl} from '../cms/content';
+import type {Settings} from '../cms/model';
+const {settings} = Astro.props as {settings: Settings};
+---
+<footer class="site-footer"><div class="footer-bottom"><span>© {new Date().getFullYear()} {settings.footer.owner}</span><a href="/privacy">{settings.footer.privacy}</a><a class="footer-credit" href="https://memoryone.eu/" target="_blank" rel="noopener noreferrer"><span>{settings.footer.credit}</span><span class="footer-credit-logo" role="img" aria-label={settings.footer.creditLabel} style={`--footer-logo:url("${imageUrl(settings.branding.footerMark)}")`}></span></a></div></footer>

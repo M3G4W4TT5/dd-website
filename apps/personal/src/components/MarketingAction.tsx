@@ -1,127 +1,42 @@
-import { useFormsAvailable, formEndpoint, PreviewFormsNotice } from "../lib/forms";
-import { useEffect, useState } from "react";
+import {useFormsAvailable, formEndpoint, PreviewFormsNotice} from '../lib/forms';
+import {useEffect, useState} from 'react';
+import type {CopyGroup, SupportingPage} from '../cms/model';
 
-export function MarketingAction({
-  list,
-  purpose,
-  token: initialToken,
-  language,
-}: {
-  list: "personal" | "booking";
-  purpose: "confirm" | "unsubscribe";
-  token: string;
-  language: "da" | "en";
+export function MarketingAction({purpose, page, copy, formsCopy}: {
+  purpose: 'confirm' | 'unsubscribe'; page: SupportingPage; copy: CopyGroup<'marketing'>; formsCopy: CopyGroup<'forms'>;
 }) {
   const available = useFormsAvailable();
-  const [token, setToken] = useState(initialToken);
+  const [token, setToken] = useState('');
   useEffect(() => {
-    const value = new URLSearchParams(window.location.hash.slice(1)).get("token");
+    const value = new URLSearchParams(window.location.hash.slice(1)).get('token');
     if (value) setToken(value);
-    history.replaceState(
-      null,
-      "",
-      window.location.pathname + window.location.search,
-    );
+    history.replaceState(null, '', window.location.pathname + window.location.search);
   }, []);
-  const [state, setState] = useState<
-    "ready" | "working" | "done" | "expired" | "error"
-  >("ready");
-  const isPersonal = list === "personal";
-  const da = language === "da" && !isPersonal;
-  const title =
-    purpose === "confirm"
-      ? da
-        ? "Bekræft din tilmelding"
-        : "Confirm your email signup"
-      : da
-        ? "Afmeld e-mails"
-        : "Unsubscribe from emails";
+  const [state, setState] = useState<'ready' | 'working' | 'done' | 'expired' | 'error'>('ready');
+  const validToken = /^[A-Za-z0-9_-]{43}$/.test(token);
   async function submit() {
     if (!available) return;
-    setState("working");
+    setState('working');
     try {
-      const response = await fetch(
-        formEndpoint("/api/marketing/action"),
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ list, purpose, token }),
-        },
-      );
-      setState(
-        response.ok ? "done" : response.status === 410 ? "expired" : "error",
-      );
-    } catch {
-      setState("error");
-    }
+      const response = await fetch(formEndpoint('/api/marketing/action'), {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({list: 'personal', purpose, token}),
+      });
+      setState(response.ok ? 'done' : response.status === 410 ? 'expired' : 'error');
+    } catch {setState('error');}
   }
-  return (
-    <main className={isPersonal ? "newsletter-unsubscribe-page marketing-page" : "marketing-page"}>
-      {isPersonal ? <a href="/" className="wordmark">DD<span>.</span></a> : <span>TTD STUDIO</span>}
-      <h1>{isPersonal ? purpose === "confirm" ? "CONFIRM SIGNUP." : "UNSUBSCRIBE." : title}</h1>
-      <PreviewFormsNotice available={available} />
-      <p>
-        {purpose === "confirm"
-          ? da
-            ? "Bekræft, at du vil modtage e-mails om TTD Studio-tilbud, nye events og rabatter."
-            : `Confirm that you want ${isPersonal ? "my newsletter about my work and dance videos" : "TTD Studio emails about offers, new events and discounts"}.`
-          : da
-            ? "Stop e-mails om TTD Studio-tilbud, nye events og rabatter til denne adresse."
-            : `Stop ${isPersonal ? "my newsletter" : "TTD Studio promotional"} emails to this address.`}
-      </p>
-      {(state === "ready" || state === "error") && /^[A-Za-z0-9_-]{43}$/.test(token) && (
-        <button className={isPersonal ? "marketing-action-button" : undefined} type="button" disabled={!available} onClick={() => void submit()}>
-          {purpose === "confirm"
-            ? da
-              ? "Bekræft tilmelding"
-              : "Confirm signup"
-            : da
-              ? "Afmeld"
-              : "Unsubscribe"}
-        </button>
-      )}
-      {state === "ready" && !/^[A-Za-z0-9_-]{43}$/.test(token) && (
-        <p role="status">
-          Open the {purpose === "confirm" ? "confirmation" : "unsubscribe"} link
-          from your email. If you have just signed in, reopen that link to continue.
-        </p>
-      )}
-      {state === "working" && (
-        <p role="status">{da ? "Arbejder…" : "Working…"}</p>
-      )}
-      {state === "done" && (
-        <p role="status">
-          {purpose === "confirm"
-            ? da
-              ? "Din tilmelding er bekræftet."
-              : "Your signup is confirmed."
-            : da
-              ? "Du er nu afmeldt."
-              : "You have been unsubscribed."}
-        </p>
-      )}
-      {state === "expired" && (
-        <p role="status">
-          {da
-            ? "Linket er udløbet eller er allerede brugt."
-            : "This link has expired or has already been used."}
-        </p>
-      )}
-      {state === "error" && (
-        <p role="alert">
-          {da
-            ? "Vi kunne ikke gennemføre anmodningen. Prøv igen senere."
-            : "We could not complete this request. Please try again later."}
-        </p>
-      )}
-      {isPersonal && (state === "expired" || (state === "ready" && !/^[A-Za-z0-9_-]{43}$/.test(token))) && (
-        <p><a href={purpose === "unsubscribe" ? "/unsubscribe" : "/#newsletter"}>{purpose === "unsubscribe" ? "Request a new unsubscribe link" : "Sign up again for a new confirmation link"}</a></p>
-      )}
-      <a href={isPersonal ? "https://didde-mie.com" : "/"}>
-        {da
-          ? "Tilbage til TTD Studio"
-          : `Back to ${isPersonal ? "DD" : "TTD Studio"}`}
-      </a>
-    </main>
-  );
+  return <main className="newsletter-unsubscribe-page marketing-page">
+    <a href="/" className="wordmark">DD<span>.</span></a>
+    <h1>{page.heading}</h1>
+    <PreviewFormsNotice available={available} copy={formsCopy} />
+    <p>{page.description}</p>
+    {(state === 'ready' || state === 'error') && validToken && <button className="marketing-action-button" type="button" disabled={!available} onClick={() => void submit()}>{page.action}</button>}
+    {state === 'ready' && !validToken && <p role="status">{page.missing}</p>}
+    {state === 'working' && <p role="status">{copy.working}</p>}
+    {state === 'done' && <p role="status">{page.success}</p>}
+    {state === 'expired' && <p role="status">{copy.expired}</p>}
+    {state === 'error' && <p role="alert">{copy.error}</p>}
+    {(state === 'expired' || (state === 'ready' && !validToken)) && <p><a href={purpose === 'unsubscribe' ? '/unsubscribe' : '/#newsletter'}>{page.recovery}</a></p>}
+    <a href="https://didde-mie.com">{copy.back}</a>
+  </main>;
 }

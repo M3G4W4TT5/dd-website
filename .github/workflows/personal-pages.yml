@@ -19,6 +19,10 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run typecheck -w @dd/personal
+      - run: npm run typecheck:studio
+      - run: npm run test:personal-cms
+      - run: npm run build:studio
+      - run: npm run build:personal-preview
       - run: npm run test:pages
       - run: npm run typecheck:pages
       - run: npm run build:personal

@@ -1,0 +1,25 @@
+{
+  "name": "@dd/studio",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "sanity dev --host 127.0.0.1 --port 3333",
+    "build": "sanity build && sanity manifest extract --path dist/static",
+    "typecheck": "tsc --noEmit",
+    "schema": "sanity schema extract --path ../../tools/personal-sanity/schema.json --force",
+    "typegen": "sanity typegen generate",
+    "validate": "sanity documents validate"
+  },
+  "dependencies": {
+    "sanity": "6.17.0",
+    "@sanity/icons": "^5.0.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "styled-components": "^6.1.19"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/react": "19.1.13"
+  }
+}

@@ -63,9 +63,30 @@ jobs:
       - run: python3 infra/ttd-native-mail-config.test.py
       - run: python3 infra/verify-hosted-compose-upgrade.py
 
+  # Personal CMS release isolation BEGIN
+  personal_release_scope:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      skip_booking_images: ${{ steps.scope.outputs.skip_booking_images }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.20.0
+      - name: Detect personal-only changes without shared dependency changes
+        id: scope
+        env:
+          PERSONAL_CMS_BEFORE_SHA: ${{ github.event.before }}
+        run: node tools/personal-sanity/release-scope.mjs
+  # Personal CMS release isolation END
+
   images:
-    needs: checks
-    if: github.event_name != 'workflow_dispatch' || inputs.release_run_id == ''
+    needs: [checks, personal_release_scope]
+    if: needs.personal_release_scope.outputs.skip_booking_images != 'true' && (github.event_name != 'workflow_dispatch' || inputs.release_run_id == '')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:

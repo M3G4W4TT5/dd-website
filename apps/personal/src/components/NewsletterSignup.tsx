@@ -1,8 +1,9 @@
+import type {CopyGroup} from "../cms/model";
 import { useFormsAvailable, formEndpoint, PreviewFormsNotice } from "../lib/forms";
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
 
-export function NewsletterSignup() {
+export function NewsletterSignup({copy, formsCopy}: {copy: CopyGroup<"newsletter">; formsCopy: CopyGroup<"forms">}) {
   const available = useFormsAvailable();
   const [status, setStatus] = useState("");
   const [sending, setSending] = useState(false);
@@ -22,21 +23,21 @@ export function NewsletterSignup() {
       });
       if (!response.ok) throw new Error("Signup failed");
       form.reset();
-      setStatus("Check your inbox for a confirmation link. If you're already subscribed, you're all set.");
+      setStatus(copy.success);
     } catch {
-      setStatus("We couldn't start your signup right now. Please try again later.");
+      setStatus(copy.error);
     } finally { setSending(false); }
   }
 
   return <div className="newsletter-signup" id="newsletter">
-    <p>Sign up for my newsletter where I share updates on my work and dance videos!</p>
-    <PreviewFormsNotice available={available} />
+    <p>{copy.intro}</p>
+    <PreviewFormsNotice available={available} copy={formsCopy} />
     <form onSubmit={submit}>
-      <label htmlFor="newsletter-email">EMAIL ADDRESS</label>
-      <div className="newsletter-fields"><input id="newsletter-email" name="email" type="email" autoComplete="email" maxLength={254} required placeholder="you@example.com" /><button type="submit" disabled={sending || !available}>{sending ? "SENDING…" : "SIGN UP"}<ArrowUpRight size={18} /></button></div>
-      <label className="newsletter-honeypot" aria-hidden="true">Website<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
+      <label htmlFor="newsletter-email">{copy.emailLabel}</label>
+      <div className="newsletter-fields"><input id="newsletter-email" name="email" type="email" autoComplete="email" maxLength={254} required placeholder={copy.emailPlaceholder} /><button type="submit" disabled={sending || !available}>{sending ? copy.sending : copy.send}<ArrowUpRight size={18} /></button></div>
+      <label className="newsletter-honeypot" aria-hidden="true">{formsCopy.honeypot}<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
     </form>
-    <small>DD Production will email you to confirm. Unsubscribe at any time. <a href="/privacy">Privacy policy</a> · <a href="/unsubscribe">Unsubscribe</a></small>
+    <small>{copy.notice} <a href="/privacy">{copy.privacy}</a> · <a href="/unsubscribe">{copy.unsubscribe}</a></small>
     <p className="newsletter-status" role="status" aria-live="polite">{status}</p>
   </div>;
 }

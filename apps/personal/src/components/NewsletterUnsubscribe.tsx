@@ -1,7 +1,8 @@
+import type {CopyGroup} from "../cms/model";
 import { useFormsAvailable, formEndpoint, PreviewFormsNotice } from "../lib/forms";
 import { useState, type FormEvent } from "react";
 
-export function NewsletterUnsubscribe() {
+export function NewsletterUnsubscribe({copy, formsCopy}: {copy: CopyGroup<"unsubscribe">; formsCopy: CopyGroup<"forms">}) {
   const available = useFormsAvailable();
   const [status, setStatus] = useState("");
   const [sending, setSending] = useState(false);
@@ -20,15 +21,15 @@ export function NewsletterUnsubscribe() {
       });
       if (!response.ok) throw new Error("Unsubscribe request failed");
       form.reset();
-      setStatus("If this address is subscribed, we'll email an unsubscribe link.");
-    } catch { setStatus("Please try later, or reply to a newsletter and ask to unsubscribe."); }
+      setStatus(copy.success);
+    } catch { setStatus(copy.error); }
     finally { setSending(false); }
   }
   return <form className="newsletter-unsubscribe-form" onSubmit={submit}>
-    <PreviewFormsNotice available={available} />
-    <label htmlFor="unsubscribe-email">EMAIL ADDRESS</label>
+    <PreviewFormsNotice available={available} copy={formsCopy} />
+    <label htmlFor="unsubscribe-email">{copy.emailLabel}</label>
     <input id="unsubscribe-email" name="email" type="email" autoComplete="email" maxLength={254} required />
-    <button type="submit" disabled={sending || !available}>{sending ? "SENDING…" : "SEND UNSUBSCRIBE LINK"}</button>
+    <button type="submit" disabled={sending || !available}>{sending ? copy.sending : copy.send}</button>
     <p role="status" aria-live="polite">{status}</p>
   </form>;
 }

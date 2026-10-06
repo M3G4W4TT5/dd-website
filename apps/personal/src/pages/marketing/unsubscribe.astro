@@ -1,9 +1,15 @@
 ---
+import {getSiteContent, pageFor} from '../../cms/content';
+import PreviewEditing from '../../components/PreviewEditing.astro';
+import {stegaClean} from '@sanity/client/stega';
 import SiteFavicon from '../../components/SiteFavicon.astro';
 import { MarketingAction } from '../../components/MarketingAction';
 import '@fontsource/montserrat/500.css';
 import '@fontsource/montserrat/700.css';
 import '@fontsource/montserrat/900.css';
 import '../../styles/site.css';
+const content = await getSiteContent(Astro.locals.preview);
+const {settings} = content;
+const page = pageFor(content, "/marketing/unsubscribe");
 ---
-<!doctype html><html lang="en"><head><SiteFavicon /><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="referrer" content="no-referrer"/><meta name="robots" content="noindex,nofollow"/><title>Email preferences | DD</title></head><body><MarketingAction list="personal" purpose="unsubscribe" token="" language="en" client:load /></body></html>
+<!doctype html><html lang="en"><head><SiteFavicon settings={settings} /><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="referrer" content="no-referrer"/><meta name="robots" content="noindex,nofollow"/><title>{stegaClean(page.title)}</title></head><body><MarketingAction purpose="unsubscribe" page={page} copy={settings.marketing} formsCopy={settings.forms} client:load /><PreviewEditing /></body></html>

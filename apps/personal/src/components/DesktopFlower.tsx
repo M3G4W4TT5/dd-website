@@ -4,7 +4,7 @@ import "./DesktopFlower.css";
 
 const clamp = (value: number, low: number, high: number) => Math.max(low, Math.min(high, value));
 
-export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc: string }) {
+export function DesktopFlower({ maskSrc, modelSrc, desktopLabel, mobileLabel }: { maskSrc: string; modelSrc: string; desktopLabel: string; mobileLabel: string }) {
   const flowerRef = useRef<HTMLButtonElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
@@ -69,7 +69,7 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
     const abort = new AbortController();
     const fullTurn = Math.PI * 2;
     const updateInteraction = () => {
-      flower.setAttribute("aria-label", desktop.matches ? "Spin the flower" : "Spin or drag the flower");
+      flower.setAttribute("aria-label", desktop.matches ? desktopLabel : mobileLabel);
       flower.disabled = !model || reduced.matches
         || document.documentElement.classList.contains("desktop-intro-active");
     };
@@ -439,9 +439,9 @@ export function DesktopFlower({ maskSrc, modelSrc }: { maskSrc: string; modelSrc
       desktop.removeEventListener("change", resize);
       reduced.removeEventListener("change", motionChange);
     };
-  }, [modelSrc]);
+  }, [modelSrc, desktopLabel, mobileLabel]);
 
-  return <><button ref={flowerRef} type="button" className="desktop-flower-layer desktop-flower" aria-label="Spin the flower" disabled
+  return <><button ref={flowerRef} type="button" className="desktop-flower-layer desktop-flower" aria-label={desktopLabel} disabled
     style={{ "--flower-mask": `url("${maskSrc}")` } as CSSProperties}>
     <canvas ref={canvasRef} aria-hidden="true" />
   </button>

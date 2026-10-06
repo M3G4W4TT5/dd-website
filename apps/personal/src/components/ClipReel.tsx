@@ -1,3 +1,5 @@
+import {RichText} from "./RichText";
+import type {CopyGroup, RichTextValue} from "../cms/model";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ArrowUpRight, Pause, Play } from "lucide-react";
 import FlexCarousel from "./FlexCarousel";
@@ -5,7 +7,7 @@ import { SwipeIndicator } from "./SwipeIndicator";
 import type { FlexCarouselApi, ReelClip } from "./flex-carousel-types";
 import "./ClipReel.css";
 
-export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
+export function ClipReel({ clips, copy, bio, source }: { clips: readonly ReelClip[]; copy: CopyGroup<"reel">; bio: RichTextValue; source: {url: string; label: string} }) {
   const [mobile, setMobile] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -47,11 +49,12 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
 
   if (!clips.length) return null;
 
-  return <div className="clip-reel" id="motion" aria-label="DD in motion">
+  return <div className="clip-reel" id="motion" aria-label={copy.label}>
     <div className="clip-reel-stage" ref={stageRef}>
       <SwipeIndicator interactionRef={stageRef} />
       {!nativeMode && <FlexCarousel
         items={clips}
+        accessibleLabel={copy.canvasLabel}
         preset="liquid"
         intro="bloom"
         cardHeight={mobile ? .46 : .52}
@@ -77,17 +80,17 @@ export function ClipReel({ clips }: { clips: readonly ReelClip[] }) {
         onReady={onReady}
         onUnsupported={onUnsupported}
       />}
-      <div className="clip-reel-native" ref={fallbackRef} hidden={ready && !nativeMode} aria-label="Dance video excerpts">
+      <div className="clip-reel-native" ref={fallbackRef} hidden={ready && !nativeMode} aria-label={copy.fallbackLabel}>
         {clips.map(clip => <video key={clip.id} src={clip.src} poster={clip.poster} controls muted playsInline loop preload="none" aria-label={clip.alt} />)}
       </div>
     </div>
-    <p className="clip-reel-bio">DD’s work moves between live stages, music films and campaigns. Selected credits include Dua Lipa’s Glastonbury set, Jungle’s <i>Back On 74</i> and Rosalía’s LUX tour. <a href="https://www.voguescandinavia.com/articles/didde-mie-beauty-guide" target="_blank" rel="noopener noreferrer">Tour source <ArrowUpRight size={14} /></a></p>
+    <p className="clip-reel-bio"><RichText value={bio} inline italicTag="i" /> <a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} <ArrowUpRight size={14} /></a></p>
     <div className="clip-reel-controls">
-      <span>DRAG TO EXPLORE</span>
+      <span>{copy.explore}</span>
       <div>
-        <button type="button" aria-label="Previous dance clip" onClick={() => move(-1)}><ArrowLeft size={18} /></button>
-        {!nativeMode && <button type="button" aria-label={paused ? "Play dance clips" : "Pause dance clips"} aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? <Play size={17} /> : <Pause size={17} />}</button>}
-        <button type="button" aria-label="Next dance clip" onClick={() => move(1)}><ArrowRight size={18} /></button>
+        <button type="button" aria-label={copy.previous} onClick={() => move(-1)}><ArrowLeft size={18} /></button>
+        {!nativeMode && <button type="button" aria-label={paused ? copy.play : copy.pause} aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? <Play size={17} /> : <Pause size={17} />}</button>}
+        <button type="button" aria-label={copy.next} onClick={() => move(1)}><ArrowRight size={18} /></button>
       </div>
     </div>
   </div>;

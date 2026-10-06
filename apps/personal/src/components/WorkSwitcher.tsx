@@ -1,3 +1,4 @@
+import type {CopyGroup} from "../cms/model";
 import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight } from "lucide-react";
@@ -23,11 +24,11 @@ function DDLoader({ label }: { label: string }) {
   </div>;
 }
 
-function ImageError() {
-  return <div className="dd-image-error" role="status" aria-label="Project image could not load">DD.</div>;
+function ImageError({copy}: {copy: CopyGroup<"work">}) {
+  return <div className="dd-image-error" role="status" aria-label={copy.imageError}>DD.</div>;
 }
 
-function MobileWorkImage({ item }: { item: WorkItem }) {
+function MobileWorkImage({ item, copy }: { item: WorkItem; copy: CopyGroup<"work"> }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -39,14 +40,15 @@ function MobileWorkImage({ item }: { item: WorkItem }) {
   if (!item.image) return null;
 
   return <div className="work-mobile-image">
-    {status === "loading" && <DDLoader label={`Loading image for ${item.title}`} />}
-    {status === "error" && <ImageError />}
+    {status === "loading" && <DDLoader label={copy.loading.replace("{title}", item.title)} />}
+    {status === "error" && <ImageError copy={copy} />}
     <img
       ref={imageRef}
       src={item.image}
       alt={item.imageAlt}
       loading="lazy"
       decoding="async"
+      style={{objectPosition: item.imagePosition}}
       className={status === "loaded" ? "is-loaded" : ""}
       onLoad={() => setStatus("loaded")}
       onError={() => setStatus("error")}
@@ -54,7 +56,7 @@ function MobileWorkImage({ item }: { item: WorkItem }) {
   </div>;
 }
 
-export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
+export function WorkSwitcher({ items, copy }: { items: readonly WorkItem[]; copy: CopyGroup<"work"> }) {
   const [active, setActive] = useState(0);
   const [imageStatus, setImageStatus] = useState<Partial<Record<string, "loaded" | "error">>>({});
   const activeImageRef = useRef<HTMLImageElement>(null);
@@ -173,9 +175,9 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
   return (
     <div className="work-switcher">
       <div className="work-visual-column" aria-live="polite">
-        <a ref={visualRef} className="work-visual" href={current.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={`Watch ${current.title} video`}>
-          {currentStatus === "loading" && <DDLoader label={`Loading image for ${current.title}`} />}
-          {currentStatus === "error" && <ImageError />}
+        <a ref={visualRef} className="work-visual" href={current.videoUrl} target="_blank" rel="noopener noreferrer" aria-label={copy.watch.replace("{title}", current.title)}>
+          {currentStatus === "loading" && <DDLoader label={copy.loading.replace("{title}", current.title)} />}
+          {currentStatus === "error" && <ImageError copy={copy} />}
           {currentStatus === "empty" && <div className="work-visual-placeholder" aria-hidden="true">DD.</div>}
           <AnimatePresence mode="wait">
             {current.image && currentStatus !== "error" && <motion.img
@@ -184,6 +186,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
               src={current.image}
               alt={current.imageAlt}
               decoding="async"
+              style={{objectPosition: current.imagePosition}}
               onLoad={() => setImageStatus((previous) => ({ ...previous, [current.image!]: "loaded" }))}
               onError={() => setImageStatus((previous) => ({ ...previous, [current.image!]: "error" }))}
               initial={{ opacity: 0, filter: reducedMotion ? "blur(0px)" : "blur(16px)", scale: reducedMotion ? 1 : 1.04 }}
@@ -207,7 +210,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
         ref={setListRef}
         role={mobile ? "region" : undefined}
         aria-roledescription={mobile ? "carousel" : undefined}
-        aria-label="Selected projects"
+        aria-label={copy.region}
         style={mobile ? mobileHeight ? { height: mobileHeight } : undefined : desktopHeight ? { height: desktopHeight, maxHeight: desktopHeight } : undefined}
         onKeyDown={(event) => {
           if (!mobile || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
@@ -239,24 +242,24 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
               <span className="work-item-note">{item.note}</span>
             </div>
             <div className="work-mobile-media">
-              <MobileWorkImage item={item} />
+              <MobileWorkImage item={item} copy={copy} />
             </div>
           </a>
         ))}
         </div>
       </div>
       <div className="work-gallery-controls">
-        <span>CLICK AN IMAGE TO WATCH · OPENS YOUTUBE</span>
+        <span>{copy.galleryHint}</span>
         <div>
-          <button type="button" onClick={() => carousel?.scrollPrev()} aria-label="Previous project" aria-controls="selected-projects"><ArrowLeft size={20} /></button>
-          <button type="button" onClick={() => carousel?.scrollNext()} aria-label="Next project" aria-controls="selected-projects"><ArrowRight size={20} /></button>
+          <button type="button" onClick={() => carousel?.scrollPrev()} aria-label={copy.previous} aria-controls="selected-projects"><ArrowLeft size={20} /></button>
+          <button type="button" onClick={() => carousel?.scrollNext()} aria-label={copy.next} aria-controls="selected-projects"><ArrowRight size={20} /></button>
         </div>
       </div>
       <div className="work-list-controls">
-        <span>SCROLL TO EXPLORE · {items.length.toString().padStart(2, "0")} PROJECTS</span>
+        <span>{copy.listHint.replace("{count}", items.length.toString().padStart(2, "0"))}</span>
         <div>
-          <button type="button" onClick={() => scrollList(-1)} disabled={!canScrollUp} aria-label="Scroll to previous projects" aria-controls="selected-projects"><ArrowUp size={20} /></button>
-          <button type="button" onClick={() => scrollList(1)} disabled={!canScrollDown} aria-label="Scroll to more projects" aria-controls="selected-projects"><ArrowDown size={20} /></button>
+          <button type="button" onClick={() => scrollList(-1)} disabled={!canScrollUp} aria-label={copy.scrollPrevious} aria-controls="selected-projects"><ArrowUp size={20} /></button>
+          <button type="button" onClick={() => scrollList(1)} disabled={!canScrollDown} aria-label={copy.scrollNext} aria-controls="selected-projects"><ArrowDown size={20} /></button>
         </div>
       </div>
       </div>

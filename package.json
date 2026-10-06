@@ -21,12 +21,19 @@
     "build:server": "npm run build -w @dd/contracts && npm run build -w @dd/mail && npm run build -w @dd/database && npm run build -w @dd/contact && npm run build -w @dd/marketing && npm run build -w @dd/runtime",
     "test:pages": "tsx --test server/runtime/pages-proxy.test.ts",
     "typecheck:pages": "tsc --noEmit -p functions/tsconfig.json",
-    "build:pages-functions": "wrangler pages functions build --outdir=artifacts/pages-functions"
+    "build:pages-functions": "wrangler pages functions build --outdir=artifacts/pages-functions",
+    "test:personal-cms": "tsx --test tools/personal-sanity/integration.test.ts",
+    "build:personal-preview": "PUBLIC_DRAFT_PREVIEW=1 npm run build -w @dd/personal && node tools/personal-sanity/prepare-preview.mjs",
+    "build:studio": "npm run build -w @dd/studio",
+    "typecheck:studio": "npm run typecheck -w @dd/studio"
   },
   "engines": {
     "node": ">=24.0.0"
   },
   "devDependencies": {
+    "@portabletext/block-tools": "^5.0.0",
+    "groq-js": "^2.0.0",
+    "jsdom": "^27.0.0",
     "wrangler": "4.143.1"
   }
 }

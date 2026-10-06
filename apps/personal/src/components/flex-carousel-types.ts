@@ -12,6 +12,7 @@ export type FlexCarouselApi = { move: (direction: number) => void };
 
 export type FlexCarouselProps = {
   items: readonly ReelClip[];
+  accessibleLabel: string;
   preset?: "liquid" | "ribbon" | "vortex" | "arch";
   intro?: "rise" | "bloom" | "spin" | "deal" | "none";
   cardHeight?: number;

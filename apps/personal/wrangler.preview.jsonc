@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "dd-personal-preview",
+  "main": "src/preview/worker.ts",
+  "account_id": "b259f8a4a84c2435819ed369102f3724",
+  "compatibility_date": "2026-10-03",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {"binding": "ASSETS", "run_worker_first": true, "html_handling": "none"},
+  "vars": {"ACCESS_ISSUER": "https://memory-one.cloudflareaccess.com", "ACCESS_AUDIENCE": "3745fc7d4dde914879982e6815225503d2c1850c61adb24919f48123356a1614"},
+  "secrets": {"required": ["SANITY_PREVIEW_READ_TOKEN", "PREVIEW_SESSION_SECRET"]},
+  "observability": {"enabled": false}
+}

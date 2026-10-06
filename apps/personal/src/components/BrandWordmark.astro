@@ -1,9 +1,9 @@
 ---
-import { Image } from "astro:assets";
-import ddName from "../assets/branding/dd-name.png";
+import {imageUrl} from '../cms/content';
+import type {Settings} from '../cms/model';
 
-const { href = "/" } = Astro.props;
+const {href = '/', settings} = Astro.props as {href?: string; settings: Settings};
 ---
-<a class="wordmark wordmark-logo" href={href} aria-label="DD — Didde-Mie Lykke From, top of page">
-  <Image src={ddName} alt="" width={1120} format="png" loading="eager" />
+<a class="wordmark wordmark-logo" href={href} aria-label={settings.navigation.wordmarkLabel}>
+  <img src={imageUrl(settings.branding.wordmark, 1120, 'png')} alt="" width={1120} loading="eager" />
 </a>

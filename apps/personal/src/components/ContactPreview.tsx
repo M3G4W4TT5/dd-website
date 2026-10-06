@@ -1,3 +1,4 @@
+import type {CopyGroup} from "../cms/model";
 import { useFormsAvailable, formEndpoint, PreviewFormsNotice } from "../lib/forms";
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight } from "lucide-react";
@@ -7,7 +8,7 @@ function invalidContactFields(form: HTMLFormElement): string[] {
     .filter((field) => !field.checkValidity()).map((field) => field.name);
 }
 
-export function ContactPreview() {
+export function ContactPreview({copy, formsCopy}: {copy: CopyGroup<"contact">; formsCopy: CopyGroup<"forms">}) {
   const available = useFormsAvailable();
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState("");
@@ -42,9 +43,9 @@ export function ContactPreview() {
       if (!response.ok) throw new Error("Delivery failed");
       form.reset();
       setInvalidFields([]);
-      setStatus("Your message has been sent. Thank you!");
+      setStatus(copy.success);
     } catch {
-      setStatus("Your message could not be sent. Please try again later.");
+      setStatus(copy.error);
     } finally {
       setSending(false);
     }
@@ -52,17 +53,17 @@ export function ContactPreview() {
 
   return (
     <form className="contact-form" noValidate onInput={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onChange={(event) => { if (invalidFields.length) setInvalidFields(invalidContactFields(event.currentTarget)); }} onSubmit={submit}>
-      <PreviewFormsNotice available={available} />
+      <PreviewFormsNotice available={available} copy={formsCopy} />
       <div className="contact-fields">
-        <label>YOUR NAME<input type="text" name="name" autoComplete="name" maxLength={100} required placeholder="Name" aria-invalid={invalidFields.includes("name")} /></label>
-        <label>EMAIL ADDRESS<input type="email" name="email" autoComplete="email" maxLength={254} required placeholder="name@example.com" aria-invalid={invalidFields.includes("email")} /></label>
-        <label className="field-wide">WHAT IS THIS ABOUT?<select name="subject" required defaultValue="" aria-invalid={invalidFields.includes("subject")}><option value="" disabled>Choose a topic</option><option value="dance">Dance / performance</option><option value="choreography">Choreography</option><option value="modelling">Modelling</option><option value="brand_partnerships">Brand partnerships</option><option value="other">Other</option></select></label>
-        <label className="field-wide">YOUR MESSAGE<textarea name="message" rows={5} maxLength={2000} required placeholder="Tell DD about your inquiry…" aria-invalid={invalidFields.includes("message")} /></label>
-        <label className="contact-honeypot" aria-hidden="true">Website<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
+        <label>{copy.nameLabel}<input type="text" name="name" autoComplete="name" maxLength={100} required placeholder={copy.namePlaceholder} aria-invalid={invalidFields.includes("name")} /></label>
+        <label>{copy.emailLabel}<input type="email" name="email" autoComplete="email" maxLength={254} required placeholder={copy.emailPlaceholder} aria-invalid={invalidFields.includes("email")} /></label>
+        <label className="field-wide">{copy.subjectLabel}<select name="subject" required defaultValue="" aria-invalid={invalidFields.includes("subject")}><option value="" disabled>{copy.subjectPlaceholder}</option><option value="dance">{copy.dance}</option><option value="choreography">{copy.choreography}</option><option value="modelling">{copy.modelling}</option><option value="brand_partnerships">{copy.brand_partnerships}</option><option value="other">{copy.other}</option></select></label>
+        <label className="field-wide">{copy.messageLabel}<textarea name="message" rows={5} maxLength={2000} required placeholder={copy.messagePlaceholder} aria-invalid={invalidFields.includes("message")} /></label>
+        <label className="contact-honeypot" aria-hidden="true">{formsCopy.honeypot}<input name="website" type="text" tabIndex={-1} autoComplete="off" /></label>
       </div>
-      {invalidFields.length > 0 && <p className="contact-validation-error" role="alert">Complete or correct the highlighted fields before sending.</p>}
-      <div className="contact-submit"><button type="submit" disabled={sending || !available}>{sending ? "Sending…" : "Send inquiry"} <ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status}</p></div>
-      <p className="form-privacy">We use your details to reply. <a href="/privacy">Read the privacy policy</a>.</p>
+      {invalidFields.length > 0 && <p className="contact-validation-error" role="alert">{copy.validation}</p>}
+      <div className="contact-submit"><button type="submit" disabled={sending || !available}>{sending ? copy.sending : copy.send} <ArrowUpRight size={20} /></button><p role="status" aria-live="polite">{status}</p></div>
+      <p className="form-privacy">{copy.privacyBefore} <a href="/privacy">{copy.privacyLink}</a>{copy.privacyAfter}</p>
     </form>
   );
 }
