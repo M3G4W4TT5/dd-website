@@ -1,0 +1,4 @@
+---
+import {VisualEditing} from '@sanity/astro/visual-editing';
+---
+{import.meta.env.PUBLIC_DRAFT_PREVIEW === '1' && Astro.locals.preview && <VisualEditing enabled />}

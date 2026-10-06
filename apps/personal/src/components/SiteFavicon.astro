@@ -1,1 +1,6 @@
-<link rel="icon" type="image/png" sizes="64x64" href="/branding/dd/flower-favicon-64.png" />
+---
+import {imageUrl} from '../cms/content';
+import type {Settings} from '../cms/model';
+const {settings} = Astro.props as {settings: Settings};
+---
+<link rel="icon" type="image/png" sizes="64x64" href={imageUrl(settings.branding.favicon)} />

@@ -1,0 +1,47 @@
+name: Personal Sanity content backup
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
+permissions:
+  contents: read
+concurrency:
+  group: personal-sanity-backup
+  cancel-in-progress: false
+jobs:
+  backup:
+    # Activation is an explicit release step after checking included Actions quota.
+    if: vars.PERSONAL_CMS_BACKUPS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24.20.0
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Export personal documents and original assets
+        run: npx --no-install tsx tools/personal-sanity/backup.ts
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.PERSONAL_SANITY_BACKUP_READ_TOKEN }}
+      - name: Validate backup before storing it
+        shell: bash
+        run: |
+          for backup in artifacts/private/sanity-backups/*; do
+            case "$backup" in *.incomplete) exit 1 ;; esac
+            npx --no-install tsx tools/personal-sanity/restore.ts "$backup" personal-restore-validation
+          done
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: personal-sanity-${{ github.run_id }}
+          path: artifacts/private/sanity-backups/
+          if-no-files-found: error
+          retention-days: 28
+          compression-level: 0
+      - name: Report failure
+        if: failure()
+        run: |
+          echo '::error::Personal content backup failed. The previous backup remains available. See docs/PERSONAL_CMS_OPERATIONS.md.'

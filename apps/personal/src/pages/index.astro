@@ -1,8 +1,5 @@
 ---
 import { ArrowUpRight } from "lucide-react";
-import { Image, getImage } from "astro:assets";
-import ddFlower from "../assets/branding/dd-flower-sharp-corners.png";
-import flower from "../assets/branding/flower.png";
 import BrandWordmark from "../components/BrandWordmark.astro";
 import SiteFavicon from "../components/SiteFavicon.astro";
 import { ContactPreview } from "../components/ContactPreview";
@@ -11,14 +8,24 @@ import { DesktopFlower } from "../components/DesktopFlower";
 import { WorkSwitcher } from "../components/WorkSwitcher";
 import { ClipReel } from "../components/ClipReel";
 import { NewsletterSignup } from "../components/NewsletterSignup";
-import { clips, media, work } from "../content";
+import {getSiteContent, imageUrl, imagePosition} from '../cms/content';
+import {RichText} from '../components/RichText';
+import SiteFooter from '../components/SiteFooter.astro';
+import PreviewEditing from '../components/PreviewEditing.astro';
+import {stegaClean} from '@sanity/client/stega';
 import "@fontsource/montserrat/500.css";
 import "@fontsource/montserrat/700.css";
 import "@fontsource/montserrat/900.css";
 import "../styles/site.css";
 
 const bookingUrl = import.meta.env.PUBLIC_BOOKING_URL || "http://127.0.0.1:3000";
-const flowerMask = await getImage({ src: flower, width: 512, format: "png" });
+const {home, settings} = await getSiteContent(Astro.locals.preview);
+const flowerMask = {src: imageUrl(settings.branding.flowerMask, 512, 'png')};
+const clips = home.reel.map(c => ({id: c._id, src: c.video.asset.url, poster: imageUrl(c.poster), title: c.title, alt: c.description}));
+const work = home.selectedWork.map(w => ({number: w._id, title: w.title, category: w.category, role: w.role, note: w.description, image: imageUrl(w.image), imageAlt: w.image.alt, imagePosition: imagePosition(w.image), imageCredit: w.image.credit, videoUrl: w.videoUrl}));
+const [workFirst, ...workRest] = home.workHeading.split('\n');
+const [followFirst, ...followRest] = home.followHeading.split('\n');
+const followEnd = followRest.join('\n').split(' ');
 ---
 
 <!doctype html>
@@ -36,13 +43,16 @@ const flowerMask = await getImage({ src: flower, width: 512, format: "png" });
         }, 4000);
       }
     </script>
-    <SiteFavicon />
+    <SiteFavicon settings={settings} />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
-    <meta name="description" content="DD — Didde-Mie Lykke From. Dancer and choreographer. Selected performance, film and modelling work." />
-    <meta name="author" content="Didde-Mie Lykke From" />
-    <title>DD — Didde-Mie Lykke From | Dancer / Choreographer</title>
+    <meta name="description" content={stegaClean(settings.metadata.description)} />
+    <meta name="author" content={stegaClean(settings.metadata.author)} />
+    <title>{stegaClean(settings.metadata.title)}</title>
+    {settings.metadata.socialTitle && <meta property="og:title" content={stegaClean(settings.metadata.socialTitle)} />}
+    {settings.metadata.socialDescription && <meta property="og:description" content={stegaClean(settings.metadata.socialDescription)} />}
+    {settings.metadata.socialImage && <meta property="og:image" content={imageUrl(settings.metadata.socialImage)} />}
   </head>
   <body>
     <div class="site-intro" aria-hidden="true">
@@ -56,53 +66,53 @@ const flowerMask = await getImage({ src: flower, width: 512, format: "png" });
     </script>
     <EditorialMotion client:load />
     <header class="site-header">
-      <BrandWordmark href="#top" />
-      <nav class="desktop-nav" aria-label="Main navigation"><a href="#work">Work</a><a href="#contact">Contact</a></nav>
-      <a class="header-book" href={bookingUrl}>STUDIO BOOKING <ArrowUpRight size={18} /></a>
-      <details class="mobile-menu"><summary>MENU <span>+</span></summary><nav aria-label="Mobile navigation"><a href="#work">Work</a><a href="#contact">Contact</a><a href={bookingUrl}>Studio booking</a></nav></details>
+      <BrandWordmark href="#top" settings={settings} />
+      <nav class="desktop-nav" aria-label={settings.navigation.mainLabel}><a href="#work">{settings.navigation.work}</a><a href="#contact">{settings.navigation.contact}</a></nav>
+      <a class="header-book" href={bookingUrl}>{settings.navigation.booking} <ArrowUpRight size={18} /></a>
+      <details class="mobile-menu"><summary>{settings.navigation.menu} <span>+</span></summary><nav aria-label={settings.navigation.mobileLabel}><a href="#work">{settings.navigation.work}</a><a href="#contact">{settings.navigation.contact}</a><a href={bookingUrl}>{settings.navigation.mobileBooking}</a></nav></details>
     </header>
 
     <main id="top" class="desktop-flower-page">
-      <DesktopFlower client:load maskSrc={flowerMask.src} modelSrc="/branding/flower-globe-coin.glb" />
+      <DesktopFlower client:load maskSrc={flowerMask.src} modelSrc="/branding/flower-globe-coin.glb" desktopLabel={settings.navigation.flowerDesktop} mobileLabel={settings.navigation.flowerMobile} />
       <section class="hero" aria-labelledby="hero-heading">
-        <div class="hero-name"><h1 id="hero-heading">IN MOTION.</h1></div>
-        <div class="hero-image" data-reveal>
+        <div class="hero-name"><h1 id="hero-heading">{home.hero.heading}</h1></div>
+        <div class="hero-image" data-reveal style={`--hero-position:${imagePosition(home.hero.desktop)};--hero-mobile-position:${imagePosition(home.hero.mobile)}`}>
           <picture>
-            <source media="(max-width:760px)" srcset={media.mobileHeroPortrait} />
-            <img src={media.heroPortrait} alt="DD in a HALO campaign portrait" fetchpriority="high" />
+            <source media="(max-width:760px)" srcset={imageUrl(home.hero.mobile)} />
+            <img src={imageUrl(home.hero.desktop)} alt={home.hero.desktop.alt} fetchpriority="high" />
           </picture>
+          {home.hero.caption && <p class="hero-caption">{home.hero.caption}</p>}
           <div class="hero-overlay-type" aria-hidden="true">DD<span class="hero-overlay-period">.</span></div>
         </div>
       </section>
 
-      <section class="intro-statement" aria-label="Introduction">
-        <p>DANCE.<br />CHOREOGRAPHY.<br /><em>MODELLING.</em></p>
-        <ClipReel client:visible clips={clips} />
+      <section class="intro-statement" aria-label={settings.navigation.introduction}>
+        <p><RichText value={home.introduction} inline /></p>
+        <ClipReel client:visible clips={clips} copy={settings.reel} bio={home.reelBio} source={home.reelSource} />
       </section>
 
       <section class="work-section" id="work" aria-labelledby="work-title">
-        <div class="mega-heading"><h2 id="work-title">SELECTED<br /><span>WORK.</span></h2></div>
-        <WorkSwitcher client:load items={work} />
+        <div class="mega-heading"><h2 id="work-title">{workFirst}<br /><span>{workRest.join(" ")}</span></h2></div>
+        <WorkSwitcher client:load items={work} copy={settings.work} />
       </section>
 
-      <section class="contact-section" id="contact" aria-labelledby="contact-title" style={`--contact-image: url("${media.lowerBanner}"); --contact-desktop-image: url("${media.desktopContactPortrait}")`}>
-        <div class="contact-layout"><div class="contact-copy"><h2 id="contact-title"><span>WORK<br />WITH</span><span class="contact-title-logo"><Image src={ddFlower} alt="DD." width={600} widths={[240, 360, 600]} sizes="(max-width: 500px) 26vw, (max-width: 760px) 184px, (max-width: 1653px) 17vw, 275px" format="webp" quality={95} loading="lazy" /></span></h2><p>For dance, choreography and campaign inquiries.</p></div><ContactPreview client:load /></div>
+      <section class="contact-section" id="contact" aria-labelledby="contact-title" style={`--contact-image:url("${imageUrl(home.contact.mobile)}");--contact-desktop-image:url("${imageUrl(home.contact.desktop)}");--contact-position:${imagePosition(home.contact.desktop)};--contact-mobile-position:${imagePosition(home.contact.mobile)};--contact-small-position:${imagePosition(home.contact.mobile, true)}`}>
+        <div class="contact-layout"><div class="contact-copy"><h2 id="contact-title"><span>{home.contact.heading.split("\n").map((line,i) => <>{i > 0 && <br />}{line}</>)}</span><span class="contact-title-logo"><img src={imageUrl(settings.branding.contactMark, 600, "webp")} srcset={[240,360,600].map(w => `${imageUrl(settings.branding.contactMark, w, "webp")} ${w}w`).join(", ")} alt={settings.branding.contactMark.alt} width={600} sizes="(max-width: 500px) 26vw, (max-width: 760px) 184px, (max-width: 1653px) 17vw, 275px" loading="lazy" /></span></h2><p>{home.contact.description}</p></div><ContactPreview client:load copy={settings.contact} formsCopy={settings.forms} /></div>
       </section>
 
       <section class="links-section" aria-labelledby="links-title">
         <div class="links-layout">
-          <div class="links-intro"><h2 id="links-title">FOLLOW<br />THE <span>WORK.</span></h2><NewsletterSignup client:load /></div>
+          <div class="links-intro"><h2 id="links-title">{followFirst}<br />{followEnd.slice(0,-1).join(" ")} <span>{followEnd.at(-1)}</span></h2><NewsletterSignup client:load copy={settings.newsletter} formsCopy={settings.forms} /></div>
           <div class="links-list">
-            <a href={bookingUrl}><span>Studio booking</span><small>TTD STUDIO</small><ArrowUpRight size={23} /></a>
-            <a href="https://www.instagram.com/diddemie_from/" target="_blank" rel="noopener noreferrer"><span>Instagram</span><small>@diddemie_from</small><ArrowUpRight size={23} /></a>
-            <a href="https://www.tiktok.com/@diddemielykkefrom" target="_blank" rel="noopener noreferrer"><span>TikTok</span><small>@diddemielykkefrom</small><ArrowUpRight size={23} /></a>
-            <a href="https://www.imdb.com/name/nm15290342/" target="_blank" rel="noopener noreferrer"><span>IMDb</span><small>PROFILE</small><ArrowUpRight size={23} /></a>
+            <a href={bookingUrl}><span>{settings.bookingLabel}</span><small>{settings.bookingHandle}</small><ArrowUpRight size={23} /></a>
+            {settings.socialLinks.map(link => <a href={link.url} target="_blank" rel="noopener noreferrer"><span>{link.label}</span><small>{link.handle}</small><ArrowUpRight size={23} /></a>)}
           </div>
         </div>
       </section>
     </main>
 
-    <footer class="site-footer"><div class="footer-bottom"><span>© {new Date().getFullYear()} DD Production</span><a href="/privacy">PRIVACY POLICY</a><a class="footer-credit" href="https://memoryone.eu/" target="_blank" rel="noopener noreferrer"><span>Designed by</span><span class="footer-credit-logo" role="img" aria-label="Memory(One)"></span></a></div></footer>
+    <SiteFooter settings={settings} />
+    <PreviewEditing />
     <script>
       const header = document.querySelector<HTMLElement>(".site-header");
       const heroImage = document.querySelector<HTMLElement>(".hero-image");

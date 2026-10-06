@@ -17,3 +17,9 @@ artifacts/pages-functions/
 __pycache__/
 
 artifacts/runtime-probes/
+
+.preview-dist/
+.wrangler/
+.sanity/
+.dev.vars*
+!.dev.vars.example

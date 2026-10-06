@@ -239,6 +239,7 @@ const Digits = ({ value }) => (
 /** @param {import("./flex-carousel-types").FlexCarouselProps} props */
 const FlexCarousel = ({
   items = [],
+  accessibleLabel,
   preset = 'liquid',
   intro = 'rise',
   cardHeight = 0.5,
@@ -530,6 +531,7 @@ const FlexCarousel = ({
       video.loop = true;
       video.playsInline = true;
       video.preload = 'metadata';
+      video.crossOrigin = 'anonymous';
       video.src = item.src;
       video.setAttribute('aria-label', item.title);
       sources.append(video);
@@ -1329,7 +1331,7 @@ const FlexCarousel = ({
       style={{ ...style, '--flex-carousel-half': `${Math.min(Math.max(cardHeight, 0.05), 1) * 50}%` }}
       role="region"
       aria-roledescription="carousel"
-      aria-label="Dance video excerpts. Drag or use the left and right arrow keys to explore."
+      aria-label={accessibleLabel}
       tabIndex={0}
     >
       {captions && current && revealed && (

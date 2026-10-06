@@ -1,0 +1,1031 @@
+{
+  "settings": {
+    "_id": "personal-settings",
+    "metadata": {
+      "title": "DD — Didde-Mie Lykke From | Dancer / Choreographer",
+      "description": "DD — Didde-Mie Lykke From. Dancer and choreographer. Selected performance, film and modelling work.",
+      "author": "Didde-Mie Lykke From"
+    },
+    "branding": {
+      "wordmark": {
+        "asset": {
+          "_id": "image-f2bf7198500e9e171efa7b22649f129992f577ab-20476x2372-png",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/f2bf7198500e9e171efa7b22649f129992f577ab-20476x2372.png"
+        },
+        "alt": "DD — Didde-Mie Lykke From",
+        "credit": "",
+        "frame": {
+          "x": 50,
+          "y": 50
+        }
+      },
+      "contactMark": {
+        "asset": {
+          "_id": "image-b628db94f07a3d056d35ecb97f12b49ae1c836ad-5260x2372-png",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/b628db94f07a3d056d35ecb97f12b49ae1c836ad-5260x2372.png"
+        },
+        "alt": "DD.",
+        "credit": "",
+        "frame": {
+          "x": 50,
+          "y": 50
+        }
+      },
+      "flowerMask": {
+        "asset": {
+          "_id": "image-b9a85d86742105d5a8c12757dd6ee80d42d375b9-2048x2048-png",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/b9a85d86742105d5a8c12757dd6ee80d42d375b9-2048x2048.png"
+        },
+        "alt": "DD flower",
+        "credit": "",
+        "frame": {
+          "x": 50,
+          "y": 50
+        }
+      },
+      "favicon": {
+        "asset": {
+          "_id": "image-3e8045c16aea492cf65214b9ce9e89641a419559-64x64-png",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/3e8045c16aea492cf65214b9ce9e89641a419559-64x64.png"
+        },
+        "alt": "DD flower",
+        "credit": "",
+        "frame": {
+          "x": 50,
+          "y": 50
+        }
+      },
+      "footerMark": {
+        "asset": {
+          "_id": "image-474f8a2c531915e1791b98b869f05265afd421f4-1534x320-png",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/474f8a2c531915e1791b98b869f05265afd421f4-1534x320.png"
+        },
+        "alt": "Memory(One)",
+        "credit": "",
+        "frame": {
+          "x": 50,
+          "y": 50
+        }
+      }
+    },
+    "socialLinks": [
+      {
+        "_key": "instagram",
+        "label": "Instagram",
+        "url": "https://www.instagram.com/diddemie_from/",
+        "handle": "@diddemie_from"
+      },
+      {
+        "_key": "tiktok",
+        "label": "TikTok",
+        "url": "https://www.tiktok.com/@diddemielykkefrom",
+        "handle": "@diddemielykkefrom"
+      },
+      {
+        "_key": "imdb",
+        "label": "IMDb",
+        "url": "https://www.imdb.com/name/nm15290342/",
+        "handle": "PROFILE"
+      }
+    ],
+    "bookingLabel": "Studio booking",
+    "bookingHandle": "TTD STUDIO",
+    "navigation": {
+      "introduction": "Introduction",
+      "flowerDesktop": "Spin the flower",
+      "flowerMobile": "Spin or drag the flower",
+      "mainLabel": "Main navigation",
+      "mobileLabel": "Mobile navigation",
+      "work": "Work",
+      "contact": "Contact",
+      "booking": "STUDIO BOOKING",
+      "mobileBooking": "Studio booking",
+      "menu": "MENU",
+      "wordmarkLabel": "DD — Didde-Mie Lykke From, top of page"
+    },
+    "footer": {
+      "owner": "DD Production",
+      "privacy": "PRIVACY POLICY",
+      "credit": "Designed by",
+      "creditLabel": "Memory(One)"
+    },
+    "forms": {
+      "previewBefore": "This is a visual preview. Forms are available on",
+      "previewAfter": ".",
+      "honeypot": "Website"
+    },
+    "contact": {
+      "nameLabel": "YOUR NAME",
+      "namePlaceholder": "Name",
+      "emailLabel": "EMAIL ADDRESS",
+      "emailPlaceholder": "name@example.com",
+      "subjectLabel": "WHAT IS THIS ABOUT?",
+      "subjectPlaceholder": "Choose a topic",
+      "dance": "Dance / performance",
+      "choreography": "Choreography",
+      "modelling": "Modelling",
+      "brand_partnerships": "Brand partnerships",
+      "other": "Other",
+      "messageLabel": "YOUR MESSAGE",
+      "messagePlaceholder": "Tell DD about your inquiry…",
+      "validation": "Complete or correct the highlighted fields before sending.",
+      "send": "Send inquiry",
+      "sending": "Sending…",
+      "success": "Your message has been sent. Thank you!",
+      "error": "Your message could not be sent. Please try again later.",
+      "privacyBefore": "We use your details to reply.",
+      "privacyLink": "Read the privacy policy",
+      "privacyAfter": "."
+    },
+    "newsletter": {
+      "intro": "Sign up for my newsletter where I share updates on my work and dance videos!",
+      "emailLabel": "EMAIL ADDRESS",
+      "emailPlaceholder": "you@example.com",
+      "sending": "SENDING…",
+      "send": "SIGN UP",
+      "notice": "DD Production will email you to confirm. Unsubscribe at any time.",
+      "privacy": "Privacy policy",
+      "unsubscribe": "Unsubscribe",
+      "success": "Check your inbox for a confirmation link. If you're already subscribed, you're all set.",
+      "error": "We couldn't start your signup right now. Please try again later."
+    },
+    "reel": {
+      "canvasLabel": "Dance video excerpts. Drag or use the left and right arrow keys to explore.",
+      "label": "DD in motion",
+      "fallbackLabel": "Dance video excerpts",
+      "sourceLabel": "Tour source",
+      "explore": "DRAG TO EXPLORE",
+      "previous": "Previous dance clip",
+      "next": "Next dance clip",
+      "play": "Play dance clips",
+      "pause": "Pause dance clips"
+    },
+    "work": {
+      "imageError": "Project image could not load",
+      "loading": "Loading image for {title}",
+      "watch": "Watch {title} video",
+      "region": "Selected projects",
+      "galleryHint": "CLICK AN IMAGE TO WATCH · OPENS YOUTUBE",
+      "previous": "Previous project",
+      "next": "Next project",
+      "listHint": "SCROLL TO EXPLORE · {count} PROJECTS",
+      "scrollPrevious": "Scroll to previous projects",
+      "scrollNext": "Scroll to more projects"
+    },
+    "unsubscribe": {
+      "emailLabel": "EMAIL ADDRESS",
+      "sending": "SENDING…",
+      "send": "SEND UNSUBSCRIBE LINK",
+      "success": "If this address is subscribed, we'll email an unsubscribe link.",
+      "error": "Please try later, or reply to a newsletter and ask to unsubscribe."
+    },
+    "marketing": {
+      "working": "Working…",
+      "expired": "This link has expired or has already been used.",
+      "error": "We could not complete this request. Please try again later.",
+      "back": "Back to DD"
+    }
+  },
+  "home": {
+    "_id": "personal-home",
+    "hero": {
+      "heading": "IN MOTION.",
+      "caption": "",
+      "desktop": {
+        "asset": {
+          "_id": "image-5d7ddf210442a57b58a10a49d34dcf99778962e0-2100x913-webp",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/5d7ddf210442a57b58a10a49d34dcf99778962e0-2100x913.webp"
+        },
+        "alt": "DD in a HALO campaign portrait",
+        "credit": "HALO",
+        "frame": {
+          "x": 50,
+          "y": 50
+        }
+      },
+      "mobile": {
+        "asset": {
+          "_id": "image-22eb260ee1fbb188769ecd3f6df213beb0839da6-480x700-webp",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/22eb260ee1fbb188769ecd3f6df213beb0839da6-480x700.webp"
+        },
+        "alt": "DD in a HALO campaign portrait",
+        "credit": "HALO",
+        "frame": {
+          "x": 50,
+          "y": 0
+        }
+      }
+    },
+    "introduction": [
+      {
+        "_type": "block",
+        "_key": "c5cf97febc0c",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_type": "span",
+            "_key": "615a132fb905",
+            "text": "DANCE.\nCHOREOGRAPHY.\n",
+            "marks": []
+          },
+          {
+            "_type": "span",
+            "_key": "650c0ca5d55f",
+            "text": "MODELLING.",
+            "marks": [
+              "em"
+            ]
+          }
+        ]
+      }
+    ],
+    "reelBio": [
+      {
+        "_type": "block",
+        "_key": "a2cf17c3f53f",
+        "style": "normal",
+        "markDefs": [],
+        "children": [
+          {
+            "_type": "span",
+            "_key": "4834af7d5a51",
+            "text": "DD’s work moves between live stages, music films and campaigns. Selected credits include Dua Lipa’s Glastonbury set, Jungle’s ",
+            "marks": []
+          },
+          {
+            "_type": "span",
+            "_key": "fd349397e230",
+            "text": "Back On 74",
+            "marks": [
+              "em"
+            ]
+          },
+          {
+            "_type": "span",
+            "_key": "d047abea538d",
+            "text": " and Rosalía’s LUX tour.",
+            "marks": []
+          }
+        ]
+      }
+    ],
+    "reelSource": {
+      "label": "Tour source",
+      "url": "https://www.voguescandinavia.com/articles/didde-mie-beauty-guide",
+      "handle": ""
+    },
+    "reel": [
+      {
+        "_id": "gYBbIurMXvrOqyYf7WwrGS",
+        "_key": "jungle",
+        "title": "Jungle / Back On 74",
+        "description": "Dance excerpt from Jungle / Back On 74",
+        "video": {
+          "asset": {
+            "_id": "file-ff04eb47798ed59260e20609fd959483c0e00022-mp4",
+            "url": "https://cdn.sanity.io/files/i7lp8473/production/ff04eb47798ed59260e20609fd959483c0e00022.mp4"
+          }
+        },
+        "poster": {
+          "asset": {
+            "_id": "image-226a65da7ed1042a792ec0968d029b1b8f06dec7-960x540-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/226a65da7ed1042a792ec0968d029b1b8f06dec7-960x540.webp"
+          },
+          "alt": "Dance excerpt from Jungle / Back On 74",
+          "credit": "",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      },
+      {
+        "_id": "gYBbIurMXvrOqyYf7WwsbI",
+        "_key": "potion",
+        "title": "Calvin Harris / Potion",
+        "description": "Dance excerpt from Calvin Harris / Potion",
+        "video": {
+          "asset": {
+            "_id": "file-ed8339fe03ffb0dc6da901c44d614228e062d0bf-mp4",
+            "url": "https://cdn.sanity.io/files/i7lp8473/production/ed8339fe03ffb0dc6da901c44d614228e062d0bf.mp4"
+          }
+        },
+        "poster": {
+          "asset": {
+            "_id": "image-84f8d605cae56e0639d5cd792c8fa12d5627762e-960x540-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/84f8d605cae56e0639d5cd792c8fa12d5627762e-960x540.webp"
+          },
+          "alt": "Dance excerpt from Calvin Harris / Potion",
+          "credit": "",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      },
+      {
+        "_id": "4Uon20R3fRb2VIjNACkzAy",
+        "_key": "gap",
+        "title": "GAP x Jungle / Linen Moves",
+        "description": "Dance excerpt from GAP x Jungle / Linen Moves",
+        "video": {
+          "asset": {
+            "_id": "file-4d876808ca6bda9955f275d75d4ad235fee5660e-mp4",
+            "url": "https://cdn.sanity.io/files/i7lp8473/production/4d876808ca6bda9955f275d75d4ad235fee5660e.mp4"
+          }
+        },
+        "poster": {
+          "asset": {
+            "_id": "image-b606b0d2eaafed094f3672d2ad68bf713be3d2d3-960x540-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/b606b0d2eaafed094f3672d2ad68bf713be3d2d3-960x540.webp"
+          },
+          "alt": "Dance excerpt from GAP x Jungle / Linen Moves",
+          "credit": "",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      },
+      {
+        "_id": "bQYP7xhuT5v8w3idX5lsWh",
+        "_key": "lisa",
+        "title": "LISA x NikeSKIMS",
+        "description": "Dance excerpt from LISA x NikeSKIMS",
+        "video": {
+          "asset": {
+            "_id": "file-dd3d3f43b9db31737efc277195927623a3bdebe0-mp4",
+            "url": "https://cdn.sanity.io/files/i7lp8473/production/dd3d3f43b9db31737efc277195927623a3bdebe0.mp4"
+          }
+        },
+        "poster": {
+          "asset": {
+            "_id": "image-e580b7cc9c8764f7d67d790da9a0dbc3dfe7041f-960x540-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/e580b7cc9c8764f7d67d790da9a0dbc3dfe7041f-960x540.webp"
+          },
+          "alt": "Dance excerpt from LISA x NikeSKIMS",
+          "credit": "",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      },
+      {
+        "_id": "bQYP7xhuT5v8w3idX5lskF",
+        "_key": "something-wrong",
+        "title": "DJ Snake, Don Toliver / Something Wrong",
+        "description": "Dance excerpt from DJ Snake, Don Toliver / Something Wrong",
+        "video": {
+          "asset": {
+            "_id": "file-d05c224fb9e44f0681e7f40ca8c0191214afa69b-mp4",
+            "url": "https://cdn.sanity.io/files/i7lp8473/production/d05c224fb9e44f0681e7f40ca8c0191214afa69b.mp4"
+          }
+        },
+        "poster": {
+          "asset": {
+            "_id": "image-c0cc58fe12dc06c61f0bba015fb897dee6bddaa3-960x540-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/c0cc58fe12dc06c61f0bba015fb897dee6bddaa3-960x540.webp"
+          },
+          "alt": "Dance excerpt from DJ Snake, Don Toliver / Something Wrong",
+          "credit": "",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      },
+      {
+        "_id": "bQYP7xhuT5v8w3idX5ltSH",
+        "_key": "houdini",
+        "title": "Dua Lipa / Glastonbury",
+        "description": "Dance excerpt from Dua Lipa / Glastonbury",
+        "video": {
+          "asset": {
+            "_id": "file-0990512a0cea4ac21d6771ea958fe9816e91ed12-mp4",
+            "url": "https://cdn.sanity.io/files/i7lp8473/production/0990512a0cea4ac21d6771ea958fe9816e91ed12.mp4"
+          }
+        },
+        "poster": {
+          "asset": {
+            "_id": "image-4e17b281c8e9010965a56c42146cfcbfd6fc1332-960x540-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/4e17b281c8e9010965a56c42146cfcbfd6fc1332-960x540.webp"
+          },
+          "alt": "Dance excerpt from Dua Lipa / Glastonbury",
+          "credit": "",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      },
+      {
+        "_id": "4Uon20R3fRb2VIjNACl3ra",
+        "_key": "berghain",
+        "title": "Rosalía / BRIT Awards 2026",
+        "description": "Dance excerpt from Rosalía / BRIT Awards 2026",
+        "video": {
+          "asset": {
+            "_id": "file-296ed048a1d67ca800bd0ca2b03f4bc70e6c88c4-mp4",
+            "url": "https://cdn.sanity.io/files/i7lp8473/production/296ed048a1d67ca800bd0ca2b03f4bc70e6c88c4.mp4"
+          }
+        },
+        "poster": {
+          "asset": {
+            "_id": "image-35f357fa52b0a51ad46f26dac924ce36ac0fc697-960x540-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/35f357fa52b0a51ad46f26dac924ce36ac0fc697-960x540.webp"
+          },
+          "alt": "Dance excerpt from Rosalía / BRIT Awards 2026",
+          "credit": "",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      },
+      {
+        "_id": "gYBbIurMXvrOqyYf7WwwMH",
+        "_key": "de-aqui-no-sales",
+        "title": "Rosalía / DE AQUÍ NO SALES",
+        "description": "Dance excerpt from Rosalía / DE AQUÍ NO SALES",
+        "video": {
+          "asset": {
+            "_id": "file-1f5bd1e09d160ca1ec490277ea0d187c1c4e2e28-mp4",
+            "url": "https://cdn.sanity.io/files/i7lp8473/production/1f5bd1e09d160ca1ec490277ea0d187c1c4e2e28.mp4"
+          }
+        },
+        "poster": {
+          "asset": {
+            "_id": "image-c146e443ca50635509e7cab99ac4a3dac9e8dd65-960x540-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/c146e443ca50635509e7cab99ac4a3dac9e8dd65-960x540.webp"
+          },
+          "alt": "Dance excerpt from Rosalía / DE AQUÍ NO SALES",
+          "credit": "",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        }
+      }
+    ],
+    "selectedWork": [
+      {
+        "_id": "4Uon20R3fRb2VIjNACl4ym",
+        "_key": "work-01",
+        "title": "Dua Lipa / Glastonbury",
+        "category": "DANCE",
+        "role": "Dancer · 2024",
+        "description": "DD performed in Dua Lipa’s Pyramid Stage set. She is the dancer at far left in this photograph.",
+        "image": {
+          "asset": {
+            "_id": "image-e8a1cbb8076baf76b33652fff42f5122c57a7817-2000x1270-jpg",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/e8a1cbb8076baf76b33652fff42f5122c57a7817-2000x1270.jpg"
+          },
+          "alt": "DD at far left among dancers performing with Dua Lipa at Glastonbury",
+          "credit": "User-supplied Glastonbury photograph / photographer to confirm",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=qeQfFfRy_FU"
+      },
+      {
+        "_id": "gYBbIurMXvrOqyYf7Wwy70",
+        "_key": "work-02",
+        "title": "Jungle / Back On 74",
+        "category": "DANCE",
+        "role": "Dancer · 2023",
+        "description": "DD is credited as a dancer in Back On 74. Choreography is by Shay Latukolan.",
+        "image": {
+          "asset": {
+            "_id": "image-1d8b8c04cdc8cc5ab41d909df903d2a494ef275b-2400x1600-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/1d8b8c04cdc8cc5ab41d909df903d2a494ef275b-2400x1600.webp"
+          },
+          "alt": "Three dancers in a desert-set scene from Jungle’s Back On 74",
+          "credit": "User-supplied Back On 74 still / creator to confirm",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=q3lX2p_Uy9I"
+      },
+      {
+        "_id": "gYBbIurMXvrOqyYf7WwzMf",
+        "_key": "work-03",
+        "title": "Rosalía / LUX Tour",
+        "category": "DANCE / LIVE",
+        "role": "Tour dancer · 2026",
+        "description": "DD joined Rosalía’s LUX world tour as a dancer.",
+        "image": {
+          "asset": {
+            "_id": "image-c5fadd6637bc51cd185ceaed49b1f0050562152d-2048x1322-jpg",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/c5fadd6637bc51cd185ceaed49b1f0050562152d-2048x1322.jpg"
+          },
+          "alt": "Rosalía performing with dancers on the LUX Tour stage",
+          "credit": "User-supplied LUX Tour photograph / photographer to confirm",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=b8x1508WkG4&list=RDb8x1508WkG4&start_radio=1"
+      },
+      {
+        "_id": "4Uon20R3fRb2VIjNACl6T2",
+        "_key": "work-04",
+        "title": "GAP x Jungle - Linen Moves Campaign (feat. Tyla)",
+        "category": "CAMPAIGN VIDEO",
+        "role": "Dancer",
+        "description": "Campaign Video · DD: dancer",
+        "image": {
+          "asset": {
+            "_id": "image-f307d1fb2a70fa78f48bcfb8b93a28f318be175b-1176x1078-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/f307d1fb2a70fa78f48bcfb8b93a28f318be175b-1176x1078.webp"
+          },
+          "alt": "Dancers performing in the GAP x Jungle Linen Moves campaign",
+          "credit": "User-supplied project image",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=8unVMB-LoT8"
+      },
+      {
+        "_id": "bQYP7xhuT5v8w3idX5lw4r",
+        "_key": "work-05",
+        "title": "LISA x NikeSKIMS Spring ’26 Collection | Nike",
+        "category": "CAMPAIGN VIDEO",
+        "role": "Dancer",
+        "description": "Campaign Video · DD: dancer",
+        "image": {
+          "asset": {
+            "_id": "image-b0f60c8012071f7bc4ec3dd43845eb43d98071cd-1219x1078-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/b0f60c8012071f7bc4ec3dd43845eb43d98071cd-1219x1078.webp"
+          },
+          "alt": "LISA and dancers in the NikeSKIMS Spring ’26 campaign",
+          "credit": "User-supplied project image",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=65B_GoV-qoE"
+      },
+      {
+        "_id": "bQYP7xhuT5v8w3idX5lwPB",
+        "_key": "work-06",
+        "title": "Calvin Harris - Potion (Official Video) ft Dua Lipa & Young Thug",
+        "category": "MUSIC VIDEO",
+        "role": "Dancer",
+        "description": "Music Video · DD: dancer",
+        "image": {
+          "asset": {
+            "_id": "image-0e86154e90258688c28cb7491df832739d6acff4-1042x1078-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/0e86154e90258688c28cb7491df832739d6acff4-1042x1078.webp"
+          },
+          "alt": "Dancers performing in Calvin Harris’s Potion music video",
+          "credit": "User-supplied project image",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=FFV6t4Dl_zQ"
+      },
+      {
+        "_id": "bQYP7xhuT5v8w3idX5lwtf",
+        "_key": "work-07",
+        "title": "DJ Snake, Don Toliver - Something Wrong (Visualizer)",
+        "category": "MUSIC VIDEO",
+        "role": "Dancer",
+        "description": "Music Video · DD: dancer",
+        "image": {
+          "asset": {
+            "_id": "image-8c03d5ef26b0e9fc860e3083b303c6b1d62b897a-1351x1078-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/8c03d5ef26b0e9fc860e3083b303c6b1d62b897a-1351x1078.webp"
+          },
+          "alt": "A dancer seated at a red table in DJ Snake and Don Toliver’s Something Wrong visualizer",
+          "credit": "User-supplied project image",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=U_vai_a2bzk&list=RDU_vai_a2bzk&start_radio=1"
+      },
+      {
+        "_id": "4Uon20R3fRb2VIjNAClA74",
+        "_key": "work-08",
+        "title": "ROSALÍA - Berghain (Live at The BRIT Awards 2026) ft. Björk",
+        "category": "LIVE PERFORMANCE",
+        "role": "Live performance · 2026",
+        "description": "Rosalía · Björk · BRIT Awards 2026",
+        "image": {
+          "asset": {
+            "_id": "image-2feee4bbb24f8d2d9feb74774063b244b93745a0-1280x720-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/2feee4bbb24f8d2d9feb74774063b244b93745a0-1280x720.webp"
+          },
+          "alt": "Rosalía and dancers performing Berghain at the BRIT Awards 2026",
+          "credit": "User-supplied project image",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=7fyufPkXLbs"
+      },
+      {
+        "_id": "gYBbIurMXvrOqyYf7Wx2SE",
+        "_key": "work-09",
+        "title": "ROSALÍA - DE AQUÍ NO SALES",
+        "category": "MUSIC VIDEO",
+        "role": "Music video",
+        "description": "Rosalía · DE AQUÍ NO SALES (Cap.4: Disputa)",
+        "image": {
+          "asset": {
+            "_id": "image-3b0fa53fb7a1ab032e4f2ad81319390315a2d040-1280x720-webp",
+            "url": "https://cdn.sanity.io/images/i7lp8473/production/3b0fa53fb7a1ab032e4f2ad81319390315a2d040-1280x720.webp"
+          },
+          "alt": "Rosalía in the DE AQUÍ NO SALES music video",
+          "credit": "User-supplied project image",
+          "frame": {
+            "x": 50,
+            "y": 50
+          }
+        },
+        "videoUrl": "https://www.youtube.com/watch?v=vy4lZs8fVRQ"
+      }
+    ],
+    "workHeading": "SELECTED\nWORK.",
+    "contact": {
+      "heading": "WORK\nWITH",
+      "description": "For dance, choreography and campaign inquiries.",
+      "desktop": {
+        "asset": {
+          "_id": "image-a9a9859f4ca25f956a0a39363b2a7c0f1304e9fc-1920x1080-jpg",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/a9a9859f4ca25f956a0a39363b2a7c0f1304e9fc-1920x1080.jpg"
+        },
+        "alt": "DD in a HALO campaign portrait",
+        "credit": "HALO",
+        "frame": {
+          "x": 50,
+          "y": 50
+        }
+      },
+      "mobile": {
+        "asset": {
+          "_id": "image-cc5b6576dbd2a904231f81b77fafa5d090857749-2100x920-webp",
+          "url": "https://cdn.sanity.io/images/i7lp8473/production/cc5b6576dbd2a904231f81b77fafa5d090857749-2100x920.webp"
+        },
+        "alt": "DD in a HALO campaign portrait",
+        "credit": "HALO",
+        "frame": {
+          "x": 52,
+          "y": 0,
+          "smallX": 51
+        }
+      }
+    },
+    "followHeading": "FOLLOW\nTHE WORK."
+  },
+  "pages": [
+    {
+      "_id": "personal-page-confirm",
+      "route": "/marketing/confirm",
+      "title": "Email preferences | DD",
+      "heading": "CONFIRM SIGNUP.",
+      "description": "Confirm that you want my newsletter about my work and dance videos.",
+      "action": "Confirm signup",
+      "success": "Your signup is confirmed.",
+      "missing": "Open the confirmation link from your email. If you have just signed in, reopen that link to continue.",
+      "recovery": "Sign up again for a new confirmation link"
+    },
+    {
+      "_id": "personal-page-withdraw",
+      "route": "/marketing/unsubscribe",
+      "title": "Email preferences | DD",
+      "heading": "UNSUBSCRIBE.",
+      "description": "Stop my newsletter emails to this address.",
+      "action": "Unsubscribe",
+      "success": "You have been unsubscribed.",
+      "missing": "Open the unsubscribe link from your email. If you have just signed in, reopen that link to continue.",
+      "recovery": "Request a new unsubscribe link"
+    },
+    {
+      "_id": "personal-page-privacy",
+      "route": "/privacy",
+      "title": "Privacy policy | DD — Didde-Mie Lykke From",
+      "heading": "PRIVACY\nPOLICY.",
+      "updatedLabel": "Last updated 25 September 2026",
+      "introduction": [
+        {
+          "_type": "block",
+          "_key": "80bbce9b9b93",
+          "style": "normal",
+          "markDefs": [],
+          "children": [
+            {
+              "_type": "span",
+              "_key": "4522a6896693",
+              "text": "This policy explains how the DD website handles personal data when you visit the site, play a film, send an inquiry, or sign up for the newsletter.",
+              "marks": []
+            }
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "_key": "section-1",
+          "heading": "1. Controller",
+          "body": [
+            {
+              "_type": "block",
+              "_key": "4747b6443dfc",
+              "style": "normal",
+              "markDefs": [
+                {
+                  "_type": "link",
+                  "_key": "a296ad09a90d",
+                  "href": "mailto:contact@didde-mie.com",
+                  "external": false
+                }
+              ],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "1a987f3c9ff7",
+                  "text": "DD Production, CVR no. 42234958, Rathsacksvej 3, 3., 1862 Frederiksberg C, Denmark. For privacy requests, email ",
+                  "marks": []
+                },
+                {
+                  "_type": "span",
+                  "_key": "933888ee53fc",
+                  "text": "contact@didde-mie.com",
+                  "marks": [
+                    "a296ad09a90d"
+                  ]
+                },
+                {
+                  "_type": "span",
+                  "_key": "14774c127501",
+                  "text": ".",
+                  "marks": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_key": "section-2",
+          "heading": "2. Data and purposes",
+          "body": [
+            {
+              "_type": "block",
+              "_key": "8d1c8e0f7b39",
+              "style": "normal",
+              "listItem": "bullet",
+              "level": 1,
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "16d2be18836d",
+                  "text": "Contact inquiries:",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_type": "span",
+                  "_key": "0575062eb771",
+                  "text": " We collect your name, email address, topic and message to reply. The legal basis is GDPR Article 6(1)(b) for a possible engagement or Article 6(1)(f), our legitimate interest in answering other inquiries. The form sends data to the DD communications service, which routes it through our email provider.",
+                  "marks": []
+                }
+              ]
+            },
+            {
+              "_type": "block",
+              "_key": "6f905bc3159b",
+              "style": "normal",
+              "listItem": "bullet",
+              "level": 1,
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "66b0e1400f56",
+                  "text": "Newsletter:",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_type": "span",
+                  "_key": "26e25f4c8028",
+                  "text": " If you sign up, we use your email address to send DD Production updates on Didde-Mie's work and dance videos. The basis is your consent under GDPR Article 6(1)(a) and the marketing rules. We record when and where you requested and confirmed the signup, the wording you accepted, and any withdrawal. A confirmation email is required before you receive newsletters. You can unsubscribe using the link supplied with newsletter messages, through the unsubscribe page, or by replying to us. Withdrawal does not affect other communications you requested.",
+                  "marks": []
+                }
+              ]
+            },
+            {
+              "_type": "block",
+              "_key": "c7d473abc65f",
+              "style": "normal",
+              "listItem": "bullet",
+              "level": 1,
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "efcdee60ef37",
+                  "text": "Site operation:",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_type": "span",
+                  "_key": "5e4cd5341c7b",
+                  "text": " The hosting provider may process IP addresses and technical request data to serve and secure the site. The legal basis is Article 6(1)(f), our legitimate interest in operating a secure website.",
+                  "marks": []
+                }
+              ]
+            },
+            {
+              "_type": "block",
+              "_key": "3e63153b8d1a",
+              "style": "normal",
+              "listItem": "bullet",
+              "level": 1,
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "1e07c48a040b",
+                  "text": "External media:",
+                  "marks": [
+                    "strong"
+                  ]
+                },
+                {
+                  "_type": "span",
+                  "_key": "382f5de2e813",
+                  "text": " YouTube is contacted only when you choose to play a film on this page. YouTube may then receive your IP address and place or read cookies or similar identifiers according to its own settings. External profile and source links open their providers' sites when clicked.",
+                  "marks": []
+                }
+              ]
+            },
+            {
+              "_type": "block",
+              "_key": "c36e98c42b61",
+              "style": "normal",
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "29a50bd7de9a",
+                  "text": "Please do not include sensitive personal data in the inquiry field. You need to provide your name, email and message for us to answer via the form.",
+                  "marks": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_key": "section-3",
+          "heading": "3. Recipients and transfers",
+          "body": [
+            {
+              "_type": "block",
+              "_key": "8d7df11c4b79",
+              "style": "normal",
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "90463856c1a7",
+                  "text": "Relevant people working with DD, the website host, the DD communications service and our email provider may process inquiry, newsletter or technical data. Newsletter addresses are stored in a separate application database and confirmation messages are sent through Purelymail. YouTube and Storyblok act under their own terms when their content loads. We will verify the final provider list, processing agreements and any transfers outside the EU/EEA before launch, and add the transfer basis here if needed.",
+                  "marks": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_key": "section-4",
+          "heading": "4. Retention",
+          "body": [
+            {
+              "_type": "block",
+              "_key": "fbcebfd4ea28",
+              "style": "normal",
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "17e63b09bc67",
+                  "text": "We normally delete inquiries within 12 months of the last relevant contact, unless they become part of a business relationship or a specific dispute. We keep active newsletter subscriptions while you remain subscribed. When you unsubscribe, we stop sending newsletters and retain only the minimum information needed to honor the withdrawal and document it, then review it for deletion when no longer needed. Unconfirmed signup links expire after 48 hours. Accounting records for completed work are retained for five years from the end of the relevant financial year. The hosting log retention period will be added after the deployment setup is confirmed.",
+                  "marks": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_key": "section-5",
+          "heading": "5. Your rights",
+          "body": [
+            {
+              "_type": "block",
+              "_key": "42ce117e3c44",
+              "style": "normal",
+              "markDefs": [
+                {
+                  "_type": "link",
+                  "_key": "f06e2f47c275",
+                  "href": "https://www.datatilsynet.dk/borger/klage-til-datatilsynet",
+                  "external": true
+                }
+              ],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "e62f7027adf3",
+                  "text": "You may request access, correction, erasure, restriction and, where applicable, data portability. You may object to processing based on legitimate interests. These rights depend on the circumstances, and legally required records cannot always be deleted immediately. Contact us at the address above. You can complain to the ",
+                  "marks": []
+                },
+                {
+                  "_type": "span",
+                  "_key": "cf6056caa6c0",
+                  "text": "Danish Data Protection Agency",
+                  "marks": [
+                    "f06e2f47c275"
+                  ]
+                },
+                {
+                  "_type": "span",
+                  "_key": "f3d69ea9b261",
+                  "text": ".",
+                  "marks": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_key": "section-6",
+          "heading": "6. Cookies and similar technologies",
+          "body": [
+            {
+              "_type": "block",
+              "_key": "c2489eda45aa",
+              "style": "normal",
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "fbfe59555abe",
+                  "text": "We will publish a separate, verified technology list and consent controls before adding optional analytics, advertising or embedded services that require consent. Playing a YouTube film initiates a connection to YouTube; choose an external YouTube link instead if you prefer to visit it directly. The final cookie information will state purposes, providers and lifetimes, and let you change any consent you give.",
+                  "marks": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "_key": "section-7",
+          "heading": "7. Changes",
+          "body": [
+            {
+              "_type": "block",
+              "_key": "c8296ff6564a",
+              "style": "normal",
+              "markDefs": [],
+              "children": [
+                {
+                  "_type": "span",
+                  "_key": "0516566a1be6",
+                  "text": "We update this policy when features or providers change. The date above shows the latest revision.",
+                  "marks": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "contactLabel": "CONTACT ↗"
+    },
+    {
+      "_id": "personal-page-unsubscribe",
+      "route": "/unsubscribe",
+      "title": "Unsubscribe | DD",
+      "heading": "UNSUBSCRIBE.",
+      "description": "Enter your email to stop DD Production newsletter updates on my work and dance videos. You can also reply to any newsletter and ask to unsubscribe.",
+      "privacy": "Privacy policy"
+    }
+  ]
+}
