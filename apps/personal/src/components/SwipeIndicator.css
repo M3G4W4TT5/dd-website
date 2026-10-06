@@ -8,9 +8,7 @@
   .swipe-indicator[data-state="playing"]::before { animation:swipe-hint-fade 2s linear 1 both; }
   .swipe-indicator[data-state="playing"]::after { opacity:1; animation:swipe-hint-left-right 2s linear 1 both; }
   .clip-reel-stage>.swipe-indicator { top:calc(50% - 12px); }
-  .work-mobile-media { position:relative; }
-  .work-mobile-media>.swipe-indicator { top:-24px; }
-  .work-item strong { margin-bottom:24px; }
+  .work-mobile-image>.swipe-indicator { top:calc(50% - 12px); }
 }
 
 @keyframes swipe-hint-left-right {

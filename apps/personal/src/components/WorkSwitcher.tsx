@@ -27,7 +27,7 @@ function ImageError() {
   return <div className="dd-image-error" role="status" aria-label="Project image could not load">DD.</div>;
 }
 
-function MobileWorkImage({ item }: { item: WorkItem }) {
+function MobileWorkImage({ item, showSwipeHint }: { item: WorkItem; showSwipeHint: boolean }) {
   const [status, setStatus] = useState<"loading" | "loaded" | "error">("loading");
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -39,6 +39,7 @@ function MobileWorkImage({ item }: { item: WorkItem }) {
   if (!item.image) return null;
 
   return <div className="work-mobile-image">
+    {showSwipeHint && <SwipeIndicator />}
     {status === "loading" && <DDLoader label={`Loading image for ${item.title}`} />}
     {status === "error" && <ImageError />}
     <img
@@ -225,8 +226,7 @@ export function WorkSwitcher({ items }: { items: readonly WorkItem[] }) {
               <span className="work-item-note">{item.note}</span>
             </div>
             <div className="work-mobile-media">
-              {index === 0 && <SwipeIndicator targetSelector=".work-mobile-image" />}
-              <MobileWorkImage item={item} />
+              <MobileWorkImage item={item} showSwipeHint={index === 0} />
             </div>
           </a>
         ))}
