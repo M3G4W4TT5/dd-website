@@ -133,7 +133,7 @@ html.desktop-intro-active { overflow:hidden; overscroll-behavior:none; scrollbar
 .work-gallery-controls>div { display:flex; gap:8px; flex:none; }
 .work-gallery-controls button { display:grid; place-items:center; width:42px; height:42px; border:1px solid #bbb1bd; border-radius:50%; background:transparent; color:#fff; }
 .work-gallery-controls button:last-child,.work-gallery-controls button:hover { background:var(--pink); border-color:var(--pink); color:var(--black); }
-@media(max-width:760px) { .work-gallery-controls { display:flex; } }
+@media(max-width:760px) { .work-gallery-controls { display:flex; visibility:hidden; } }
 @media(max-width:500px) { .work-gallery-controls { font-size:8px; } }
 
 .links-section { background:var(--pink); color:var(--black); }
